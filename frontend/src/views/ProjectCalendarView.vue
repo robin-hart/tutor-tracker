@@ -280,7 +280,7 @@ const selectedDaySlots = computed(() => {
   }
   return monthSlots.value
     .filter((slot) => slot.date === selectedDate.value)
-    .sort((a, b) => a.startTime.localeCompare(b.startTime));
+    .sort((a, b) => sortByStartTimeAsc(a.startTime, b.startTime));
 });
 
 const hasActiveSearch = computed(() => searchText.value.trim().length > 0);
@@ -301,7 +301,7 @@ const filteredSlotResults = computed(() => {
     .sort((left, right) => {
       const leftKey = `${left.date} ${left.startTime}`;
       const rightKey = `${right.date} ${right.startTime}`;
-      return leftKey.localeCompare(rightKey);
+      return rightKey.localeCompare(leftKey);
     });
 });
 
@@ -317,14 +317,14 @@ const groupedFilteredSlots = computed(() => {
   }
 
   return Array.from(grouped.entries())
-    .sort(([left], [right]) => left.localeCompare(right))
+    .sort(([left], [right]) => right.localeCompare(left))
     .map(([monthKey, slots]) => ({
       monthKey,
       label: formatMonthLabel(monthKey),
       slots: slots.sort((left, right) => {
         const leftKey = `${left.date} ${left.startTime}`;
         const rightKey = `${right.date} ${right.startTime}`;
-        return leftKey.localeCompare(rightKey);
+        return rightKey.localeCompare(leftKey);
       })
     }));
 });
@@ -398,6 +398,18 @@ function formatTime(timeValue) {
   const safeMinutes = Number.isNaN(minutes) ? 0 : minutes;
   const d = new Date(2000, 0, 1, safeHours, safeMinutes);
   return new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit' }).format(d);
+}
+
+function toMinutes(timeValue) {
+  const raw = String(timeValue || '00:00').slice(0, 5);
+  const [hours, minutes] = raw.split(':').map(Number);
+  const safeHours = Number.isNaN(hours) ? 0 : hours;
+  const safeMinutes = Number.isNaN(minutes) ? 0 : minutes;
+  return (safeHours * 60) + safeMinutes;
+}
+
+function sortByStartTimeAsc(left, right) {
+  return toMinutes(left) - toMinutes(right);
 }
 
 function formatPeriod(startTime, durationMinutes) {
