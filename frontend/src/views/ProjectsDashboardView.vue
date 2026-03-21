@@ -62,7 +62,17 @@
         <span class="text-sm text-on-surface-variant">{{ filteredProjects.length }} shown</span>
       </section>
 
-      <p v-if="isLoading" class="text-on-surface-variant mb-4">Loading projects...</p>
+      <section v-if="isLoading" class="mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-pulse">
+          <div v-for="item in 3" :key="item" class="bg-surface-container-lowest rounded-xl p-8">
+            <div class="h-4 w-24 bg-surface-container-high rounded mb-6"></div>
+            <div class="h-8 w-3/4 bg-surface-container-high rounded mb-8"></div>
+            <div class="h-4 w-full bg-surface-container-high rounded mb-3"></div>
+            <div class="h-4 w-2/3 bg-surface-container-high rounded mb-6"></div>
+            <div class="h-2 w-full bg-surface-container-high rounded"></div>
+          </div>
+        </div>
+      </section>
       <p v-if="errorMessage && !apiUnavailable" class="text-error mb-4">{{ errorMessage }}</p>
 
       <section
@@ -127,7 +137,12 @@
         </article>
       </div>
 
-      <p v-if="!isLoading && filteredProjects.length === 0" class="text-on-surface-variant mt-8">No projects match your filter.</p>
+      <p v-if="!isLoading && !apiUnavailable && hasActiveFilter && filteredProjects.length === 0" class="text-on-surface-variant mt-8">
+        No projects match your filter.
+      </p>
+      <p v-if="!isLoading && !apiUnavailable && !hasActiveFilter && projects.length === 0" class="text-on-surface-variant mt-8">
+        No projects available yet.
+      </p>
 
       <ConfirmDialog
         :is-open="showDeleteConfirm"
@@ -184,6 +199,7 @@ const filteredProjects = computed(() => {
     return project.name.toLowerCase().includes(query) || project.category.toLowerCase().includes(query);
   });
 });
+const hasActiveFilter = computed(() => searchText.value.trim().length > 0);
 
 /**
  * Opens the calendar route for a selected project.
