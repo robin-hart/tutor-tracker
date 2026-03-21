@@ -11,11 +11,9 @@ import jakarta.validation.constraints.NotBlank;
  * @param groupName optional initial student group
  */
 public record StudentCreateRequest(
-        @Schema(description = "Student full name", example = "Alex Thompson")
-        @NotBlank String name,
-        @Schema(description = "Optional tutoring notes", example = "Needs additional practice on quadratics.")
+    @Schema(description = "Student full name", example = "Alex Thompson") @NotBlank String name,
+    @Schema(
+            description = "Optional tutoring notes",
+            example = "Needs additional practice on quadratics.")
         String notes,
-        @Schema(description = "Optional initial group name", example = "Group A")
-        String groupName
-) {
-}
+    @Schema(description = "Optional initial group name", example = "Group A") String groupName) {}

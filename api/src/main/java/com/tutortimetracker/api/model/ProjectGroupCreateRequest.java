@@ -7,7 +7,4 @@ import jakarta.validation.constraints.NotBlank;
  *
  * @param name group name
  */
-public record ProjectGroupCreateRequest(
-        @NotBlank String name
-) {
-}
+public record ProjectGroupCreateRequest(@NotBlank String name) {}

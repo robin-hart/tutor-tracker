@@ -189,6 +189,34 @@ Current thresholds:
 
 If thresholds are not met, `mvn verify` fails.
 
+## Code Quality
+
+Backend code quality is enforced via Maven with Checkstyle and Spotless.
+
+- Checkstyle config: `checkstyle.xml`
+- Max line length: `100`
+- Quality gate runs during: `mvn verify`
+
+### Run quality checks
+
+```bash
+mvn checkstyle:check
+mvn spotless:check
+```
+
+### Auto-format backend code
+
+```bash
+mvn spotless:apply
+```
+
+Recommended daily workflow:
+
+```bash
+mvn spotless:apply
+mvn verify
+```
+
 ## CORS
 CORS is enabled for `http://localhost:5173` in `TutorDataController`.
 

@@ -10,10 +10,4 @@ package com.tutortimetracker.api.model;
  * @param durationMinutes duration in minutes
  */
 public record CalendarSlot(
-        String id,
-        String title,
-        String date,
-        String startTime,
-        int durationMinutes
-) {
-}
+    String id, String title, String date, String startTime, int durationMinutes) {}
