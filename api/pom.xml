@@ -132,6 +132,78 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.6.3</version>
+                <configuration>
+                    <!-- General Settings -->
+                    <outputDirectory>${project.build.directory}/site/apidocs</outputDirectory>
+                    <reportOutputDirectory>${project.build.directory}/site</reportOutputDirectory>
+                    <destDir>apidocs</destDir>
+                    <javadocDirectory>${basedir}/src/main/javadoc</javadocDirectory>
+                    
+                    <!-- Javadoc Options -->
+                    <source>21</source>
+                    <author>true</author>
+                    <version>true</version>
+                    <use>true</use>
+                    <detectLinks>true</detectLinks>
+                    <links>
+                        <link>https://docs.spring.io/spring-framework/docs/current/javadoc-api/</link>
+                        <link>https://docs.spring.io/spring-boot/docs/current/api/</link>
+                        <link>https://docs.spring.io/spring-data/jpa/docs/current/api/</link>
+                        <link>https://docs.oracle.com/en/java/javase/21/docs/api/</link>
+                    </links>
+                    
+                    <!-- HTML Generation -->
+                    <doclint>all,-missing</doclint>
+                    <quiet>false</quiet>
+                    <minmemory>128m</minmemory>
+                    <maxmemory>1024m</maxmemory>
+                    
+                    <!-- Exclusions -->
+                    <excludePackageNames>
+                        *.config
+                    </excludePackageNames>
+                    
+                    <!-- Custom taglets and groups -->
+                    <groups>
+                        <group>
+                            <title>Controller APIs</title>
+                            <packages>com.tutortimetracker.api.controller</packages>
+                        </group>
+                        <group>
+                            <title>Service Layer</title>
+                            <packages>com.tutortimetracker.api.service</packages>
+                        </group>
+                        <group>
+                            <title>Data Models</title>
+                            <packages>com.tutortimetracker.api.model</packages>
+                        </group>
+                        <group>
+                            <title>Persistence Layer</title>
+                            <packages>com.tutortimetracker.api.repository:com.tutortimetracker.api.entity</packages>
+                        </group>
+                    </groups>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>generate-javadoc</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>javadoc</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>aggregate-javadoc</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>aggregate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 </project>

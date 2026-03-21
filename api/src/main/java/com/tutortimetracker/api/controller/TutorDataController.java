@@ -31,7 +31,34 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- * Main REST API for TutorTimeTracker frontend consumption.
+ * Main REST API controller for TutorTimeTracker frontend consumption.
+ *
+ * <p>This controller provides a comprehensive REST API for managing tutoring projects,
+ * student records, timeslots, and performance reports. The API is organized around two main
+ * resource hierarchies:</p>
+ *
+ * <h3>Project-Scoped Resources:</h3>
+ * <ul>
+ *   <li>Projects: Dashboard cards with hour metrics and completion tracking</li>
+ *   <li>Students: Tutoring students assigned to projects with notes and group management</li>
+ *   <li>Groups: Student grouping for organizational purposes (e.g., "Honors", "Remedial")</li>
+ *   <li>Timeslots: Individual tutoring sessions with duration and scheduling</li>
+ *   <li>Reports: Monthly aggregated metrics (hours, sessions, revenue)</li>
+ *   <li>Calendar: Combined month/day view of timeslots with project metrics</li>
+ * </ul>
+ *
+ * <h3>Global Resources:</h3>
+ * <ul>
+ *   <li>Timeslots: Global timeslot creation (legacy support)</li>
+ *   <li>Reports: Cross-project report aggregation</li>
+ * </ul>
+ *
+ * <p>All endpoints support JSON request/response payloads with validation.
+ * CORS is enabled for frontend at http://localhost:5173.</p>
+ *
+ * @see TutorDataService
+ * @author TutorTimeTracker Team
+ * @version 1.0
  */
 @RestController
 @RequestMapping("/api")
