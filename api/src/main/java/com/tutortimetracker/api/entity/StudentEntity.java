@@ -27,9 +27,6 @@ public class StudentEntity {
     @Column(nullable = false, length = 160)
     private String name;
 
-    @Column(nullable = false, length = 80)
-    private String lastActive;
-
     @Column(nullable = false, length = 1000)
     private String notes;
 
@@ -58,14 +55,6 @@ public class StudentEntity {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getLastActive() {
-        return lastActive;
-    }
-
-    public void setLastActive(String lastActive) {
-        this.lastActive = lastActive;
     }
 
     public String getNotes() {

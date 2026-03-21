@@ -88,7 +88,6 @@
                 <div class="flex justify-between items-start">
                   <div>
                     <h4 class="text-lg font-bold">{{ student.name }}</h4>
-                    <p class="text-sm text-on-surface-variant">Last active: {{ student.lastActive }}</p>
                   </div>
                   <button
                     type="button"
@@ -109,6 +108,7 @@
                   />
                 </div>
                 <div class="mt-3 flex justify-end">
+                  <button @click="openDeleteConfirm(student)" class="text-sm font-bold text-error mr-4">Delete</button>
                   <button @click="saveNotes(student)" class="text-sm font-bold text-primary">Save Notes</button>
                 </div>
               </article>
@@ -141,6 +141,15 @@
             </div>
           </div>
         </div>
+
+        <ConfirmDialog
+          :is-open="showDeleteConfirm"
+          title="Delete Student?"
+          @cancel="cancelDelete"
+          @confirm="confirmDelete"
+        >
+          Are you sure you want to delete <strong>{{ studentToDelete?.name }}</strong>? This action cannot be undone.
+        </ConfirmDialog>
       </section>
     </main>
   </div>
@@ -150,11 +159,13 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import AppSidebar from '../components/AppSidebar.vue';
+import ConfirmDialog from '../components/ConfirmDialog.vue';
 import MainTopBar from '../components/MainTopBar.vue';
 import SearchActiveIndicator from '../components/SearchActiveIndicator.vue';
 import {
   createProjectGroup,
   createProjectStudent,
+  deleteStudent,
   deleteProjectGroup,
   getProjectGroups,
   getProjectStudents,
@@ -172,6 +183,8 @@ const searchText = ref('');
 const showAddStudent = ref(false);
 const showAddGroup = ref(false);
 const newGroupName = ref('');
+const showDeleteConfirm = ref(false);
+const studentToDelete = ref(null);
 const draggedStudentId = ref('');
 const isDragging = ref(false);
 const hoveredGroupName = ref('');
@@ -253,14 +266,12 @@ async function loadStudentContext() {
       {
         id: 'alex-thompson',
         name: 'Alex Thompson',
-        lastActive: '2 hours ago',
         notes: 'Struggling with quadratic equations. Requires focus on discriminant formula next session.',
         groupName: 'Group A'
       },
       {
         id: 'maya-rodriguez',
         name: 'Maya Rodriguez',
-        lastActive: 'Yesterday',
         notes: 'Excellent grasp of trigonometry. Ready for advanced circle theorem exercises.',
         groupName: 'Ungrouped'
       }
@@ -423,6 +434,31 @@ async function saveNotes(student) {
     await updateStudentNotes(student.id, student.notes);
   } catch (error) {
     errorMessage.value = error.message;
+  }
+}
+
+function openDeleteConfirm(student) {
+  studentToDelete.value = { id: student.id, name: student.name };
+  showDeleteConfirm.value = true;
+}
+
+function cancelDelete() {
+  showDeleteConfirm.value = false;
+  studentToDelete.value = null;
+}
+
+async function confirmDelete() {
+  if (!studentToDelete.value) {
+    return;
+  }
+
+  try {
+    await deleteStudent(studentToDelete.value.id);
+    students.value = students.value.filter((student) => student.id !== studentToDelete.value.id);
+    cancelDelete();
+  } catch (error) {
+    errorMessage.value = error.message;
+    cancelDelete();
   }
 }
 

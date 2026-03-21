@@ -179,6 +179,17 @@ public class TutorDataController {
     }
 
     /**
+     * Deletes one student.
+     *
+     * @param studentId student key
+     */
+    @DeleteMapping("/students/{studentId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteStudent(@PathVariable String studentId) {
+        tutorDataService.deleteStudent(studentId);
+    }
+
+    /**
      * Returns report table rows.
      *
      * @return list of report rows

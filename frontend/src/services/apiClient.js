@@ -104,7 +104,7 @@ export function deleteProjectGroup(projectId, groupName) {
 
 /**
  * @param {string} projectId
- * @param {{name: string, lastActive: string, notes: string, groupName?: string}} payload
+ * @param {{name: string, notes: string, groupName?: string}} payload
  */
 export function createProjectStudent(projectId, payload) {
   return request(`/projects/${projectId}/students`, {
@@ -132,6 +132,16 @@ export function updateStudentGroup(studentId, groupName) {
   return request(`/students/${studentId}/group`, {
     method: 'PATCH',
     body: JSON.stringify({ groupName })
+  });
+}
+
+/**
+ * @param {string} studentId
+ * @returns {Promise<null>}
+ */
+export function deleteStudent(studentId) {
+  return request(`/students/${studentId}`, {
+    method: 'DELETE'
   });
 }
 

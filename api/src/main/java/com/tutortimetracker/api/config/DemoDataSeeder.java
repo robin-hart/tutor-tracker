@@ -77,9 +77,9 @@ public class DemoDataSeeder {
         ));
 
         studentRepository.saveAll(List.of(
-            buildStudent("alex-thompson", "Alex Thompson", "2 hours ago", "Struggling with quadratic equations. Requires focus on discriminant formula next session.", GROUP_A, persistedMath),
-            buildStudent("maya-rodriguez", "Maya Rodriguez", "Yesterday", "Excellent grasp of trigonometry. Ready for advanced circle theorem exercises.", GROUP_A, persistedMath),
-            buildStudent("jordan-chen", "Jordan Chen", "3 days ago", "Consistent homework completion. Needs more confidence with word problems involving systems.", GROUP_B, persistedMath)
+            buildStudent("alex-thompson", "Alex Thompson", "Struggling with quadratic equations. Requires focus on discriminant formula next session.", GROUP_A, persistedMath),
+            buildStudent("maya-rodriguez", "Maya Rodriguez", "Excellent grasp of trigonometry. Ready for advanced circle theorem exercises.", GROUP_A, persistedMath),
+            buildStudent("jordan-chen", "Jordan Chen", "Consistent homework completion. Needs more confidence with word problems involving systems.", GROUP_B, persistedMath)
         ));
 
         timeslotRepository.saveAll(List.of(
@@ -105,11 +105,10 @@ public class DemoDataSeeder {
         return entity;
     }
 
-    private StudentEntity buildStudent(String studentKey, String name, String lastActive, String notes, String groupName, ProjectEntity project) {
+    private StudentEntity buildStudent(String studentKey, String name, String notes, String groupName, ProjectEntity project) {
         StudentEntity entity = new StudentEntity();
         entity.setStudentKey(studentKey);
         entity.setName(name);
-        entity.setLastActive(lastActive);
         entity.setNotes(notes);
         entity.setGroupName(groupName);
         entity.setProject(project);
