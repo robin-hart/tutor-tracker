@@ -191,3 +191,57 @@ If thresholds are not met, `mvn verify` fails.
 
 ## CORS
 CORS is enabled for `http://localhost:5173` in `TutorDataController`.
+
+## Documentation
+
+### Javadoc
+
+Full API documentation is generated via Maven Javadoc plugin:
+
+```bash
+mvn javadoc:javadoc
+```
+
+Javadoc is organized by package with cross-references:
+- **Controller Layer** (`com.tutortimetracker.api.controller`) - REST API endpoints and request/response contracts
+- **Service Layer** (`com.tutortimetracker.api.service`) - Business logic, domain rules, and entity operations
+- **Data Models** (`com.tutortimetracker.api.model`) - Request/response DTOs and records
+- **Persistence Layer** (`com.tutortimetracker.api.repository`, `com.tutortimetracker.api.entity`) - JPA entities and database repositories
+
+**Generated Documentation:**
+- Location: `target/site/apidocs/index.html`
+- Includes: 99+ HTML pages with full class hierarchies, method signatures, and documentation
+- External Links: Spring Framework, Spring Boot, Spring Data JPA, and Java 21 API documentation
+- Overview: Comprehensive guide at `target/site/apidocs/overview-summary.html` with architecture, entity relationships, and business rules
+
+**Key Documentation Included:**
+- **Architecture**: 3-tier pattern (Controller → Service → Repository)
+- **Entity Relationships**: Table showing all entities and their operations
+- **API Reference**: Complete endpoint listing with request/response examples
+- **Business Rules**: Constraints, defaults, and validation rules
+- **Error Handling**: HTTP status codes and error response format
+- **Setup Instructions**: Development environment configuration
+
+**View Javadoc:**
+Open `target/site/apidocs/index.html` in your browser after generation.
+
+### Comments & Code Documentation
+
+Key classes have enhanced Javadoc comments:
+- `TutorDataController` - Detailed API overview with resource hierarchy
+- `TutorDataService` - Entity operation table and business rule documentation
+- All public methods include parameter and return value documentation
+
+Note: `com.tutortimetracker.api.config` package is excluded from Javadoc (internal configuration).
+
+### Javadoc During Build
+
+Javadoc is automatically generated during package phase:
+```bash
+mvn package
+```
+
+To skip Javadoc generation:
+```bash
+mvn package -DskipTests -DskipJavadoc
+```
