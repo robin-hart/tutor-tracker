@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-error-container": "#93000a",
+              "on-primary": "#ffffff",
+              "on-primary-fixed": "#00105c",
+              "surface-container-lowest": "#ffffff",
+              "secondary-fixed": "#d5e3fc",
+              "on-background": "#0b1c30",
+              "tertiary": "#6c3400",
+              "secondary-container": "#d5e3fc",
+              "inverse-primary": "#bac3ff",
+              "primary": "#24389c",
+              "on-surface-variant": "#454652",
+              "surface-container-low": "#eff4ff",
+              "on-error": "#ffffff",
+              "outline-variant": "#c5c5d4",
+              "secondary-fixed-dim": "#b9c7df",
+              "on-tertiary": "#ffffff",
+              "surface-container-highest": "#d3e4fe",
+              "secondary": "#515f74",
+              "surface": "#f8f9ff",
+              "background": "#f8f9ff",
+              "on-tertiary-fixed-variant": "#713700",
+              "on-secondary-fixed": "#0d1c2e",
+              "surface-dim": "#cbdbf5",
+              "on-secondary-fixed-variant": "#3a485b",
+              "error-container": "#ffdad6",
+              "on-primary-fixed-variant": "#293ca0",
+              "primary-container": "#3f51b5",
+              "error": "#ba1a1a",
+              "inverse-surface": "#213145",
+              "surface-tint": "#4355b9",
+              "on-secondary-container": "#57657a",
+              "on-surface": "#0b1c30",
+              "on-tertiary-container": "#ffc7a2",
+              "on-secondary": "#ffffff",
+              "tertiary-container": "#8f4700",
+              "surface-variant": "#d3e4fe",
+              "tertiary-fixed": "#ffdcc6",
+              "surface-container-high": "#dce9ff",
+              "tertiary-fixed-dim": "#ffb784",
+              "on-primary-container": "#cacfff",
+              "primary-fixed-dim": "#bac3ff",
+              "outline": "#757684",
+              "surface-bright": "#f8f9ff",
+              "inverse-on-surface": "#eaf1ff",
+              "on-tertiary-fixed": "#301400",
+              "surface-container": "#e5eeff",
+              "primary-fixed": "#dee0ff"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.5rem", "lg": "0.75rem", "xl": "1rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .primary-gradient {
+            background: linear-gradient(135deg, #24389c 0%, #3f51b5 100%);
+        }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface antialiased">
+<!-- Background Project Detail Layout (The "Canvas") -->
+<div class="fixed inset-0 flex">
+<!-- SideNavBar Anchor -->
+<aside class="fixed left-0 top-0 h-screen w-72 bg-[#eff4ff] flex flex-col p-6 space-y-8 z-10">
+<div class="flex items-center gap-3 mb-4">
+<div class="w-10 h-10 primary-gradient rounded-lg flex items-center justify-center text-white">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+</div>
+<div>
+<h1 class="text-2xl font-black text-[#24389c] font-headline tracking-tight">TutorFlow</h1>
+<p class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Premium Tracking</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-[#454652] hover:bg-[#d3e4fe] rounded-lg transition-all hover:translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-manrope font-semibold tracking-tight">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-[#ffffff] text-[#24389c] rounded-lg font-bold transition-all shadow-sm" href="#">
+<span class="material-symbols-outlined" data-icon="folder_shared" style="font-variation-settings: 'FILL' 1;">folder_shared</span>
+<span class="font-manrope font-semibold tracking-tight">Projects</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-[#454652] hover:bg-[#d3e4fe] rounded-lg transition-all hover:translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-manrope font-semibold tracking-tight">Reports</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-[#454652] hover:bg-[#d3e4fe] rounded-lg transition-all hover:translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-manrope font-semibold tracking-tight">Settings</span>
+</a>
+</nav>
+<button class="w-full py-4 primary-gradient text-white rounded-xl font-bold text-sm shadow-lg shadow-primary/20 active:scale-95 transition-all">
+                Log Hours
+            </button>
+<div class="pt-6 mt-auto border-t border-outline-variant/20 space-y-1">
+<a class="flex items-center gap-3 px-4 py-2 text-[#454652] hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="help">help</span>
+<span class="text-xs font-medium">Support</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 text-[#454652] hover:text-error transition-colors" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="logout">logout</span>
+<span class="text-xs font-medium">Sign Out</span>
+</a>
+</div>
+</aside>
+<!-- Main Content (Blurred Context) -->
+<main class="flex-1 ml-72 p-16 overflow-y-auto">
+<header class="mb-12">
+<div class="flex items-center gap-2 text-on-surface-variant mb-4">
+<span class="text-sm font-medium">Projects</span>
+<span class="material-symbols-outlined text-xs" data-icon="chevron_right">chevron_right</span>
+<span class="text-sm font-bold text-primary">Advanced Calculus Prep</span>
+</div>
+<h2 class="font-headline text-5xl font-extrabold text-on-surface tracking-tight">Session Log</h2>
+</header>
+<div class="grid grid-cols-12 gap-8">
+<!-- Session Cards (Visual Context) -->
+<div class="col-span-8 space-y-4">
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-secondary-container rounded-full flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+</div>
+<div>
+<h4 class="font-bold text-lg">Limits &amp; Continuity</h4>
+<p class="text-on-surface-variant text-sm">Yesterday • 1h 45m</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline" data-icon="more_vert">more_vert</span>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-secondary-container rounded-full flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+</div>
+<div>
+<h4 class="font-bold text-lg">Derivatives Overview</h4>
+<p class="text-on-surface-variant text-sm">Oct 24 • 2h 15m</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline" data-icon="more_vert">more_vert</span>
+</div>
+</div>
+<div class="col-span-4 space-y-8">
+<div class="bg-surface-container-high p-8 rounded-2xl">
+<p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Total Project Time</p>
+<p class="font-headline text-4xl font-black text-primary">42.5<span class="text-xl ml-1 font-bold">hrs</span></p>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- The Focus Shroud (Modal Overlay) -->
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-on-background/40 backdrop-blur-md">
+<!-- Timeslot Editor Modal -->
+<div class="w-full max-w-lg mx-4 glass-panel rounded-2xl shadow-2xl overflow-hidden border border-white/20">
+<!-- Modal Header -->
+<div class="px-8 pt-8 pb-4 flex justify-between items-center">
+<div>
+<h3 class="font-headline text-2xl font-extrabold text-on-surface tracking-tight">Edit Timeslot</h3>
+<p class="text-on-surface-variant text-sm font-medium">Define your session details</p>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-highest transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="close">close</span>
+</button>
+</div>
+<!-- Form Body -->
+<div class="px-8 py-6 space-y-6">
+<!-- Title Field -->
+<div class="space-y-2">
+<label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant ml-1" for="session-title">
+                        Title <span class="text-error">*</span>
+</label>
+<div class="relative">
+<input class="w-full px-5 py-4 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-primary/20 focus:bg-surface-bright text-on-surface font-medium transition-all placeholder:text-outline" id="session-title" placeholder="e.g. Integration Workshop" type="text"/>
+</div>
+</div>
+<!-- Description Field -->
+<div class="space-y-2">
+<label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant ml-1" for="session-desc">
+                        Description
+                    </label>
+<textarea class="w-full px-5 py-4 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-primary/20 focus:bg-surface-bright text-on-surface font-medium transition-all placeholder:text-outline resize-none" id="session-desc" placeholder="Briefly describe the work performed..." rows="4"></textarea>
+</div>
+<!-- Metadata Row (Optional Context) -->
+<div class="flex gap-4 p-4 bg-secondary-fixed/30 rounded-xl">
+<div class="flex-1">
+<p class="text-[10px] font-bold uppercase text-on-secondary-fixed-variant">Duration</p>
+<p class="text-sm font-bold text-on-surface">1h 30m</p>
+</div>
+<div class="w-px bg-outline-variant/30"></div>
+<div class="flex-1">
+<p class="text-[10px] font-bold uppercase text-on-secondary-fixed-variant">Date</p>
+<p class="text-sm font-bold text-on-surface">Oct 26, 2023</p>
+</div>
+</div>
+</div>
+<!-- Footer Actions -->
+<div class="px-8 pb-8 pt-4 flex items-center justify-end gap-3">
+<button class="px-6 py-3 text-sm font-bold text-on-surface-variant hover:text-on-surface transition-colors">
+                    Cancel
+                </button>
+<button class="px-10 py-3 primary-gradient text-white rounded-lg font-bold text-sm shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
+                    Save Session
+                </button>
+</div>
+</div>
+</div>
+</body></html>

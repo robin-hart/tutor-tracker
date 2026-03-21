@@ -1,0 +1,23 @@
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# Build outputs from subprojects
+api/target/
+frontend/dist/
+
+# Dependency caches
+**/node_modules/
+**/.pnpm-store/

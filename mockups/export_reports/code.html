@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TutorFlow - Export &amp; Reports</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-error-container": "#93000a",
+              "on-primary": "#ffffff",
+              "on-primary-fixed": "#00105c",
+              "surface-container-lowest": "#ffffff",
+              "secondary-fixed": "#d5e3fc",
+              "on-background": "#0b1c30",
+              "tertiary": "#6c3400",
+              "secondary-container": "#d5e3fc",
+              "inverse-primary": "#bac3ff",
+              "primary": "#24389c",
+              "on-surface-variant": "#454652",
+              "surface-container-low": "#eff4ff",
+              "on-error": "#ffffff",
+              "outline-variant": "#c5c5d4",
+              "secondary-fixed-dim": "#b9c7df",
+              "on-tertiary": "#ffffff",
+              "surface-container-highest": "#d3e4fe",
+              "secondary": "#515f74",
+              "surface": "#f8f9ff",
+              "background": "#f8f9ff",
+              "on-tertiary-fixed-variant": "#713700",
+              "on-secondary-fixed": "#0d1c2e",
+              "surface-dim": "#cbdbf5",
+              "on-secondary-fixed-variant": "#3a485b",
+              "error-container": "#ffdad6",
+              "on-primary-fixed-variant": "#293ca0",
+              "primary-container": "#3f51b5",
+              "error": "#ba1a1a",
+              "inverse-surface": "#213145",
+              "surface-tint": "#4355b9",
+              "on-secondary-container": "#57657a",
+              "on-surface": "#0b1c30",
+              "on-tertiary-container": "#ffc7a2",
+              "on-secondary": "#ffffff",
+              "tertiary-container": "#8f4700",
+              "surface-variant": "#d3e4fe",
+              "tertiary-fixed": "#ffdcc6",
+              "surface-container-high": "#dce9ff",
+              "tertiary-fixed-dim": "#ffb784",
+              "on-primary-container": "#cacfff",
+              "primary-fixed-dim": "#bac3ff",
+              "outline": "#757684",
+              "surface-bright": "#f8f9ff",
+              "inverse-on-surface": "#eaf1ff",
+              "on-tertiary-fixed": "#301400",
+              "surface-container": "#e5eeff",
+              "primary-fixed": "#dee0ff"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9ff;
+        }
+        .editorial-shadow {
+            box-shadow: 0 20px 40px rgba(11, 28, 48, 0.04);
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+        }
+    </style>
+</head>
+<body class="text-on-surface bg-background">
+<!-- SideNavBar Anchor -->
+<aside class="fixed left-0 top-0 h-screen w-72 bg-[#eff4ff] dark:bg-[#0b1c30] flex flex-col p-6 space-y-8 z-50">
+<div class="flex flex-col gap-1 px-2">
+<span class="text-2xl font-black text-[#24389c] dark:text-[#f8f9ff] font-headline">TutorFlow</span>
+</div>
+<nav class="flex-1 space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 text-[#454652] dark:text-[#c5c5d4] hover:bg-[#d3e4fe] dark:hover:bg-[#1a2b42] rounded-lg transition-all hover:translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-manrope font-semibold tracking-tight">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-[#454652] dark:text-[#c5c5d4] hover:bg-[#d3e4fe] dark:hover:bg-[#1a2b42] rounded-lg transition-all hover:translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="folder_shared">folder_shared</span>
+<span class="font-manrope font-semibold tracking-tight">Projects</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-[#ffffff] dark:bg-[#1a2b42] text-[#24389c] dark:text-[#d3e4fe] rounded-lg font-bold shadow-none hover:translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="analytics" style="font-variation-settings: 'FILL' 1;">analytics</span>
+<span class="font-manrope font-semibold tracking-tight">Reports</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-[#454652] dark:text-[#c5c5d4] hover:bg-[#d3e4fe] dark:hover:bg-[#1a2b42] rounded-lg transition-all hover:translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-manrope font-semibold tracking-tight">Settings</span>
+</a>
+</nav>
+<div class="pt-6 border-t border-outline-variant/20 flex flex-col space-y-2">
+<a class="flex items-center gap-3 px-4 py-2 text-[#454652] hover:bg-[#d3e4fe] rounded-lg transition-all text-sm font-medium" href="#">
+<span class="material-symbols-outlined text-xl" data-icon="help">help</span>
+<span>Support</span>
+</a>
+</div>
+</aside>
+<!-- TopNavBar Anchor -->
+<header class="fixed top-0 right-0 left-72 h-20 z-40 flex items-center justify-between px-10 w-full bg-[#f8f9ff]/80 backdrop-blur-xl shadow-sm">
+<div class="flex items-center gap-8 flex-1">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-xl">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-full py-2 pl-11 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none" placeholder="Search reports or sessions..." type="text"/>
+</div>
+<nav class="flex items-center gap-6">
+<a class="text-[#24389c] font-bold border-b-2 border-[#24389c] pb-1 font-manrope text-sm" href="#">All Projects</a>
+<a class="text-[#454652] hover:text-[#3f51b5] font-manrope text-sm transition-colors" href="#">Active Sessions</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1">
+<button class="hover:bg-[#eff4ff] rounded-full p-2 transition-all active:opacity-80">
+<span class="material-symbols-outlined text-[#3f51b5]" data-icon="notifications">notifications</span>
+</button>
+<button class="hover:bg-[#eff4ff] rounded-full p-2 transition-all active:opacity-80">
+<span class="material-symbols-outlined text-[#3f51b5]" data-icon="history">history</span>
+</button>
+</div>
+<button class="bg-gradient-to-br from-primary to-primary-container text-white px-5 py-2 rounded-lg font-manrope font-bold text-sm shadow-md active:scale-95 transition-all">
+                Start Timer
+            </button>
+</div>
+</header>
+<!-- Main Content -->
+<main class="ml-72 pt-32 px-12 pb-20">
+<!-- Page Header -->
+<div class="mb-12">
+<h1 class="font-headline text-5xl font-extrabold text-on-surface tracking-tight mb-2">Reports &amp; Exports</h1>
+<p class="text-on-surface-variant text-lg max-w-2xl font-body leading-relaxed">Analyze performance trends and generate professional documentation for your billing and session history.</p>
+</div>
+<!-- Filters Grid -->
+<section class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+<div class="bg-surface-container-low p-6 rounded-xl flex flex-col gap-3">
+<label class="text-xs font-bold text-primary uppercase tracking-widest">Select Project</label>
+<div class="relative">
+<select class="w-full bg-surface-container-lowest border-none rounded-lg py-3 px-4 text-sm appearance-none focus:ring-2 focus:ring-primary/10 cursor-pointer font-medium">
+<option>All Projects</option>
+<option>Advanced Calculus Prep</option>
+<option>Organic Chemistry Lab</option>
+<option>Classical Literature</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">expand_more</span>
+</div>
+</div>
+<div class="bg-surface-container-low p-6 rounded-xl flex flex-col gap-3">
+<label class="text-xs font-bold text-primary uppercase tracking-widest">Billing Period</label>
+<div class="relative">
+<select class="w-full bg-surface-container-lowest border-none rounded-lg py-3 px-4 text-sm appearance-none focus:ring-2 focus:ring-primary/10 cursor-pointer font-medium">
+<option>Last 6 Months</option>
+<option>Current Quarter</option>
+<option>Fiscal Year 2023</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">calendar_month</span>
+</div>
+</div>
+<div class="col-span-1 md:col-span-2 bg-surface-container-highest/30 p-6 rounded-xl flex items-center justify-between border border-primary/5">
+<div>
+<h3 class="text-on-surface font-headline font-bold text-xl">Quick Summaries</h3>
+<p class="text-on-surface-variant text-sm">Download comprehensive annual overview</p>
+</div>
+<button class="bg-primary text-on-primary px-6 py-3 rounded-lg font-bold text-sm flex items-center gap-2 hover:shadow-lg transition-all active:scale-95">
+<span class="material-symbols-outlined text-lg">download</span>
+                    Full Archive
+                </button>
+</div>
+</section>
+<!-- Reports Bento Table -->
+<div class="bg-surface-container-low rounded-2xl overflow-hidden editorial-shadow">
+<div class="p-8 flex items-center justify-between bg-surface-container-low border-b border-outline-variant/10">
+<h2 class="font-headline font-bold text-2xl">Monthly Breakdowns</h2>
+<div class="flex gap-2">
+<button class="bg-surface-container-lowest p-2 rounded-lg text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">filter_list</span>
+</button>
+<button class="bg-surface-container-lowest p-2 rounded-lg text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">grid_view</span>
+</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="text-on-surface-variant uppercase text-[10px] font-bold tracking-[0.2em]">
+<th class="px-8 py-6">Month / Period</th>
+<th class="px-8 py-6">Project Name</th>
+<th class="px-8 py-6">Total Hours</th>
+<th class="px-8 py-6">Sessions</th>
+<th class="px-8 py-6">Gross Amount</th>
+<th class="px-8 py-6 text-right">Action</th>
+</tr>
+</thead>
+<tbody class="text-sm font-body divide-y divide-outline-variant/5">
+<!-- Row 1 -->
+<tr class="group hover:bg-surface-container-lowest transition-colors">
+<td class="px-8 py-6">
+<span class="font-bold text-on-surface">October 2023</span>
+</td>
+<td class="px-8 py-6">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<span class="font-semibold">Advanced Calculus Prep</span>
+</div>
+</td>
+<td class="px-8 py-6">
+<span class="text-on-surface-variant">42.5 hrs</span>
+</td>
+<td class="px-8 py-6">
+<span class="px-3 py-1 bg-secondary-fixed text-on-secondary-fixed rounded-full text-xs font-bold">12 sessions</span>
+</td>
+<td class="px-8 py-6">
+<span class="font-bold text-on-surface">$2,550.00</span>
+</td>
+<td class="px-8 py-6 text-right">
+<button class="inline-flex items-center gap-2 text-primary font-bold hover:underline transition-all">
+<span class="material-symbols-outlined text-lg">picture_as_pdf</span>
+                                    Export to PDF
+                                </button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="group hover:bg-surface-container-lowest transition-colors">
+<td class="px-8 py-6">
+<span class="font-bold text-on-surface">September 2023</span>
+</td>
+<td class="px-8 py-6">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-tertiary"></div>
+<span class="font-semibold">Organic Chemistry Lab</span>
+</div>
+</td>
+<td class="px-8 py-6">
+<span class="text-on-surface-variant">38.0 hrs</span>
+</td>
+<td class="px-8 py-6">
+<span class="px-3 py-1 bg-secondary-fixed text-on-secondary-fixed rounded-full text-xs font-bold">10 sessions</span>
+</td>
+<td class="px-8 py-6">
+<span class="font-bold text-on-surface">$2,280.00</span>
+</td>
+<td class="px-8 py-6 text-right">
+<button class="inline-flex items-center gap-2 text-primary font-bold hover:underline transition-all">
+<span class="material-symbols-outlined text-lg">picture_as_pdf</span>
+                                    Export to PDF
+                                </button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="group hover:bg-surface-container-lowest transition-colors">
+<td class="px-8 py-6">
+<span class="font-bold text-on-surface">September 2023</span>
+</td>
+<td class="px-8 py-6">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-primary-container"></div>
+<span class="font-semibold">Classical Literature</span>
+</div>
+</td>
+<td class="px-8 py-6">
+<span class="text-on-surface-variant">15.5 hrs</span>
+</td>
+<td class="px-8 py-6">
+<span class="px-3 py-1 bg-secondary-fixed text-on-secondary-fixed rounded-full text-xs font-bold">4 sessions</span>
+</td>
+<td class="px-8 py-6">
+<span class="font-bold text-on-surface">$930.00</span>
+</td>
+<td class="px-8 py-6 text-right">
+<button class="inline-flex items-center gap-2 text-primary font-bold hover:underline transition-all">
+<span class="material-symbols-outlined text-lg">picture_as_pdf</span>
+                                    Export to PDF
+                                </button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="group hover:bg-surface-container-lowest transition-colors">
+<td class="px-8 py-6">
+<span class="font-bold text-on-surface">August 2023</span>
+</td>
+<td class="px-8 py-6">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<span class="font-semibold">Advanced Calculus Prep</span>
+</div>
+</td>
+<td class="px-8 py-6">
+<span class="text-on-surface-variant">29.0 hrs</span>
+</td>
+<td class="px-8 py-6">
+<span class="px-3 py-1 bg-secondary-fixed text-on-secondary-fixed rounded-full text-xs font-bold">8 sessions</span>
+</td>
+<td class="px-8 py-6">
+<span class="font-bold text-on-surface">$1,740.00</span>
+</td>
+<td class="px-8 py-6 text-right">
+<button class="inline-flex items-center gap-2 text-primary font-bold hover:underline transition-all">
+<span class="material-symbols-outlined text-lg">picture_as_pdf</span>
+                                    Export to PDF
+                                </button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-8 bg-surface-container-lowest/50 border-t border-outline-variant/5 flex items-center justify-between">
+<span class="text-xs font-medium text-on-surface-variant">Showing 4 of 24 monthly reports</span>
+<div class="flex gap-4">
+<button class="text-on-surface-variant font-bold text-sm hover:text-primary transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-lg">chevron_left</span>
+                        Previous
+                    </button>
+<button class="text-primary font-bold text-sm hover:underline transition-all flex items-center gap-1">
+                        Next
+                        <span class="material-symbols-outlined text-lg">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Analytics Visual Section -->
+<section class="mt-12 grid grid-cols-1 lg:grid-cols-3 gap-8">
+<div class="lg:col-span-2 bg-primary-container/10 rounded-2xl p-8 relative overflow-hidden group">
+<div class="relative z-10">
+<h3 class="font-headline font-bold text-2xl text-primary mb-2">Annual Trend Analysis</h3>
+<p class="text-on-surface-variant text-sm mb-6 max-w-sm">Hours across all projects are up by 14% compared to last year's average.</p>
+<div class="flex items-end gap-2 h-32">
+<div class="w-full bg-primary/20 h-[40%] rounded-t-sm group-hover:bg-primary/40 transition-all duration-500"></div>
+<div class="w-full bg-primary/20 h-[60%] rounded-t-sm group-hover:bg-primary/40 transition-all duration-500"></div>
+<div class="w-full bg-primary/20 h-[30%] rounded-t-sm group-hover:bg-primary/40 transition-all duration-500"></div>
+<div class="w-full bg-primary/20 h-[90%] rounded-t-sm group-hover:bg-primary/40 transition-all duration-500"></div>
+<div class="w-full bg-primary/20 h-[75%] rounded-t-sm group-hover:bg-primary/40 transition-all duration-500"></div>
+<div class="w-full bg-primary/20 h-[100%] rounded-t-sm group-hover:bg-primary/40 transition-all duration-500"></div>
+</div>
+</div>
+<!-- Abstract Texture -->
+<div class="absolute -right-16 -bottom-16 w-64 h-64 bg-primary/5 rounded-full blur-3xl"></div>
+</div>
+<div class="bg-surface-container-highest p-8 rounded-2xl flex flex-col justify-between editorial-shadow">
+<div>
+<span class="material-symbols-outlined text-primary text-4xl mb-4" data-icon="auto_awesome" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<h3 class="font-headline font-bold text-xl mb-2">Smart Insights</h3>
+<p class="text-on-surface-variant text-sm leading-relaxed">Based on your October activity, you are on track to exceed your quarterly goal by 12 hours.</p>
+</div>
+<button class="mt-6 text-primary font-bold text-sm flex items-center gap-2 group">
+                    View full forecast
+                    <span class="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+</div>
+</section>
+</main>
+<!-- Export Shroud (Conditional UI Concept) -->
+<div class="fixed inset-0 bg-surface-dim/60 backdrop-blur-md z-[100] hidden flex items-center justify-center">
+<div class="bg-surface-container-lowest p-10 rounded-2xl shadow-2xl max-w-md w-full text-center">
+<span class="material-symbols-outlined text-6xl text-primary mb-6 animate-pulse">downloading</span>
+<h2 class="font-headline font-bold text-2xl mb-2">Preparing Your Report</h2>
+<p class="text-on-surface-variant mb-8">We're gathering all project details and monthly tallies for October 2023.</p>
+<div class="w-full bg-surface-container-low h-2 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[65%] rounded-full"></div>
+</div>
+</div>
+</div>
+</body></html>

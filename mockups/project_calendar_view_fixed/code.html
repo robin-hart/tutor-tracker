@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Math Grade 10 - TutorFlow</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-error-container": "#93000a",
+              "on-primary": "#ffffff",
+              "on-primary-fixed": "#00105c",
+              "surface-container-lowest": "#ffffff",
+              "secondary-fixed": "#d5e3fc",
+              "on-background": "#0b1c30",
+              "tertiary": "#6c3400",
+              "secondary-container": "#d5e3fc",
+              "inverse-primary": "#bac3ff",
+              "primary": "#24389c",
+              "on-surface-variant": "#454652",
+              "surface-container-low": "#eff4ff",
+              "on-error": "#ffffff",
+              "outline-variant": "#c5c5d4",
+              "secondary-fixed-dim": "#b9c7df",
+              "on-tertiary": "#ffffff",
+              "surface-container-highest": "#d3e4fe",
+              "secondary": "#515f74",
+              "surface": "#f8f9ff",
+              "background": "#f8f9ff",
+              "on-tertiary-fixed-variant": "#713700",
+              "on-secondary-fixed": "#0d1c2e",
+              "surface-dim": "#cbdbf5",
+              "on-secondary-fixed-variant": "#3a485b",
+              "error-container": "#ffdad6",
+              "on-primary-fixed-variant": "#293ca0",
+              "primary-container": "#3f51b5",
+              "error": "#ba1a1a",
+              "inverse-surface": "#213145",
+              "surface-tint": "#4355b9",
+              "on-secondary-container": "#57657a",
+              "on-surface": "#0b1c30",
+              "on-tertiary-container": "#ffc7a2",
+              "on-secondary": "#ffffff",
+              "tertiary-container": "#8f4700",
+              "surface-variant": "#d3e4fe",
+              "tertiary-fixed": "#ffdcc6",
+              "surface-container-high": "#dce9ff",
+              "tertiary-fixed-dim": "#ffb784",
+              "on-primary-container": "#cacfff",
+              "primary-fixed-dim": "#bac3ff",
+              "outline": "#757684",
+              "surface-bright": "#f8f9ff",
+              "inverse-on-surface": "#eaf1ff",
+              "on-tertiary-fixed": "#301400",
+              "surface-container": "#e5eeff",
+              "primary-fixed": "#dee0ff"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.5rem", "lg": "0.75rem", "xl": "1rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4 { font-family: 'Manrope', sans-serif; }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body">
+<!-- SideNavBar: Clean & High-Fidelity -->
+<aside class="fixed left-0 top-0 h-screen w-72 bg-[#eff4ff] dark:bg-[#0b1c30] flex flex-col p-6 space-y-8 z-50">
+<div class="flex items-center gap-3 px-2">
+<div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white">
+<span class="material-symbols-outlined">menu_book</span>
+</div>
+<div>
+<h1 class="text-2xl font-black text-[#24389c] dark:text-[#f8f9ff]">TutorFlow</h1>
+<p class="text-[10px] uppercase tracking-widest text-[#454652] opacity-60 font-bold">Premium Tracking</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-[#454652] dark:text-[#c5c5d4] hover:bg-[#d3e4fe] dark:hover:bg-[#1a2b42] rounded-lg transition-all hover:translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined text-xl">dashboard</span>
+<span class="font-manrope font-semibold tracking-tight">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-[#ffffff] dark:bg-[#1a2b42] text-[#24389c] dark:text-[#d3e4fe] rounded-lg font-bold shadow-sm" href="#">
+<span class="material-symbols-outlined text-xl">folder_shared</span>
+<span class="font-manrope font-semibold tracking-tight">Projects</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-[#454652] dark:text-[#c5c5d4] hover:bg-[#d3e4fe] dark:hover:bg-[#1a2b42] rounded-lg transition-all hover:translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined text-xl">analytics</span>
+<span class="font-manrope font-semibold tracking-tight">Reports</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-[#454652] dark:text-[#c5c5d4] hover:bg-[#d3e4fe] dark:hover:bg-[#1a2b42] rounded-lg transition-all hover:translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined text-xl">settings</span>
+<span class="font-manrope font-semibold tracking-tight">Settings</span>
+</a>
+</nav>
+<div class="space-y-4">
+<button class="w-full bg-gradient-to-br from-primary to-primary-container text-white py-4 rounded-xl font-bold shadow-lg active:scale-95 transition-all">
+            Log Hours
+        </button>
+<div class="pt-6 border-t border-outline-variant/20">
+<a class="flex items-center gap-3 px-4 py-3 text-[#454652] dark:text-[#c5c5d4] hover:bg-[#d3e4fe] dark:hover:bg-[#1a2b42] rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-manrope font-semibold tracking-tight">Support</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-72 min-h-screen relative">
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 left-72 h-20 z-40 bg-[#f8f9ff]/80 dark:bg-[#0b1c30]/80 backdrop-blur-xl flex items-center justify-between px-10 w-full border-b border-outline-variant/10">
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2">
+<span class="text-on-surface-variant text-sm">Projects</span>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+<span class="font-bold text-primary font-manrope">Math Grade 10</span>
+</div>
+<div class="h-6 w-px bg-outline-variant/30"></div>
+<nav class="flex gap-8">
+<a class="text-[#24389c] dark:text-[#f8f9ff] font-bold border-b-2 border-[#24389c] dark:border-[#f8f9ff] pb-1 font-manrope text-sm" href="#">Overview</a>
+<a class="text-[#454652] dark:text-[#c5c5d4] hover:text-primary font-manrope text-sm transition-all" href="#">Files</a>
+<a class="text-[#454652] dark:text-[#c5c5d4] hover:text-primary font-manrope text-sm transition-all" href="#">Students</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="bg-primary text-white px-6 py-2.5 rounded-full font-bold text-sm active:opacity-80 transition-opacity flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">play_arrow</span>
+                Start Timer
+            </button>
+</div>
+</header>
+<!-- Project Canvas -->
+<div class="pt-32 px-12 pb-20 space-y-12">
+<!-- Header & Key Stats -->
+<section class="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-8">
+<div class="space-y-2">
+<span class="text-primary font-bold tracking-[0.2em] uppercase text-xs">Active Tutoring Project</span>
+<h2 class="text-6xl font-extrabold tracking-tighter text-on-surface leading-none">
+                    Math Grade 10<br/>
+<span class="text-outline/40">Advanced Calculus</span>
+</h2>
+</div>
+<div class="flex gap-16 bg-surface-container-low/50 p-8 rounded-2xl border border-white/40">
+<div>
+<p class="text-on-surface-variant font-medium text-sm mb-1">Total Hours</p>
+<p class="text-5xl font-black text-on-surface tracking-tight">124.5</p>
+</div>
+<div class="w-px h-12 bg-outline-variant/30 self-center"></div>
+<div>
+<p class="text-on-surface-variant font-medium text-sm mb-1">This Month</p>
+<p class="text-5xl font-black text-primary tracking-tight">18.2</p>
+</div>
+</div>
+</section>
+<!-- Main Layout: Bento Style -->
+<div class="grid grid-cols-12 gap-8">
+<!-- Calendar Section -->
+<div class="col-span-12 lg:col-span-8 bg-surface-container-lowest rounded-2xl p-8 shadow-sm border border-outline-variant/10">
+<div class="flex items-center justify-between mb-10">
+<div class="flex items-center gap-6">
+<h3 class="text-2xl font-black text-on-surface font-manrope">October 2023</h3>
+<div class="flex bg-surface-container-low p-1 rounded-lg">
+<button class="p-1 hover:bg-white hover:shadow-sm rounded transition-all">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="p-1 hover:bg-white hover:shadow-sm rounded transition-all">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+<div class="flex bg-surface-container-low p-1 rounded-lg">
+<button class="px-5 py-2 bg-white shadow-sm rounded-md text-xs font-bold text-primary">Month</button>
+<button class="px-5 py-2 text-on-surface-variant text-xs font-bold hover:text-on-surface">Week</button>
+</div>
+</div>
+<!-- Calendar Grid -->
+<div class="calendar-grid gap-px bg-outline-variant/10 rounded-xl overflow-hidden border border-outline-variant/10">
+<!-- Days Header -->
+<div class="bg-surface-container-low/30 text-center text-[10px] font-black text-outline uppercase tracking-widest py-3">Mon</div>
+<div class="bg-surface-container-low/30 text-center text-[10px] font-black text-outline uppercase tracking-widest py-3">Tue</div>
+<div class="bg-surface-container-low/30 text-center text-[10px] font-black text-outline uppercase tracking-widest py-3">Wed</div>
+<div class="bg-surface-container-low/30 text-center text-[10px] font-black text-outline uppercase tracking-widest py-3">Thu</div>
+<div class="bg-surface-container-low/30 text-center text-[10px] font-black text-outline uppercase tracking-widest py-3">Fri</div>
+<div class="bg-surface-container-low/30 text-center text-[10px] font-black text-outline uppercase tracking-widest py-3">Sat</div>
+<div class="bg-surface-container-low/30 text-center text-[10px] font-black text-outline uppercase tracking-widest py-3">Sun</div>
+<!-- Days (October Mockup) -->
+<!-- Week 1 -->
+<div class="bg-white aspect-square p-3 group cursor-pointer hover:bg-surface-container-low transition-colors"><span class="text-xs font-medium text-outline/40">25</span></div>
+<div class="bg-white aspect-square p-3 group cursor-pointer hover:bg-surface-container-low transition-colors"><span class="text-xs font-medium text-outline/40">26</span></div>
+<div class="bg-white aspect-square p-3 group cursor-pointer hover:bg-surface-container-low transition-colors"><span class="text-xs font-medium text-outline/40">27</span></div>
+<div class="bg-white aspect-square p-3 group cursor-pointer hover:bg-surface-container-low transition-colors"><span class="text-xs font-medium text-outline/40">28</span></div>
+<div class="bg-white aspect-square p-3 group cursor-pointer hover:bg-surface-container-low transition-colors"><span class="text-xs font-medium text-outline/40">29</span></div>
+<div class="bg-white aspect-square p-3 group cursor-pointer hover:bg-surface-container-low transition-colors"><span class="text-xs font-medium text-outline/40">30</span></div>
+<div class="bg-white aspect-square p-3 group cursor-pointer hover:bg-surface-container-low transition-colors"><span class="text-xs font-bold">1</span></div>
+<!-- Week 2 -->
+<div class="bg-white aspect-square p-3 group cursor-pointer hover:bg-surface-container-low transition-colors"><span class="text-xs font-bold">2</span></div>
+<div class="bg-white aspect-square p-3 group cursor-pointer hover:bg-surface-container-low transition-colors"><span class="text-xs font-bold">3</span></div>
+<div class="bg-white aspect-square p-3 group cursor-pointer hover:bg-surface-container-low transition-colors"><span class="text-xs font-bold">4</span></div>
+<!-- Current Day: 5th -->
+<div class="bg-primary/5 aspect-square p-3 ring-2 ring-primary/20 relative z-10">
+<span class="text-xs font-black text-primary">5</span>
+<div class="mt-2 text-[9px] bg-primary text-white p-1.5 rounded-md leading-tight font-bold shadow-sm">14:00 Session</div>
+</div>
+<div class="bg-white aspect-square p-3 group cursor-pointer hover:bg-surface-container-low transition-colors"><span class="text-xs font-bold">6</span></div>
+<div class="bg-white aspect-square p-3 group cursor-pointer hover:bg-surface-container-low transition-colors"><span class="text-xs font-bold">7</span></div>
+<div class="bg-white aspect-square p-3 group cursor-pointer hover:bg-surface-container-low transition-colors"><span class="text-xs font-bold">8</span></div>
+<!-- Week 3 -->
+<div class="bg-white aspect-square p-3 group cursor-pointer hover:bg-surface-container-low transition-colors"><span class="text-xs font-bold">9</span></div>
+<div class="bg-white aspect-square p-3 group cursor-pointer hover:bg-surface-container-low transition-colors"><span class="text-xs font-bold">10</span></div>
+<div class="bg-white aspect-square p-3 group cursor-pointer hover:bg-surface-container-low transition-colors">
+<span class="text-xs font-bold">11</span>
+<div class="mt-2 text-[9px] bg-secondary-container text-on-secondary-container p-1.5 rounded-md leading-tight font-bold">16:30 Prep</div>
+</div>
+<div class="bg-white aspect-square p-3 group cursor-pointer hover:bg-surface-container-low transition-colors"><span class="text-xs font-bold">12</span></div>
+<div class="bg-white aspect-square p-3 group cursor-pointer hover:bg-surface-container-low transition-colors"><span class="text-xs font-bold">13</span></div>
+<div class="bg-white aspect-square p-3 group cursor-pointer hover:bg-surface-container-low transition-colors"><span class="text-xs font-bold">14</span></div>
+<div class="bg-white aspect-square p-3 group cursor-pointer hover:bg-surface-container-low transition-colors"><span class="text-xs font-bold">15</span></div>
+</div>
+</div>
+<!-- Sidebar Contextual Details -->
+<div class="col-span-12 lg:col-span-4 space-y-8">
+<!-- Today's Slots -->
+<div class="bg-surface-container-low rounded-2xl p-8 border border-white/40 shadow-sm">
+<div class="flex items-center justify-between mb-8">
+<h3 class="text-xl font-black text-on-surface font-manrope">Today's Slots</h3>
+<button class="bg-white p-2 rounded-lg text-primary shadow-sm hover:scale-105 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-xl">add</span>
+</button>
+</div>
+<div class="space-y-4">
+<!-- Slot 1 -->
+<div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-primary group hover:translate-x-1 transition-transform cursor-pointer">
+<div class="flex justify-between items-start mb-2">
+<h4 class="font-bold text-on-surface text-sm">Equation Review</h4>
+<span class="text-[10px] bg-primary/10 text-primary px-2.5 py-1 rounded-full font-black">14:00</span>
+</div>
+<p class="text-xs text-on-surface-variant leading-relaxed">Focusing on quadratic systems and graphing techniques.</p>
+</div>
+<!-- Slot 2 -->
+<div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-tertiary group hover:translate-x-1 transition-transform cursor-pointer">
+<div class="flex justify-between items-start mb-2">
+<h4 class="font-bold text-on-surface text-sm">Homework Audit</h4>
+<span class="text-[10px] bg-tertiary/10 text-tertiary px-2.5 py-1 rounded-full font-black">17:15</span>
+</div>
+<p class="text-xs text-on-surface-variant leading-relaxed">Reviewing Module 4 assignments for Sarah Jenkins.</p>
+</div>
+</div>
+<!-- Deep Work Mode CTA -->
+<div class="mt-12 p-8 bg-gradient-to-br from-[#24389c] to-[#3f51b5] rounded-2xl text-white relative overflow-hidden shadow-xl group">
+<span class="material-symbols-outlined absolute -right-6 -bottom-6 text-[160px] opacity-10 group-hover:rotate-12 transition-transform duration-700">timer</span>
+<div class="relative z-10">
+<p class="text-xs font-bold uppercase tracking-widest opacity-70 mb-2">Ready for focus?</p>
+<h4 class="text-2xl font-black mb-6 leading-tight">Deep Work<br/>Shroud Mode</h4>
+<button class="w-full bg-white text-primary px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg hover:shadow-2xl active:scale-95 transition-all">
+                                Enter Shroud
+                            </button>
+</div>
+</div>
+</div>
+<!-- Project Details -->
+<div class="bg-surface-container-highest/20 rounded-2xl p-8 border border-outline-variant/10">
+<h3 class="text-[10px] font-black text-outline uppercase tracking-widest mb-8">Project Specifications</h3>
+<div class="space-y-6">
+<div class="flex items-center gap-5">
+<div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-primary shadow-sm border border-outline-variant/10">
+<span class="material-symbols-outlined">person</span>
+</div>
+<div>
+<p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-0.5">Primary Student</p>
+<p class="font-black text-on-surface">Sarah Jenkins</p>
+</div>
+</div>
+<div class="flex items-center gap-5">
+<div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-primary shadow-sm border border-outline-variant/10">
+<span class="material-symbols-outlined">payments</span>
+</div>
+<div>
+<p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-0.5">Hourly Rate</p>
+<p class="font-black text-on-surface">$65.00 / hr</p>
+</div>
+</div>
+<div class="flex items-center gap-5">
+<div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-primary shadow-sm border border-outline-variant/10">
+<span class="material-symbols-outlined">history</span>
+</div>
+<div>
+<p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-0.5">Last Session</p>
+<p class="font-black text-on-surface">Oct 2, 2023</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Floating Action Button -->
+<button class="fixed bottom-10 right-10 w-16 h-16 bg-primary text-white rounded-2xl shadow-2xl flex items-center justify-center hover:scale-110 active:scale-90 transition-all z-50 group">
+<span class="material-symbols-outlined text-3xl group-hover:rotate-90 transition-transform duration-300">add</span>
+</button>
+</body></html>

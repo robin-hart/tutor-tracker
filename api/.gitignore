@@ -1,0 +1,15 @@
+# Maven build output
+/target/
+
+# Java bytecode and archives
+*.class
+*.jar
+*.war
+*.ear
+
+# IDE files
+*.iml
+
+# Local app overrides
+application-local.yml
+application-local.properties
