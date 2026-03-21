@@ -1,7 +1,7 @@
 <template>
   <div class="bg-surface text-on-surface font-body min-h-screen">
     <AppSidebar />
-    <MainTopBar search-placeholder="Search sessions...">
+    <MainTopBar v-model="searchText" search-placeholder="Search slots...">
       <template #tabs>
         <nav class="flex gap-8">
           <a class="text-primary font-bold border-b-2 border-primary pb-1 font-manrope text-sm">Calendar</a>
@@ -39,7 +39,56 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-12 gap-8">
+      <section v-if="hasActiveSearch" class="bg-surface-container-lowest rounded-2xl p-8 shadow-sm">
+        <div class="flex items-center justify-between mb-6 gap-4">
+          <h3 class="text-2xl font-black font-manrope">Search Results</h3>
+          <span class="text-sm text-on-surface-variant">{{ filteredSlotResults.length }} slot{{ filteredSlotResults.length === 1 ? '' : 's' }} found</span>
+        </div>
+
+        <div class="space-y-4">
+          <article v-for="slot in filteredSlotResults" :key="slot.id" class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-primary">
+            <div class="flex justify-between items-start mb-2 gap-3">
+              <div>
+                <p class="text-[11px] text-on-surface-variant font-bold mb-1">{{ slot.date }}</p>
+                <h4 class="font-bold text-sm">{{ slot.title }}</h4>
+              </div>
+              <span class="text-[10px] bg-primary/10 text-primary px-2.5 py-1 rounded-full font-black">{{ formatTime(slot.startTime) }}</span>
+            </div>
+            <p class="text-[11px] text-on-surface-variant font-bold mb-2">{{ formatPeriod(slot.startTime, slot.durationMinutes) }}</p>
+            <p class="text-xs text-on-surface-variant">{{ slot.description || 'No details provided.' }}</p>
+            <div class="mt-3 flex items-center gap-2">
+              <RouterLink
+                :to="{
+                  name: 'timeslot-editor',
+                  query: {
+                    projectId,
+                    timeslotId: slot.id,
+                    date: slot.date,
+                    startTime: slot.startTime,
+                    month: monthKey
+                  }
+                }"
+                class="text-[11px] font-black px-2.5 py-1.5 rounded-md bg-surface-container-low"
+              >
+                Edit
+              </RouterLink>
+              <button
+                type="button"
+                class="text-[11px] font-black px-2.5 py-1.5 rounded-md bg-error/10 text-error"
+                @click="openDeleteConfirm(slot)"
+              >
+                Delete
+              </button>
+            </div>
+          </article>
+        </div>
+
+        <p v-if="!isLoading && filteredSlotResults.length === 0" class="text-sm text-on-surface-variant mt-6">
+          No slots found for this search.
+        </p>
+      </section>
+
+      <div v-else class="grid grid-cols-12 gap-8">
         <div class="col-span-12 lg:col-span-8 bg-surface-container-lowest rounded-2xl p-8 shadow-sm">
           <div class="flex items-center justify-between mb-8 gap-4">
             <h3 class="text-2xl font-black font-manrope">{{ monthLabel }}</h3>
@@ -174,6 +223,7 @@ const monthHours = ref(0);
 const monthSlots = ref([]);
 const isLoading = ref(false);
 const errorMessage = ref('');
+const searchText = ref('');
 const activeMonth = ref(parseMonthFromQuery(route.query.month));
 const selectedDate = ref('');
 const showDeleteConfirm = ref(false);
@@ -210,6 +260,28 @@ const selectedDaySlots = computed(() => {
   return monthSlots.value
     .filter((slot) => slot.date === selectedDate.value)
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
+});
+
+const hasActiveSearch = computed(() => searchText.value.trim().length > 0);
+
+const filteredSlotResults = computed(() => {
+  const query = searchText.value.toLowerCase().trim();
+  if (!query) {
+    return monthSlots.value;
+  }
+
+  return monthSlots.value
+    .filter((slot) => {
+      const haystack = [slot.title, slot.description, slot.date, slot.startTime]
+        .map((item) => String(item || '').toLowerCase())
+        .join(' ');
+      return haystack.includes(query);
+    })
+    .sort((left, right) => {
+      const leftKey = `${left.date} ${left.startTime}`;
+      const rightKey = `${right.date} ${right.startTime}`;
+      return leftKey.localeCompare(rightKey);
+    });
 });
 
 const selectedDayTitle = computed(() => {

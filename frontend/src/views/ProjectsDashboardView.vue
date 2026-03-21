@@ -1,7 +1,7 @@
 <template>
   <div class="bg-surface font-body text-on-surface min-h-screen">
     <AppSidebar />
-    <MainTopBar search-placeholder="Search projects...">
+    <MainTopBar v-model="searchText" search-placeholder="Search projects..." :search-disabled="apiUnavailable">
       <template #tabs>
         <nav class="flex gap-6">
           <a class="text-primary font-bold border-b-2 border-primary pb-1 font-manrope text-sm">All Projects</a>
@@ -102,14 +102,7 @@
         </div>
       </div>
 
-      <section class="mb-6 flex items-center justify-between gap-4">
-        <input
-          v-model.trim="searchText"
-          class="w-full max-w-md bg-surface-container-lowest rounded-xl px-4 py-3 border-none focus:ring-2 focus:ring-primary/20"
-          placeholder="Filter projects by name or category"
-          type="text"
-          :disabled="apiUnavailable"
-        />
+      <section class="mb-6 flex items-center justify-end gap-4">
         <span class="text-sm text-on-surface-variant">{{ filteredProjects.length }} shown</span>
       </section>
 

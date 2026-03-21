@@ -7,6 +7,9 @@
           class="pl-10 pr-4 py-2 bg-surface-container-highest border-none rounded-full w-64 focus:ring-2 focus:ring-primary/20 focus:bg-surface-bright transition-all text-sm font-body"
           :placeholder="searchPlaceholder"
           type="text"
+          :value="modelValue"
+          :disabled="searchDisabled"
+          @input="onSearchInput"
         />
       </div>
       <slot name="tabs" />
@@ -24,9 +27,23 @@
  * Shared top bar component with search and pluggable tab content.
  */
 defineProps({
+  modelValue: {
+    type: String,
+    default: ''
+  },
   searchPlaceholder: {
     type: String,
     default: 'Search...'
+  },
+  searchDisabled: {
+    type: Boolean,
+    default: false
   }
 });
+
+const emit = defineEmits(['update:modelValue']);
+
+function onSearchInput(event) {
+  emit('update:modelValue', event.target.value);
+}
 </script>
