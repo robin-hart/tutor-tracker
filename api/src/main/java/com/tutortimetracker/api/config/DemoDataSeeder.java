@@ -11,6 +11,7 @@ import com.tutortimetracker.api.repository.ReportRepository;
 import com.tutortimetracker.api.repository.StudentRepository;
 import com.tutortimetracker.api.repository.TimeslotRepository;
 import jakarta.annotation.PostConstruct;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -21,6 +22,7 @@ import java.util.List;
  * Seeds baseline mockup data into MariaDB on first boot.
  */
 @Component
+@Profile("!test")
 public class DemoDataSeeder {
 
     private static final String GROUP_UNGROUPED = "Ungrouped";

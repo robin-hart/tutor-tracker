@@ -48,7 +48,6 @@ Request example:
 ```json
 {
   "name": "Alex Thompson",
-  "lastActive": "just now",
   "notes": "Needs additional practice on quadratics.",
   "groupName": "Group A"
 }
@@ -154,6 +153,41 @@ set DB_PASSWORD=tutortime
 ```
 
 Note: Docker maps MariaDB to host port `3307` by default to avoid collisions with local MariaDB services on `3306`.
+
+## Testing
+
+The backend test setup is isolated from Docker and MariaDB:
+- Unit tests use Mockito (`*Test.java`).
+- Integration tests run with Spring Boot + MockMvc + in-memory H2 (`*IT.java`).
+- `test` profile disables demo seeders and legacy startup DB cleanup for deterministic tests.
+
+### Run tests
+
+Run only unit tests:
+```bash
+mvn test
+```
+
+Run unit + integration tests and generate coverage:
+```bash
+mvn verify
+```
+
+### JaCoCo coverage
+
+JaCoCo is integrated via Maven plugin:
+- collects execution data during tests
+- generates HTML/XML report during `verify`
+- enforces minimum coverage thresholds
+
+Coverage reports are generated at:
+- `target/site/jacoco/index.html` (open in browser)
+
+Current thresholds:
+- line coverage: `30%`
+- branch coverage: `20%`
+
+If thresholds are not met, `mvn verify` fails.
 
 ## CORS
 CORS is enabled for `http://localhost:5173` in `TutorDataController`.
