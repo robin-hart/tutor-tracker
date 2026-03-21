@@ -22,12 +22,63 @@
         </button>
       </section>
 
-      <section v-if="showCreateProject" class="mb-8 bg-surface-container-lowest rounded-xl p-6 grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
-        <input v-model.trim="newProject.name" class="bg-surface-container-low rounded-lg px-3 py-2" placeholder="Project name" type="text" />
-        <input v-model.trim="newProject.category" class="bg-surface-container-low rounded-lg px-3 py-2" placeholder="Category" type="text" />
-        <input v-model.number="newProject.totalHours" class="bg-surface-container-low rounded-lg px-3 py-2" placeholder="Total hours" type="number" min="0" step="0.5" />
-        <input v-model.number="newProject.monthHours" class="bg-surface-container-low rounded-lg px-3 py-2" placeholder="Month hours" type="number" min="0" step="0.5" />
-        <button @click="createNewProject" class="bg-primary text-white rounded-lg px-4 py-2 font-bold">Create</button>
+      <section v-if="showCreateProject" class="mb-8 bg-surface-container-lowest rounded-xl p-6 grid grid-cols-1 md:grid-cols-6 gap-4">
+        <div class="md:col-span-6 flex items-center justify-between">
+          <h2 class="text-lg font-bold font-headline">Create New Project</h2>
+          <button
+            type="button"
+            @click="closeCreateProject"
+            class="h-9 w-9 rounded-lg bg-surface-container-low text-on-surface hover:bg-surface-container-high flex items-center justify-center"
+            aria-label="Close create project form"
+          >
+            <span class="material-symbols-outlined text-base">close</span>
+          </button>
+        </div>
+
+        <div class="md:col-span-2">
+          <label class="text-xs text-on-surface-variant uppercase tracking-wider block mb-2">Project Name</label>
+          <input v-model.trim="newProject.name" class="w-full bg-surface-container-low rounded-lg px-3 py-2" placeholder="Project name" type="text" />
+        </div>
+
+        <div class="md:col-span-3">
+          <label class="text-xs text-on-surface-variant uppercase tracking-wider block mb-2">Category</label>
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="category in categoryOptions"
+              :key="category"
+              type="button"
+              class="px-3 py-1.5 rounded-full text-xs font-bold border transition"
+              :class="newProject.category === category && !showNewCategoryInput
+                ? 'bg-primary text-white border-primary'
+                : 'bg-surface-container-low text-on-surface border-outline-variant hover:border-primary/50'"
+              @click="selectCategory(category)"
+            >
+              {{ category }}
+            </button>
+            <button
+              type="button"
+              class="px-3 py-1.5 rounded-full text-xs font-bold border transition"
+              :class="showNewCategoryInput
+                ? 'bg-primary text-white border-primary'
+                : 'bg-surface-container-low text-on-surface border-outline-variant hover:border-primary/50'"
+              @click="openNewCategoryInput"
+            >
+              + New category
+            </button>
+          </div>
+          <input
+            v-if="showNewCategoryInput"
+            v-model.trim="newCategory"
+            class="mt-3 w-full bg-surface-container-low rounded-lg px-3 py-2"
+            placeholder="Enter new category"
+            type="text"
+          />
+        </div>
+
+        <div class="md:col-span-6 flex justify-end gap-3">
+          <button type="button" @click="closeCreateProject" class="px-4 py-2 rounded-lg bg-surface-container-low text-on-surface font-bold">Cancel</button>
+          <button @click="createNewProject" class="px-4 py-2 rounded-lg bg-primary text-white font-bold">Create</button>
+        </div>
       </section>
 
       <div class="grid grid-cols-12 gap-6 mb-12">
@@ -186,6 +237,19 @@ const newProject = ref({
 const showDeleteConfirm = ref(false);
 const projectToDelete = ref(null);
 const apiUnavailable = ref(false);
+const showNewCategoryInput = ref(false);
+const newCategory = ref('');
+
+const categoryOptions = computed(() => {
+  const categories = new Set(['GENERAL']);
+  projects.value.forEach((project) => {
+    const category = String(project?.category || '').trim();
+    if (category) {
+      categories.add(category);
+    }
+  });
+  return Array.from(categories).sort((a, b) => a.localeCompare(b));
+});
 
 const totalHours = computed(() => {
   const sum = projects.value.reduce((sum, item) => sum + Number(item.totalHours), 0);
@@ -205,18 +269,46 @@ function openCalendar(projectId) {
   router.push({ name: 'project-calendar', params: { projectId } });
 }
 
+function closeCreateProject() {
+  showCreateProject.value = false;
+  showNewCategoryInput.value = false;
+  newCategory.value = '';
+  newProject.value = { name: '', category: 'GENERAL', totalHours: 0, monthHours: 0, completionPercent: 0 };
+}
+
 async function createNewProject() {
-  if (!newProject.value.name) {
+  const resolvedCategory = showNewCategoryInput.value
+    ? newCategory.value.trim()
+    : String(newProject.value.category || '').trim();
+
+  if (!newProject.value.name || !resolvedCategory) {
     return;
   }
+
   try {
-    const created = await createProject(newProject.value);
+    const payload = {
+      ...newProject.value,
+      category: resolvedCategory,
+      totalHours: 0,
+      monthHours: 0,
+      completionPercent: 0
+    };
+    const created = await createProject(payload);
     projects.value = [created, ...projects.value];
-    newProject.value = { name: '', category: 'GENERAL', totalHours: 0, monthHours: 0, completionPercent: 0 };
-    showCreateProject.value = false;
+    closeCreateProject();
   } catch (error) {
     errorMessage.value = error.message;
   }
+}
+
+function selectCategory(category) {
+  newProject.value.category = category;
+  showNewCategoryInput.value = false;
+  newCategory.value = '';
+}
+
+function openNewCategoryInput() {
+  showNewCategoryInput.value = true;
 }
 
 /**
