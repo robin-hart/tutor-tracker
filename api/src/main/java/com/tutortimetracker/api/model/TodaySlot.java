@@ -7,5 +7,4 @@ package com.tutortimetracker.api.model;
  * @param time human-readable slot time
  * @param description slot details
  */
-public record TodaySlot(String title, String time, String description) {
-}
+public record TodaySlot(String title, String time, String description) {}

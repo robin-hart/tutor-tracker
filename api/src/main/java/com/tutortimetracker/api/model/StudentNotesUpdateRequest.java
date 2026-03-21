@@ -9,7 +9,8 @@ import jakarta.validation.constraints.NotBlank;
  * @param notes new progress notes text
  */
 public record StudentNotesUpdateRequest(
-	@Schema(description = "Updated notes text", example = "Improved in fractions and linear equations.")
-	@NotBlank String notes
-) {
-}
+    @Schema(
+            description = "Updated notes text",
+            example = "Improved in fractions and linear equations.")
+        @NotBlank
+        String notes) {}

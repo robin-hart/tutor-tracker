@@ -14,10 +14,8 @@ import jakarta.validation.constraints.NotNull;
  * @param grossAmount computed billing amount
  */
 public record ReportCreateRequest(
-        @NotBlank String month,
-        @NotBlank String projectName,
-        @NotNull @Min(0) Double totalHours,
-        @Min(0) int sessions,
-        @NotNull @Min(0) Double grossAmount
-) {
-}
+    @NotBlank String month,
+    @NotBlank String projectName,
+    @NotNull @Min(0) Double totalHours,
+    @Min(0) int sessions,
+    @NotNull @Min(0) Double grossAmount) {}

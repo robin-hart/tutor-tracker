@@ -154,107 +154,78 @@ set DB_PASSWORD=tutortime
 
 Note: Docker maps MariaDB to host port `3307` by default to avoid collisions with local MariaDB services on `3306`.
 
-## Testing
+## Quality & Testing
 
-The backend test setup is isolated from Docker and MariaDB:
-- Unit tests use Mockito (`*Test.java`).
-- Integration tests run with Spring Boot + MockMvc + in-memory H2 (`*IT.java`).
-- `test` profile disables demo seeders and legacy startup DB cleanup for deterministic tests.
+### Code Quality & Formatting
 
-### Run tests
+Backend code quality is enforced during the build via Checkstyle (style rules) and Spotless (auto-formatting):
 
-Run only unit tests:
+**Check violations:**
 ```bash
-mvn test
+mvn checkstyle:check
+mvn spotless:check
 ```
 
-Run unit + integration tests and generate coverage:
+**Auto-format code:**
 ```bash
-mvn verify
+mvn spotless:apply
 ```
 
-### JaCoCo coverage
+**Configuration:**
+- Checkstyle max line length: `100` characters
+- Formatter: google-java-format (opinionated, minimal config)
+- Quality gate runs during: `mvn verify`
 
-JaCoCo is integrated via Maven plugin:
-- collects execution data during tests
-- generates HTML/XML report during `verify`
-- enforces minimum coverage thresholds
+### Testing & Coverage
 
-Coverage reports are generated at:
-- `target/site/jacoco/index.html` (open in browser)
+The backend test setup is isolated from Docker:
+- **Unit tests** use Mockito (`*Test.java`).
+- **Integration tests** use Spring Boot + MockMvc + in-memory H2 (`*IT.java`).
+- `test` profile disables demo seeders and legacy DB cleanup for deterministic tests.
 
-Current thresholds:
-- line coverage: `30%`
-- branch coverage: `20%`
+**Run tests:**
+```bash
+mvn test                    # Unit tests only
+mvn verify                  # Unit + integration + coverage checks
+```
 
-If thresholds are not met, `mvn verify` fails.
+**Coverage:**
+- JaCoCo collects data during tests and generates reports at `target/site/jacoco/index.html`
+- Minimum thresholds: 30% line coverage, 20% branch coverage
+- Thresholds are enforced during `mvn verify`
 
 ## CORS
 CORS is enabled for `http://localhost:5173` in `TutorDataController`.
 
 ## Documentation
 
-### Scalar API Documentation
+### API Reference
 
-Interactive API reference is available via Scalar:
-
-- Scalar UI: `http://localhost:8080/scalar/index.html`
-- OpenAPI JSON: `http://localhost:8080/v3/api-docs`
-
-Run the backend and open Scalar in your browser:
-
+**Scalar UI** (interactive OpenAPI documentation):
 ```bash
 mvn spring-boot:run
+# Open: http://localhost:8080/scalar/index.html
 ```
+
+Also available at: `http://localhost:8080/v3/api-docs` (OpenAPI JSON)
 
 ### Javadoc
 
-Full API documentation is generated via Maven Javadoc plugin:
-
+Generate full API documentation:
 ```bash
 mvn javadoc:javadoc
+# View: target/site/apidocs/index.html
 ```
 
-Javadoc is organized by package with cross-references:
-- **Controller Layer** (`com.tutortimetracker.api.controller`) - REST API endpoints and request/response contracts
-- **Service Layer** (`com.tutortimetracker.api.service`) - Business logic, domain rules, and entity operations
-- **Data Models** (`com.tutortimetracker.api.model`) - Request/response DTOs and records
-- **Persistence Layer** (`com.tutortimetracker.api.repository`, `com.tutortimetracker.api.entity`) - JPA entities and database repositories
+**Includes:**
+- All public classes and methods across layers (Controllers, Services, Models, Repositories)
+- Parameter and return value documentation
+- Architecture overview with entity relationships
+- Business rules and validation constraints
 
-**Generated Documentation:**
-- Location: `target/site/apidocs/index.html`
-- Includes: 99+ HTML pages with full class hierarchies, method signatures, and documentation
-- External Links: Spring Framework, Spring Boot, Spring Data JPA, and Java 21 API documentation
-- Overview: Comprehensive guide at `target/site/apidocs/overview-summary.html` with architecture, entity relationships, and business rules
+**Excluded:** Internal configuration package (`com.tutortimetracker.api.config`)
 
-**Key Documentation Included:**
-- **Architecture**: 3-tier pattern (Controller → Service → Repository)
-- **Entity Relationships**: Table showing all entities and their operations
-- **API Reference**: Complete endpoint listing with request/response examples
-- **Business Rules**: Constraints, defaults, and validation rules
-- **Error Handling**: HTTP status codes and error response format
-- **Setup Instructions**: Development environment configuration
-
-**View Javadoc:**
-Open `target/site/apidocs/index.html` in your browser after generation.
-
-### Comments & Code Documentation
-
-Key classes have enhanced Javadoc comments:
-- `TutorDataController` - Detailed API overview with resource hierarchy
-- `TutorDataService` - Entity operation table and business rule documentation
-- All public methods include parameter and return value documentation
-
-Note: `com.tutortimetracker.api.config` package is excluded from Javadoc (internal configuration).
-
-### Javadoc During Build
-
-Javadoc is automatically generated during package phase:
+**Skip during build:**
 ```bash
-mvn package
-```
-
-To skip Javadoc generation:
-```bash
-mvn package -DskipTests -DskipJavadoc
+mvn package -DskipJavadoc
 ```

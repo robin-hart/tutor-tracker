@@ -9,7 +9,4 @@ import jakarta.validation.constraints.NotBlank;
  * @param groupName target group name
  */
 public record StudentGroupUpdateRequest(
-        @Schema(description = "Target group name", example = "Group B")
-        @NotBlank String groupName
-) {
-}
+    @Schema(description = "Target group name", example = "Group B") @NotBlank String groupName) {}
