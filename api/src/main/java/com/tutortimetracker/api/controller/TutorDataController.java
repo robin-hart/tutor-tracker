@@ -37,7 +37,7 @@ import java.util.List;
  * student records, timeslots, and performance reports. The API is organized around two main
  * resource hierarchies:</p>
  *
- * <h3>Project-Scoped Resources:</h3>
+ * <h2>Project-Scoped Resources</h2>
  * <ul>
  *   <li>Projects: Dashboard cards with hour metrics and completion tracking</li>
  *   <li>Students: Tutoring students assigned to projects with notes and group management</li>
@@ -47,7 +47,7 @@ import java.util.List;
  *   <li>Calendar: Combined month/day view of timeslots with project metrics</li>
  * </ul>
  *
- * <h3>Global Resources:</h3>
+ * <h2>Global Resources</h2>
  * <ul>
  *   <li>Timeslots: Global timeslot creation (legacy support)</li>
  *   <li>Reports: Cross-project report aggregation</li>

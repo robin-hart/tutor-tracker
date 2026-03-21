@@ -52,11 +52,12 @@ import java.util.stream.Collectors;
  *   <li>Student group reassignment to "Ungrouped" when groups are deleted</li>
  * </ul>
  *
- * <h3>Data Flow:</h3>
+ * <h2>Data Flow</h2>
  * <p>Controller → Service (business logic) → Repository (persistence) → Database</p>
  *
- * <h3>Key Responsibilities:</h3>
- * <table border="1" cellpadding="5">
+ * <h2>Key Responsibilities</h2>
+ * <table border="1" style="padding: 5px;">
+ *   <caption>Entity Operations and Business Rules</caption>
  *   <tr>
  *     <th>Entity</th>
  *     <th>Operations</th>

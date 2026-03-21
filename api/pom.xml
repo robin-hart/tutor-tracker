@@ -148,7 +148,7 @@
                     <author>true</author>
                     <version>true</version>
                     <use>true</use>
-                    <detectLinks>true</detectLinks>
+                    <offline>true</offline>
                     <links>
                         <link>https://docs.spring.io/spring-framework/docs/current/javadoc-api/</link>
                         <link>https://docs.spring.io/spring-boot/docs/current/api/</link>
