@@ -153,6 +153,7 @@ public class TutorDataService {
         LocalDate to = month.plusMonths(1).atDay(1);
 
         List<TimeslotEntity> monthSlots = timeslotRepository.findByProjectAndDateGreaterThanEqualAndDateLessThan(project, from, to);
+        List<TimeslotEntity> allSlots = timeslotRepository.findByProject(project);
         List<TodaySlot> todaySlots = timeslotRepository.findByProjectAndDate(project, LocalDate.now()).stream()
                 .map(slot -> new TodaySlot(
                         slot.getTitle(),
@@ -168,6 +169,15 @@ public class TutorDataService {
                 project.getMonthHours(),
                 todaySlots,
                 monthSlots.stream()
+                        .map(slot -> new CalendarSlot(
+                                slot.getId(),
+                                slot.getTitle(),
+                                slot.getDate().toString(),
+                                slot.getStartTime().toString(),
+                                slot.getDurationMinutes()
+                        ))
+                        .toList(),
+                allSlots.stream()
                         .map(slot -> new CalendarSlot(
                                 slot.getId(),
                                 slot.getTitle(),

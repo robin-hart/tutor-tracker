@@ -39,53 +39,72 @@
         </div>
       </div>
 
-      <section v-if="hasActiveSearch" class="bg-surface-container-lowest rounded-2xl p-8 shadow-sm">
+      <section v-if="hasActiveSearch" class="space-y-6">
+        <SearchActiveIndicator
+          :query="searchText"
+          :shown-count="filteredSlotResults.length"
+          :total-count="allSlots.length"
+          entity-label="slots"
+          @clear="searchText = ''"
+        />
+
+        <div class="bg-surface-container-lowest rounded-2xl p-8 shadow-sm">
         <div class="flex items-center justify-between mb-6 gap-4">
           <h3 class="text-2xl font-black font-manrope">Search Results</h3>
           <span class="text-sm text-on-surface-variant">{{ filteredSlotResults.length }} slot{{ filteredSlotResults.length === 1 ? '' : 's' }} found</span>
         </div>
 
-        <div class="space-y-4">
-          <article v-for="slot in filteredSlotResults" :key="slot.id" class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-primary">
-            <div class="flex justify-between items-start mb-2 gap-3">
-              <div>
-                <p class="text-[11px] text-on-surface-variant font-bold mb-1">{{ slot.date }}</p>
-                <h4 class="font-bold text-sm">{{ slot.title }}</h4>
-              </div>
-              <span class="text-[10px] bg-primary/10 text-primary px-2.5 py-1 rounded-full font-black">{{ formatTime(slot.startTime) }}</span>
+        <div class="space-y-8">
+          <section v-for="monthGroup in groupedFilteredSlots" :key="monthGroup.monthKey" class="space-y-4">
+            <div class="flex items-center justify-between">
+              <h4 class="text-lg font-black font-manrope">{{ monthGroup.label }}</h4>
+              <span class="text-xs text-on-surface-variant font-bold">{{ monthGroup.slots.length }} slot{{ monthGroup.slots.length === 1 ? '' : 's' }}</span>
             </div>
-            <p class="text-[11px] text-on-surface-variant font-bold mb-2">{{ formatPeriod(slot.startTime, slot.durationMinutes) }}</p>
-            <p class="text-xs text-on-surface-variant">{{ slot.description || 'No details provided.' }}</p>
-            <div class="mt-3 flex items-center gap-2">
-              <RouterLink
-                :to="{
-                  name: 'timeslot-editor',
-                  query: {
-                    projectId,
-                    timeslotId: slot.id,
-                    date: slot.date,
-                    startTime: slot.startTime,
-                    month: monthKey
-                  }
-                }"
-                class="text-[11px] font-black px-2.5 py-1.5 rounded-md bg-surface-container-low"
-              >
-                Edit
-              </RouterLink>
-              <button
-                type="button"
-                class="text-[11px] font-black px-2.5 py-1.5 rounded-md bg-error/10 text-error"
-                @click="openDeleteConfirm(slot)"
-              >
-                Delete
-              </button>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              <article v-for="slot in monthGroup.slots" :key="slot.id" class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-primary">
+                <div class="flex justify-between items-start mb-2 gap-3">
+                  <div>
+                    <p class="text-[11px] text-on-surface-variant font-bold mb-1">{{ slot.date }}</p>
+                    <h4 class="font-bold text-sm">{{ slot.title }}</h4>
+                  </div>
+                  <span class="text-[10px] bg-primary/10 text-primary px-2.5 py-1 rounded-full font-black">{{ formatTime(slot.startTime) }}</span>
+                </div>
+                <p class="text-[11px] text-on-surface-variant font-bold mb-2">{{ formatPeriod(slot.startTime, slot.durationMinutes) }}</p>
+                <p class="text-xs text-on-surface-variant">{{ slot.description || 'No details provided.' }}</p>
+                <div class="mt-3 flex items-center gap-2">
+                  <RouterLink
+                    :to="{
+                      name: 'timeslot-editor',
+                      query: {
+                        projectId,
+                        timeslotId: slot.id,
+                        date: slot.date,
+                        startTime: slot.startTime,
+                        month: getMonthKeyFromDate(slot.date)
+                      }
+                    }"
+                    class="text-[11px] font-black px-2.5 py-1.5 rounded-md bg-surface-container-low"
+                  >
+                    Edit
+                  </RouterLink>
+                  <button
+                    type="button"
+                    class="text-[11px] font-black px-2.5 py-1.5 rounded-md bg-error/10 text-error"
+                    @click="openDeleteConfirm(slot)"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </article>
             </div>
-          </article>
+          </section>
         </div>
 
         <p v-if="!isLoading && filteredSlotResults.length === 0" class="text-sm text-on-surface-variant mt-6">
           No slots found for this search.
         </p>
+        </div>
       </section>
 
       <div v-else class="grid grid-cols-12 gap-8">
@@ -208,6 +227,7 @@ import { useRoute, useRouter } from 'vue-router';
 import AppSidebar from '../components/AppSidebar.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import MainTopBar from '../components/MainTopBar.vue';
+import SearchActiveIndicator from '../components/SearchActiveIndicator.vue';
 import { deleteProjectTimeslot, getProjectCalendar } from '../services/apiClient';
 import { formatHoursToHM } from '../utils/timeFormatter';
 
@@ -221,6 +241,7 @@ const projectName = ref('Math Grade 10');
 const totalHours = ref(0);
 const monthHours = ref(0);
 const monthSlots = ref([]);
+const allSlots = ref([]);
 const isLoading = ref(false);
 const errorMessage = ref('');
 const searchText = ref('');
@@ -267,10 +288,10 @@ const hasActiveSearch = computed(() => searchText.value.trim().length > 0);
 const filteredSlotResults = computed(() => {
   const query = searchText.value.toLowerCase().trim();
   if (!query) {
-    return monthSlots.value;
+    return allSlots.value;
   }
 
-  return monthSlots.value
+  return allSlots.value
     .filter((slot) => {
       const haystack = [slot.title, slot.description, slot.date, slot.startTime]
         .map((item) => String(item || '').toLowerCase())
@@ -282,6 +303,30 @@ const filteredSlotResults = computed(() => {
       const rightKey = `${right.date} ${right.startTime}`;
       return leftKey.localeCompare(rightKey);
     });
+});
+
+const groupedFilteredSlots = computed(() => {
+  const grouped = new Map();
+
+  for (const slot of filteredSlotResults.value) {
+    const monthKey = getMonthKeyFromDate(slot.date);
+    if (!grouped.has(monthKey)) {
+      grouped.set(monthKey, []);
+    }
+    grouped.get(monthKey).push(slot);
+  }
+
+  return Array.from(grouped.entries())
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([monthKey, slots]) => ({
+      monthKey,
+      label: formatMonthLabel(monthKey),
+      slots: slots.sort((left, right) => {
+        const leftKey = `${left.date} ${left.startTime}`;
+        const rightKey = `${right.date} ${right.startTime}`;
+        return leftKey.localeCompare(rightKey);
+      })
+    }));
 });
 
 const selectedDayTitle = computed(() => {
@@ -304,6 +349,7 @@ async function loadCalendar() {
     totalHours.value = payload.totalHours;
     monthHours.value = payload.monthHours;
     monthSlots.value = payload.monthSlots || [];
+    allSlots.value = payload.allSlots || payload.monthSlots || [];
 
     if (!selectedDate.value || !selectedDate.value.startsWith(monthKey.value)) {
       const todayIso = getTodayIso();
@@ -316,6 +362,7 @@ async function loadCalendar() {
     totalHours.value = 0;
     monthHours.value = 0;
     monthSlots.value = [];
+    allSlots.value = [];
   } finally {
     isLoading.value = false;
   }
@@ -393,6 +440,21 @@ function parseMonthFromQuery(monthQuery) {
     return new Date(`${monthQuery}-01T00:00:00`);
   }
   return new Date();
+}
+
+function getMonthKeyFromDate(dateValue) {
+  const raw = String(dateValue || '').slice(0, 7);
+  if (/^\d{4}-\d{2}$/.test(raw)) {
+    return raw;
+  }
+  return monthKey.value;
+}
+
+function formatMonthLabel(value) {
+  if (!/^\d{4}-\d{2}$/.test(value)) {
+    return value;
+  }
+  return new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(new Date(`${value}-01T00:00:00`));
 }
 
 function buildCalendarCells(monthDate) {
