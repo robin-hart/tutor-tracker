@@ -106,6 +106,16 @@
         <span class="text-sm text-on-surface-variant">{{ filteredProjects.length }} shown</span>
       </section>
 
+      <SearchActiveIndicator
+        v-if="hasActiveFilter && !apiUnavailable"
+        class="mb-6"
+        :query="searchText"
+        :shown-count="filteredProjects.length"
+        :total-count="projects.length"
+        entity-label="projects"
+        @clear="searchText = ''"
+      />
+
       <section v-if="isLoading" class="mb-8">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-pulse">
           <div v-for="item in 3" :key="item" class="bg-surface-container-lowest rounded-xl p-8">
@@ -206,6 +216,7 @@ import { useRouter } from 'vue-router';
 import AppSidebar from '../components/AppSidebar.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import MainTopBar from '../components/MainTopBar.vue';
+import SearchActiveIndicator from '../components/SearchActiveIndicator.vue';
 import { createProject, getProjects, deleteProject } from '../services/apiClient';
 import { filterProjects } from '../utils/projectFilter';
 import { formatHoursToHM } from '../utils/timeFormatter';
