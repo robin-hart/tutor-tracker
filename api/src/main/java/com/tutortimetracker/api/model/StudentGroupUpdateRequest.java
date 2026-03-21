@@ -1,5 +1,6 @@
 package com.tutortimetracker.api.model;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 
 /**
@@ -8,6 +9,7 @@ import jakarta.validation.constraints.NotBlank;
  * @param groupName target group name
  */
 public record StudentGroupUpdateRequest(
+        @Schema(description = "Target group name", example = "Group B")
         @NotBlank String groupName
 ) {
 }

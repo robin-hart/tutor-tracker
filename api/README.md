@@ -194,6 +194,19 @@ CORS is enabled for `http://localhost:5173` in `TutorDataController`.
 
 ## Documentation
 
+### Scalar API Documentation
+
+Interactive API reference is available via Scalar:
+
+- Scalar UI: `http://localhost:8080/scalar/index.html`
+- OpenAPI JSON: `http://localhost:8080/v3/api-docs`
+
+Run the backend and open Scalar in your browser:
+
+```bash
+mvn spring-boot:run
+```
+
 ### Javadoc
 
 Full API documentation is generated via Maven Javadoc plugin:
