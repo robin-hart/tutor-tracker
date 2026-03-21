@@ -22,7 +22,19 @@
         </button>
       </section>
 
-      <section v-if="showCreateProject" class="mb-8 bg-surface-container-lowest rounded-xl p-6 grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
+      <section v-if="showCreateProject" class="mb-8 bg-surface-container-lowest rounded-xl p-6 grid grid-cols-1 md:grid-cols-6 gap-4">
+        <div class="md:col-span-6 flex items-center justify-between">
+          <h2 class="text-lg font-bold font-headline">Create New Project</h2>
+          <button
+            type="button"
+            @click="closeCreateProject"
+            class="h-9 w-9 rounded-lg bg-surface-container-low text-on-surface hover:bg-surface-container-high flex items-center justify-center"
+            aria-label="Close create project form"
+          >
+            <span class="material-symbols-outlined text-base">close</span>
+          </button>
+        </div>
+
         <div class="md:col-span-2">
           <label class="text-xs text-on-surface-variant uppercase tracking-wider block mb-2">Project Name</label>
           <input v-model.trim="newProject.name" class="w-full bg-surface-container-low rounded-lg px-3 py-2" placeholder="Project name" type="text" />
@@ -63,8 +75,9 @@
           />
         </div>
 
-        <div class="md:col-span-1">
-          <button @click="createNewProject" class="w-full bg-primary text-white rounded-lg px-4 py-2 font-bold">Create</button>
+        <div class="md:col-span-6 flex justify-end gap-3">
+          <button type="button" @click="closeCreateProject" class="px-4 py-2 rounded-lg bg-surface-container-low text-on-surface font-bold">Cancel</button>
+          <button @click="createNewProject" class="px-4 py-2 rounded-lg bg-primary text-white font-bold">Create</button>
         </div>
       </section>
 
@@ -256,6 +269,13 @@ function openCalendar(projectId) {
   router.push({ name: 'project-calendar', params: { projectId } });
 }
 
+function closeCreateProject() {
+  showCreateProject.value = false;
+  showNewCategoryInput.value = false;
+  newCategory.value = '';
+  newProject.value = { name: '', category: 'GENERAL', totalHours: 0, monthHours: 0, completionPercent: 0 };
+}
+
 async function createNewProject() {
   const resolvedCategory = showNewCategoryInput.value
     ? newCategory.value.trim()
@@ -275,10 +295,7 @@ async function createNewProject() {
     };
     const created = await createProject(payload);
     projects.value = [created, ...projects.value];
-    newProject.value = { name: '', category: 'GENERAL', totalHours: 0, monthHours: 0, completionPercent: 0 };
-    showNewCategoryInput.value = false;
-    newCategory.value = '';
-    showCreateProject.value = false;
+    closeCreateProject();
   } catch (error) {
     errorMessage.value = error.message;
   }
