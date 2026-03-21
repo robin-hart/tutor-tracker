@@ -163,6 +163,7 @@ import AppSidebar from '../components/AppSidebar.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import MainTopBar from '../components/MainTopBar.vue';
 import { createProject, getProjects, deleteProject } from '../services/apiClient';
+import { filterProjects } from '../utils/projectFilter';
 import { formatHoursToHM } from '../utils/timeFormatter';
 
 /**
@@ -191,13 +192,7 @@ const totalHours = computed(() => {
   return formatHoursToHM(sum);
 });
 const filteredProjects = computed(() => {
-  const query = searchText.value.toLowerCase();
-  if (!query) {
-    return projects.value;
-  }
-  return projects.value.filter((project) => {
-    return project.name.toLowerCase().includes(query) || project.category.toLowerCase().includes(query);
-  });
+  return filterProjects(projects.value, searchText.value);
 });
 const hasActiveFilter = computed(() => searchText.value.trim().length > 0);
 
