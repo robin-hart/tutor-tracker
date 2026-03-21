@@ -1,0 +1,213 @@
+<html>
+<head>
+    <title>TutorTimeTracker API Documentation</title>
+</head>
+<body>
+    <h1>TutorTimeTracker API</h1>
+    <p>
+        Comprehensive REST API for tutoring session management, student tracking, and performance reporting.
+    </p>
+
+    <h2>Overview</h2>
+    <p>
+        TutorTimeTracker is a Spring Boot-based backend API that manages the complete lifecycle of tutoring projects,
+        from project creation through student management, session scheduling, and monthly report generation.
+        The API follows REST principles and provides JSON-based request/response payloads with input validation.
+    </p>
+
+    <h2>Architecture</h2>
+    <h3>Three-Tier Architecture</h3>
+    <ul>
+        <li><strong>Controller Layer</strong>: REST endpoints in <code>com.tutortimetracker.api.controller</code></li>
+        <li><strong>Service Layer</strong>: Business logic in <code>com.tutortimetracker.api.service</code></li>
+        <li><strong>Persistence Layer</strong>: JPA repositories in <code>com.tutortimetracker.api.repository</code></li>
+        <li><strong>Model Layer</strong>: Entities in <code>com.tutortimetracker.api.entity</code> and DTOs in <code>com.tutortimetracker.api.model</code></li>
+    </ul>
+
+    <h3>Database</h3>
+    <p>
+        <strong>Production</strong>: MariaDB 10.x+ (Docker container on port 3307)<br>
+        <strong>Testing</strong>: H2 in-memory with MariaDB compatibility mode
+    </p>
+
+    <h2>Core Entities</h2>
+    <table border="1" style="padding: 8px;">
+        <caption>Core Entities and Attributes</caption>
+        <thead>
+            <tr>
+                <th>Entity</th>
+                <th>Purpose</th>
+                <th>Key Attributes</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>ProjectEntity</code></td>
+                <td>Tutoring project (dashboard card)</td>
+                <td>slug, name, category, totalHours, monthHours, completionPercent</td>
+            </tr>
+            <tr>
+                <td><code>StudentEntity</code></td>
+                <td>Individual student in a project</td>
+                <td>studentKey, name, notes, groupName, project</td>
+            </tr>
+            <tr>
+                <td><code>ProjectGroupEntity</code></td>
+                <td>Student grouping within a project</td>
+                <td>name, project (e.g., "Honors", "Group A")</td>
+            </tr>
+            <tr>
+                <td><code>TimeslotEntity</code></td>
+                <td>Individual tutoring session</td>
+                <td>id, title, date, startTime, durationMinutes, description, project</td>
+            </tr>
+            <tr>
+                <td><code>ReportRowEntity</code></td>
+                <td>Monthly aggregated metrics</td>
+                <td>monthKey, totalHours, sessions, grossAmount, project</td>
+            </tr>
+            <tr>
+                <td><code>TodaySlotEntity</code></td>
+                <td>Today's scheduled sessions (view optimization)</td>
+                <td>Similar to TimeslotEntity, project-scoped</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>API Endpoints</h2>
+    <h3>Project Management</h3>
+    <pre>
+    GET    /api/projects              - List all projects
+    POST   /api/projects              - Create new project
+    DELETE /api/projects/{projectId}  - Delete project (cascades to students, timeslots, reports)
+    GET    /api/projects/{projectId}/calendar - Get project calendar with today's slots
+    </pre>
+
+    <h3>Student Management</h3>
+    <pre>
+    GET    /api/projects/{projectId}/students              - List students in project
+    POST   /api/projects/{projectId}/students              - Add student to project
+    PATCH  /api/students/{studentId}/notes                 - Update student notes
+    PATCH  /api/students/{studentId}/group                 - Change student group
+    DELETE /api/students/{studentId}                        - Remove student
+    </pre>
+
+    <h3>Group Management</h3>
+    <pre>
+    GET    /api/projects/{projectId}/groups                - List groups with student counts
+    POST   /api/projects/{projectId}/groups                - Create new group
+    DELETE /api/projects/{projectId}/groups/{groupName}    - Delete group (reassign students)
+    </pre>
+
+    <h3>Timeslot Management</h3>
+    <pre>
+    GET    /api/projects/{projectId}/timeslots             - List timeslots (with optional month filter)
+    GET    /api/projects/{projectId}/timeslots/{slotId}    - Get single timeslot
+    POST   /api/projects/{projectId}/timeslots              - Create timeslot in project
+    PUT    /api/projects/{projectId}/timeslots/{slotId}    - Update timeslot
+    DELETE /api/projects/{projectId}/timeslots/{slotId}    - Delete timeslot
+    POST   /api/timeslots                                   - Create global timeslot (legacy)
+    </pre>
+
+    <h3>Report Management</h3>
+    <pre>
+    GET    /api/reports                                     - List all reports
+    GET    /api/projects/{projectId}/reports                - List project reports
+    POST   /api/projects/{projectId}/reports/generate       - Generate/refresh monthly report
+    </pre>
+
+    <h2>Business Rules &amp; Constraints</h2>
+    <h3>Project Rules</h3>
+    <ul>
+        <li>Slug is auto-generated from project name (lowercase, hyphenated)</li>
+        <li>Slug uniqueness is enforced; conflicts are resolved by appending "-2", "-3", etc.</li>
+        <li>Every project automatically gets an "Ungrouped" group on creation</li>
+        <li>Deleting a project cascades to all students, timeslots, groups, and reports</li>
+    </ul>
+
+    <h3>Student Rules</h3>
+    <ul>
+        <li>Notes are trimmed of leading/trailing whitespace</li>
+        <li>Students default to "Ungrouped" group if not specified</li>
+        <li>Each student must belong to exactly one group at a time</li>
+        <li>Student names default to empty string if not provided</li>
+    </ul>
+
+    <h3>Group Rules</h3>
+    <ul>
+        <li>The "Ungrouped" group cannot be deleted</li>
+        <li>When a group is deleted, all assigned students are reassigned to "Ungrouped"</li>
+        <li>Group names are case-insensitive normalized</li>
+    </ul>
+
+    <h3>Timeslot Rules</h3>
+    <ul>
+        <li>Duration is specified in minutes</li>
+        <li>Deleting a timeslot triggers project metrics refresh</li>
+        <li>Project hour metrics are calculated as: sum(timeslot.durationMinutes) / 60.0</li>
+    </ul>
+
+    <h3>Report Rules</h3>
+    <ul>
+        <li>Reports are generated monthly from timeslot data</li>
+        <li>Hourly rate is fixed at $60/hour (gross amount = hours × 60)</li>
+        <li>Month key format: "yyyy-MM" (e.g., "2026-01")</li>
+    </ul>
+
+    <h2>Error Handling</h2>
+    <p>The API returns standard HTTP status codes:</p>
+    <ul>
+        <li><code>200 OK</code> - Successful GET or PATCH</li>
+        <li><code>201 Created</code> - Successful POST</li>
+        <li><code>204 No Content</code> - Successful DELETE</li>
+        <li><code>400 Bad Request</code> - Validation error (blank notes, invalid group name, etc.)</li>
+        <li><code>404 Not Found</code> - Resource not found (project, student, timeslot, etc.)</li>
+        <li><code>500 Internal Server Error</code> - Unexpected server error</li>
+    </ul>
+
+    <p>Error responses include an <code>ApiErrorResponse</code> with message details.</p>
+
+    <h2>Validation</h2>
+    <ul>
+        <li>Student notes: Non-blank (after trimming), max 1000 characters</li>
+        <li>Project name: Required, trimmed</li>
+        <li>Timeslot duration: Positive integer (minutes)</li>
+        <li>All string inputs are trimmed to remove accidental whitespace</li>
+    </ul>
+
+    <h2>Testing</h2>
+    <p>
+        Comprehensive test coverage via Maven with two test plugins:
+    </p>
+    <ul>
+        <li><strong>Unit Tests</strong> (*Test.java): Rapid business logic validation with mocked repositories</li>
+        <li><strong>Integration Tests</strong> (*IT.java): Real H2 database with Spring Boot context</li>
+    </ul>
+    <p>Run tests with: <code>mvn verify</code></p>
+
+    <h2>Documentation</h2>
+    <p>
+        Javadoc is organized by package:
+    </p>
+    <ul>
+        <li><code>com.tutortimetracker.api.controller</code> - REST endpoint documentation</li>
+        <li><code>com.tutortimetracker.api.service</code> - Business logic and domain rules</li>
+        <li><code>com.tutortimetracker.api.entity</code> - Database entity mappings</li>
+        <li><code>com.tutortimetracker.api.model</code> - Request/response DTOs</li>
+        <li><code>com.tutortimetracker.api.repository</code> - Data access interfaces</li>
+    </ul>
+
+    <p>Generate Javadoc with: <code>mvn javadoc:javadoc</code></p>
+
+    <h2>Getting Started (Development)</h2>
+    <pre>
+    1. Start MariaDB container: docker-compose -f docker-compose.yml up -d
+    2. Build and run: mvn spring-boot:run
+    3. API base URL: http://localhost:8080/api
+    4. Frontend access: http://localhost:5173 (Vue dev server)
+    </pre>
+
+    <hr>
+    <p><em>Version 1.0 | March 2026</em></p>
+</body>
+</html>

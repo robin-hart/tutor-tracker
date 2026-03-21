@@ -38,7 +38,62 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * MariaDB-backed service for mockup-aligned frontend views.
+ * Core business logic service for TutorTimeTracker data operations.
+ *
+ * <p>This service manages all domain operations including project lifecycle management,
+ * student record tracking, timeslot scheduling, group management, and monthly report generation.
+ * The service implements transactional consistency and enforces business rules such as:</p>
+ *
+ * <ul>
+ *   <li>Automatic project slug generation with uniqueness constraints</li>
+ *   <li>Default "Ungrouped" group creation for all projects</li>
+ *   <li>String trimming and normalization for all user inputs</li>
+ *   <li>Cascading deletion of dependent entities (students, timeslots, reports)</li>
+ *   <li>Student group reassignment to "Ungrouped" when groups are deleted</li>
+ * </ul>
+ *
+ * <h2>Data Flow</h2>
+ * <p>Controller → Service (business logic) → Repository (persistence) → Database</p>
+ *
+ * <h2>Key Responsibilities</h2>
+ * <table border="1" style="padding: 5px;">
+ *   <caption>Entity Operations and Business Rules</caption>
+ *   <tr>
+ *     <th>Entity</th>
+ *     <th>Operations</th>
+ *     <th>Business Rules</th>
+ *   </tr>
+ *   <tr>
+ *     <td>Project</td>
+ *     <td>Create, Read, Delete, Metrics Refresh</td>
+ *     <td>Auto-slug, default group creation, cascading delete</td>
+ *   </tr>
+ *   <tr>
+ *     <td>Student</td>
+ *     <td>Create, Read, Update Notes, Update Group, Delete</td>
+ *     <td>Notes trimming, default "Ungrouped" assignment</td>
+ *   </tr>
+ *   <tr>
+ *     <td>Group</td>
+ *     <td>Create, Read, Delete</td>
+ *     <td>Cannot delete "Ungrouped", auto-reassign students</td>
+ *   </tr>
+ *   <tr>
+ *     <td>Timeslot</td>
+ *     <td>Create, Read, Update, Delete, Metrics Refresh</td>
+ *     <td>Duration tracking, project metrics aggregation</td>
+ *   </tr>
+ *   <tr>
+ *     <td>Report</td>
+ *     <td>Generate, Read</td>
+ *     <td>Monthly aggregation, gross amount calculation (rate: $60/hr)</td>
+ *   </tr>
+ * </table>
+ *
+ * @see com.tutortimetracker.api.entity
+ * @see com.tutortimetracker.api.repository
+ * @author TutorTimeTracker Team
+ * @version 1.0
  */
 @Service
 public class TutorDataService {
