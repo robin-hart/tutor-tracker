@@ -57,14 +57,46 @@
           class="w-full max-w-md bg-surface-container-lowest rounded-xl px-4 py-3 border-none focus:ring-2 focus:ring-primary/20"
           placeholder="Filter projects by name or category"
           type="text"
+          :disabled="apiUnavailable"
         />
         <span class="text-sm text-on-surface-variant">{{ filteredProjects.length }} shown</span>
       </section>
 
-      <p v-if="isLoading" class="text-on-surface-variant mb-4">Loading projects...</p>
-      <p v-if="errorMessage" class="text-error mb-4">{{ errorMessage }}</p>
+      <section v-if="isLoading" class="mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-pulse">
+          <div v-for="item in 3" :key="item" class="bg-surface-container-lowest rounded-xl p-8">
+            <div class="h-4 w-24 bg-surface-container-high rounded mb-6"></div>
+            <div class="h-8 w-3/4 bg-surface-container-high rounded mb-8"></div>
+            <div class="h-4 w-full bg-surface-container-high rounded mb-3"></div>
+            <div class="h-4 w-2/3 bg-surface-container-high rounded mb-6"></div>
+            <div class="h-2 w-full bg-surface-container-high rounded"></div>
+          </div>
+        </div>
+      </section>
+      <p v-if="errorMessage && !apiUnavailable" class="text-error mb-4">{{ errorMessage }}</p>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <section
+        v-if="apiUnavailable"
+        class="mb-8 bg-surface-container-lowest border border-outline-variant rounded-xl p-6"
+      >
+        <div class="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <h2 class="text-xl font-bold font-headline mb-2">Service currently unavailable</h2>
+            <p class="text-on-surface-variant max-w-2xl">
+              We are unable to reach the server right now. Please check your connection and try again.
+            </p>
+          </div>
+          <button
+            @click="loadProjects"
+            class="bg-primary text-white rounded-lg px-4 py-2 font-bold"
+            :disabled="isLoading"
+          >
+            Retry
+          </button>
+        </div>
+      </section>
+
+      <div v-if="!apiUnavailable" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         <article
           v-for="project in filteredProjects"
           :key="project.id"
@@ -105,7 +137,12 @@
         </article>
       </div>
 
-      <p v-if="!isLoading && filteredProjects.length === 0" class="text-on-surface-variant mt-8">No projects match your filter.</p>
+      <p v-if="!isLoading && !apiUnavailable && hasActiveFilter && filteredProjects.length === 0" class="text-on-surface-variant mt-8">
+        No projects match your filter.
+      </p>
+      <p v-if="!isLoading && !apiUnavailable && !hasActiveFilter && projects.length === 0" class="text-on-surface-variant mt-8">
+        No projects available yet.
+      </p>
 
       <ConfirmDialog
         :is-open="showDeleteConfirm"
@@ -126,6 +163,7 @@ import AppSidebar from '../components/AppSidebar.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import MainTopBar from '../components/MainTopBar.vue';
 import { createProject, getProjects, deleteProject } from '../services/apiClient';
+import { filterProjects } from '../utils/projectFilter';
 import { formatHoursToHM } from '../utils/timeFormatter';
 
 /**
@@ -147,26 +185,16 @@ const newProject = ref({
 
 const showDeleteConfirm = ref(false);
 const projectToDelete = ref(null);
-
-const fallbackProjects = [
-  { id: 'math-grade-10', name: 'Math Grade 10', category: 'STEM', totalHours: 48.0, monthHours: 12.5, completionPercent: 75 },
-  { id: 'physics-university', name: 'Physics University', category: 'SCIENCE', totalHours: 32.2, monthHours: 8.0, completionPercent: 50 },
-  { id: 'sat-verbal-prep', name: 'SAT Verbal Prep', category: 'EXAM PREP', totalHours: 15.5, monthHours: 15.5, completionPercent: 25 }
-];
+const apiUnavailable = ref(false);
 
 const totalHours = computed(() => {
   const sum = projects.value.reduce((sum, item) => sum + Number(item.totalHours), 0);
   return formatHoursToHM(sum);
 });
 const filteredProjects = computed(() => {
-  const query = searchText.value.toLowerCase();
-  if (!query) {
-    return projects.value;
-  }
-  return projects.value.filter((project) => {
-    return project.name.toLowerCase().includes(query) || project.category.toLowerCase().includes(query);
-  });
+  return filterProjects(projects.value, searchText.value);
 });
+const hasActiveFilter = computed(() => searchText.value.trim().length > 0);
 
 /**
  * Opens the calendar route for a selected project.
@@ -238,17 +266,22 @@ function formatProjectHours(hours) {
   return formatHoursToHM(hours);
 }
 
-onMounted(async () => {
+async function loadProjects() {
   isLoading.value = true;
   errorMessage.value = '';
   try {
     projects.value = await getProjects();
+    apiUnavailable.value = false;
   } catch (error) {
-    console.warn('Using fallback projects because API is unavailable.', error);
-    errorMessage.value = 'Using fallback project data while the API is unavailable.';
-    projects.value = fallbackProjects;
+    console.warn('Projects API is unavailable.', error);
+    apiUnavailable.value = true;
+    projects.value = [];
   } finally {
     isLoading.value = false;
   }
+}
+
+onMounted(() => {
+  loadProjects();
 });
 </script>
