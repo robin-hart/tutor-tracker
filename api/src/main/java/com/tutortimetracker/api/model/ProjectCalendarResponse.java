@@ -11,6 +11,7 @@ import java.util.List;
  * @param monthHours hours tracked this month
  * @param todaySlots list of slots scheduled for current day
  * @param monthSlots list of slots for the active month
+ * @param allSlots list of all slots for the project across all months
  */
 public record ProjectCalendarResponse(
         String projectId,
@@ -18,6 +19,7 @@ public record ProjectCalendarResponse(
         double totalHours,
         double monthHours,
         List<TodaySlot> todaySlots,
-        List<CalendarSlot> monthSlots
+        List<CalendarSlot> monthSlots,
+        List<CalendarSlot> allSlots
 ) {
 }

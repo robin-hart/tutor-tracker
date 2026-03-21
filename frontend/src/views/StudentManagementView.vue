@@ -1,7 +1,7 @@
 <template>
   <div class="student-management-view bg-surface text-on-surface min-h-screen">
     <AppSidebar />
-    <MainTopBar search-placeholder="Search students...">
+    <MainTopBar v-model="searchText" search-placeholder="Search students...">
       <template #tabs>
         <nav class="flex gap-6">
           <RouterLink :to="{ name: 'project-calendar', params: { projectId } }" class="text-on-surface-variant font-manrope font-medium text-sm">Calendar</RouterLink>
@@ -29,14 +29,14 @@
           <button @click="addStudent" class="bg-primary text-white rounded-lg px-4 py-2 font-bold">Add</button>
         </div>
 
-        <div class="max-w-md">
-          <input
-            v-model.trim="searchText"
-            class="w-full bg-surface-container-lowest rounded-xl px-4 py-3 border-none focus:ring-2 focus:ring-primary/20"
-            placeholder="Filter students by name"
-            type="text"
-          />
-        </div>
+        <SearchActiveIndicator
+          v-if="hasActiveSearch"
+          :query="searchText"
+          :shown-count="filteredStudents.length"
+          :total-count="students.length"
+          entity-label="students"
+          @clear="searchText = ''"
+        />
 
         <p v-if="isLoading" class="text-on-surface-variant">Loading students...</p>
         <p v-if="errorMessage" class="text-error">{{ errorMessage }}</p>
@@ -151,6 +151,7 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import AppSidebar from '../components/AppSidebar.vue';
 import MainTopBar from '../components/MainTopBar.vue';
+import SearchActiveIndicator from '../components/SearchActiveIndicator.vue';
 import {
   createProjectGroup,
   createProjectStudent,
@@ -188,6 +189,8 @@ const filteredStudents = computed(() => {
   }
   return students.value.filter((student) => student.name.toLowerCase().includes(query));
 });
+
+const hasActiveSearch = computed(() => searchText.value.trim().length > 0);
 
 const selectableGroups = computed(() => groups.value.filter((group) => group !== 'Ungrouped'));
 
