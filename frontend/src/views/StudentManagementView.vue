@@ -29,6 +29,24 @@
           <button @click="addStudent" class="bg-primary text-white rounded-lg px-4 py-2 font-bold">Add</button>
         </div>
 
+        <section
+          v-if="hasActiveSearch"
+          class="bg-primary/5 border border-primary/20 rounded-xl px-4 py-3 flex items-center justify-between gap-3"
+        >
+          <p class="text-sm text-on-surface-variant">
+            Search active for <span class="font-bold text-on-surface">"{{ searchText }}"</span>.
+            Showing <span class="font-bold text-primary">{{ filteredStudents.length }}</span>
+            of <span class="font-bold text-on-surface">{{ students.length }}</span> students.
+          </p>
+          <button
+            type="button"
+            class="text-xs font-bold px-3 py-1.5 rounded-md bg-surface-container-low text-on-surface"
+            @click="searchText = ''"
+          >
+            Clear
+          </button>
+        </section>
+
         <p v-if="isLoading" class="text-on-surface-variant">Loading students...</p>
         <p v-if="errorMessage" class="text-error">{{ errorMessage }}</p>
 
@@ -179,6 +197,8 @@ const filteredStudents = computed(() => {
   }
   return students.value.filter((student) => student.name.toLowerCase().includes(query));
 });
+
+const hasActiveSearch = computed(() => searchText.value.trim().length > 0);
 
 const selectableGroups = computed(() => groups.value.filter((group) => group !== 'Ungrouped'));
 
