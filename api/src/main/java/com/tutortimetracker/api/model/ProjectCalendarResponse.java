@@ -1,5 +1,7 @@
 package com.tutortimetracker.api.model;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.util.List;
 
 /**
@@ -14,12 +16,19 @@ import java.util.List;
  * @param allSlots list of all slots for the project across all months
  */
 public record ProjectCalendarResponse(
+        @Schema(description = "Project identifier", example = "math-grade-10")
         String projectId,
+        @Schema(description = "Project display name", example = "Math Grade 10")
         String projectName,
+        @Schema(description = "All-time tracked hours", example = "42.5")
         double totalHours,
+        @Schema(description = "Current month tracked hours", example = "6.5")
         double monthHours,
+        @Schema(description = "Timeslots scheduled for the current day")
         List<TodaySlot> todaySlots,
+        @Schema(description = "Timeslots in the requested month")
         List<CalendarSlot> monthSlots,
+        @Schema(description = "All project timeslots across months")
         List<CalendarSlot> allSlots
 ) {
 }
