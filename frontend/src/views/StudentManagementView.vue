@@ -88,7 +88,6 @@
                 <div class="flex justify-between items-start">
                   <div>
                     <h4 class="text-lg font-bold">{{ student.name }}</h4>
-                    <p class="text-sm text-on-surface-variant">Last active: {{ student.lastActive }}</p>
                   </div>
                   <button
                     type="button"
@@ -102,14 +101,26 @@
                 <div class="relative mt-5">
                   <p class="absolute -top-3 left-4 px-2 bg-white text-[10px] font-black uppercase tracking-widest text-primary">Progress Notes</p>
                   <textarea
-                    class="w-full h-28 bg-surface-container-low border-none rounded-2xl p-4 focus:ring-2 ring-primary/20 resize-none"
+                    class="w-full h-28 bg-surface-container-low rounded-2xl p-4 focus:ring-2 ring-primary/20 resize-none"
+                    :class="noteValidationErrors[student.id] ? 'border border-error focus:ring-error/30' : 'border-none'"
                     v-model="student.notes"
                     draggable="false"
                     @dragstart.prevent
+                    @input="onNotesInput(student.id)"
                   />
                 </div>
+                <p v-if="noteValidationErrors[student.id]" class="mt-2 text-xs font-semibold text-error">{{ noteValidationErrors[student.id] }}</p>
+                <p v-else-if="noteSaveSuccess[student.id]" class="mt-2 text-xs font-semibold text-primary">{{ noteSaveSuccess[student.id] }}</p>
                 <div class="mt-3 flex justify-end">
-                  <button @click="saveNotes(student)" class="text-sm font-bold text-primary">Save Notes</button>
+                  <button @click="openDeleteConfirm(student)" class="text-sm font-bold text-error mr-4">Delete</button>
+                  <button
+                    @click="saveNotes(student)"
+                    :disabled="!hasNoteChanges(student)"
+                    class="text-sm font-bold"
+                    :class="hasNoteChanges(student) ? 'text-primary' : 'text-on-surface-variant/50 cursor-not-allowed'"
+                  >
+                    {{ hasNoteChanges(student) ? 'Save Notes' : 'No Changes' }}
+                  </button>
                 </div>
               </article>
 
@@ -141,6 +152,15 @@
             </div>
           </div>
         </div>
+
+        <ConfirmDialog
+          :is-open="showDeleteConfirm"
+          title="Delete Student?"
+          @cancel="cancelDelete"
+          @confirm="confirmDelete"
+        >
+          Are you sure you want to delete <strong>{{ studentToDelete?.name }}</strong>? This action cannot be undone.
+        </ConfirmDialog>
       </section>
     </main>
   </div>
@@ -150,11 +170,13 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import AppSidebar from '../components/AppSidebar.vue';
+import ConfirmDialog from '../components/ConfirmDialog.vue';
 import MainTopBar from '../components/MainTopBar.vue';
 import SearchActiveIndicator from '../components/SearchActiveIndicator.vue';
 import {
   createProjectGroup,
   createProjectStudent,
+  deleteStudent,
   deleteProjectGroup,
   getProjectGroups,
   getProjectStudents,
@@ -172,6 +194,12 @@ const searchText = ref('');
 const showAddStudent = ref(false);
 const showAddGroup = ref(false);
 const newGroupName = ref('');
+const showDeleteConfirm = ref(false);
+const studentToDelete = ref(null);
+const noteValidationErrors = ref({});
+const noteSaveSuccess = ref({});
+const noteBaselineByStudentId = ref({});
+const noteSuccessTimers = new Map();
 const draggedStudentId = ref('');
 const isDragging = ref(false);
 const hoveredGroupName = ref('');
@@ -238,6 +266,9 @@ async function loadStudentContext() {
       ...student,
       groupName: normalizeGroupName(student.groupName)
     }));
+    noteBaselineByStudentId.value = Object.fromEntries(
+      students.value.map((student) => [student.id, normalizeNotes(student.notes)])
+    );
 
     const groupNames = new Set(['Ungrouped']);
     for (const group of loadedGroups) {
@@ -253,18 +284,19 @@ async function loadStudentContext() {
       {
         id: 'alex-thompson',
         name: 'Alex Thompson',
-        lastActive: '2 hours ago',
         notes: 'Struggling with quadratic equations. Requires focus on discriminant formula next session.',
         groupName: 'Group A'
       },
       {
         id: 'maya-rodriguez',
         name: 'Maya Rodriguez',
-        lastActive: 'Yesterday',
         notes: 'Excellent grasp of trigonometry. Ready for advanced circle theorem exercises.',
         groupName: 'Ungrouped'
       }
     ];
+    noteBaselineByStudentId.value = Object.fromEntries(
+      students.value.map((student) => [student.id, normalizeNotes(student.notes)])
+    );
     groups.value = ['Ungrouped', 'Group A'];
   } finally {
     isLoading.value = false;
@@ -326,6 +358,10 @@ async function addStudent() {
       groupName: selectedGroup
     });
     students.value = [{ ...created, groupName: normalizeGroupName(created.groupName) }, ...students.value];
+    noteBaselineByStudentId.value = {
+      ...noteBaselineByStudentId.value,
+      [created.id]: normalizeNotes(created.notes)
+    };
     if (!groups.value.includes(selectedGroup)) {
       groups.value = [...groups.value, selectedGroup];
     }
@@ -419,10 +455,115 @@ async function moveStudentToGroup(groupName) {
 }
 
 async function saveNotes(student) {
+  if (!hasNoteChanges(student)) {
+    return;
+  }
+
+  const normalizedNotes = String(student.notes || '').trim();
+  if (!normalizedNotes) {
+    setNoteValidationError(student.id, 'Notes cannot be empty.');
+    return;
+  }
+  if (normalizedNotes.length > 1000) {
+    setNoteValidationError(student.id, 'Notes cannot exceed 1000 characters.');
+    return;
+  }
+
+  clearNoteValidation(student.id);
+
   try {
-    await updateStudentNotes(student.id, student.notes);
+    await updateStudentNotes(student.id, normalizedNotes);
+    student.notes = normalizedNotes;
+    noteBaselineByStudentId.value = {
+      ...noteBaselineByStudentId.value,
+      [student.id]: normalizedNotes
+    };
+    noteSaveSuccess.value = { ...noteSaveSuccess.value, [student.id]: 'Notes saved.' };
+    clearNoteSuccessTimer(student.id);
+    const timeoutId = globalThis.setTimeout(() => {
+      const next = { ...noteSaveSuccess.value };
+      delete next[student.id];
+      noteSaveSuccess.value = next;
+      noteSuccessTimers.delete(student.id);
+    }, 2200);
+    noteSuccessTimers.set(student.id, timeoutId);
   } catch (error) {
     errorMessage.value = error.message;
+    setNoteValidationError(student.id, 'Could not save notes. Please try again.');
+  }
+}
+
+function setNoteValidationError(studentId, message) {
+  noteValidationErrors.value = { ...noteValidationErrors.value, [studentId]: message };
+  clearNoteSuccessTimer(studentId);
+  if (noteSaveSuccess.value[studentId]) {
+    const next = { ...noteSaveSuccess.value };
+    delete next[studentId];
+    noteSaveSuccess.value = next;
+  }
+}
+
+function clearNoteValidation(studentId) {
+  if (noteValidationErrors.value[studentId]) {
+    const next = { ...noteValidationErrors.value };
+    delete next[studentId];
+    noteValidationErrors.value = next;
+  }
+}
+
+function onNotesInput(studentId) {
+  clearNoteValidation(studentId);
+  clearNoteSuccessTimer(studentId);
+  if (noteSaveSuccess.value[studentId]) {
+    const next = { ...noteSaveSuccess.value };
+    delete next[studentId];
+    noteSaveSuccess.value = next;
+  }
+}
+
+function clearNoteSuccessTimer(studentId) {
+  const timeoutId = noteSuccessTimers.get(studentId);
+  if (!timeoutId) {
+    return;
+  }
+  globalThis.clearTimeout(timeoutId);
+  noteSuccessTimers.delete(studentId);
+}
+
+function normalizeNotes(value) {
+  return String(value || '').trim();
+}
+
+function hasNoteChanges(student) {
+  const baseline = noteBaselineByStudentId.value[student.id] ?? '';
+  return normalizeNotes(student.notes) !== baseline;
+}
+
+function openDeleteConfirm(student) {
+  studentToDelete.value = { id: student.id, name: student.name };
+  showDeleteConfirm.value = true;
+}
+
+function cancelDelete() {
+  showDeleteConfirm.value = false;
+  studentToDelete.value = null;
+}
+
+async function confirmDelete() {
+  if (!studentToDelete.value) {
+    return;
+  }
+
+  try {
+    await deleteStudent(studentToDelete.value.id);
+    students.value = students.value.filter((student) => student.id !== studentToDelete.value.id);
+    const nextBaselines = { ...noteBaselineByStudentId.value };
+    delete nextBaselines[studentToDelete.value.id];
+    noteBaselineByStudentId.value = nextBaselines;
+    cancelDelete();
+  } catch (error) {
+    errorMessage.value = error.message;
+    cancelDelete();
   }
 }
 
@@ -431,6 +572,10 @@ watch(projectId, () => {
 }, { immediate: true });
 
 onBeforeUnmount(() => {
+  for (const timeoutId of noteSuccessTimers.values()) {
+    globalThis.clearTimeout(timeoutId);
+  }
+  noteSuccessTimers.clear();
   globalThis.document.body.style.userSelect = '';
   globalThis.removeEventListener('mousemove', onPointerMove);
   globalThis.removeEventListener('mouseup', onGlobalMouseUp);

@@ -46,6 +46,7 @@ public class TutorDataService {
         private static final double DEFAULT_HOURLY_RATE = 60.0;
         private static final DateTimeFormatter MONTH_LABEL_FORMATTER = DateTimeFormatter.ofPattern("MMMM uuuu", Locale.ENGLISH);
                 private static final String UNGROUPED_GROUP = "Ungrouped";
+        private static final String STUDENT_NOT_FOUND_PREFIX = "Student not found: ";
 
     private final ProjectRepository projectRepository;
         private final ProjectGroupRepository projectGroupRepository;
@@ -200,7 +201,6 @@ public class TutorDataService {
                 .map(student -> new StudentProfile(
                         student.getStudentKey(),
                         student.getName(),
-                        student.getLastActive(),
                         student.getNotes(),
                         normalizeGroupName(student.getGroupName())
                 ))
@@ -323,7 +323,6 @@ public class TutorDataService {
         StudentEntity entity = new StudentEntity();
         entity.setStudentKey(UUID.randomUUID().toString());
         entity.setName(request.name().trim());
-        entity.setLastActive("");
         entity.setNotes(request.notes() != null ? request.notes().trim() : "");
         entity.setGroupName(groupName);
         entity.setProject(project);
@@ -332,7 +331,6 @@ public class TutorDataService {
         return new StudentProfile(
                 created.getStudentKey(),
                 created.getName(),
-                created.getLastActive(),
                 created.getNotes(),
                 normalizeGroupName(created.getGroupName())
         );
@@ -347,7 +345,7 @@ public class TutorDataService {
      */
     public StudentProfile updateStudentNotes(String studentId, StudentNotesUpdateRequest request) {
         StudentEntity student = studentRepository.findByStudentKey(studentId)
-                .orElseThrow(() -> new StudentNotFoundException("Student not found: " + studentId));
+                                .orElseThrow(() -> new StudentNotFoundException(STUDENT_NOT_FOUND_PREFIX + studentId));
 
         student.setNotes(request.notes().trim());
         StudentEntity updated = studentRepository.save(student);
@@ -355,7 +353,6 @@ public class TutorDataService {
         return new StudentProfile(
                 updated.getStudentKey(),
                 updated.getName(),
-                updated.getLastActive(),
                 updated.getNotes(),
                 normalizeGroupName(updated.getGroupName())
         );
@@ -370,7 +367,7 @@ public class TutorDataService {
      */
     public StudentProfile updateStudentGroup(String studentId, StudentGroupUpdateRequest request) {
         StudentEntity student = studentRepository.findByStudentKey(studentId)
-                .orElseThrow(() -> new StudentNotFoundException("Student not found: " + studentId));
+                                .orElseThrow(() -> new StudentNotFoundException(STUDENT_NOT_FOUND_PREFIX + studentId));
         ProjectEntity project = student.getProject();
         String groupName = normalizeGroupName(request.groupName());
         ensureGroupExists(project, groupName);
@@ -381,11 +378,21 @@ public class TutorDataService {
         return new StudentProfile(
                 updated.getStudentKey(),
                 updated.getName(),
-                updated.getLastActive(),
                 updated.getNotes(),
                 normalizeGroupName(updated.getGroupName())
         );
     }
+
+        /**
+         * Deletes a student.
+         *
+         * @param studentId student key
+         */
+        public void deleteStudent(String studentId) {
+                StudentEntity student = studentRepository.findByStudentKey(studentId)
+                                .orElseThrow(() -> new StudentNotFoundException(STUDENT_NOT_FOUND_PREFIX + studentId));
+                studentRepository.delete(student);
+        }
 
     /**
      * @return report rows for the export table
