@@ -9,13 +9,19 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "e2e": "playwright test",
+    "e2e:debug": "playwright test --debug",
+    "e2e:ui": "playwright test tests/e2e/ui-smoke.e2e.ts --ui --project=chromium",
+    "e2e:ui:all": "playwright test --ui --project=chromium",
+    "e2e:report": "playwright show-report"
   },
   "dependencies": {
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@vitejs/plugin-vue": "^5.2.1",
     "@vitest/ui": "^1.0.0",
     "autoprefixer": "^10.4.20",

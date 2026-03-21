@@ -54,3 +54,33 @@ npm run dev
 npm run build
 npm run preview
 ```
+
+## Testing
+
+### Unit Tests
+Run component and utility tests with Vitest:
+
+```bash
+npm run test          # Run in watch mode
+npm run test:ui       # Open interactive UI
+npm run test:run      # Run once and exit
+```
+
+### End-to-End Tests
+Run user workflow tests with Playwright (tests both frontend and backend):
+
+```bash
+npm run e2e           # Run E2E tests
+npm run e2e:ui        # Interactive test UI
+npm run e2e:debug     # Step-through debugging
+npm run e2e:report    # View last test report
+```
+
+**E2E tests verify:**
+- Project creation and management workflows
+- Student management across projects
+- Calendar timeslot operations
+- Report generation from timeslots
+- API contracts and data structures
+
+For detailed E2E testing guide, see: [E2E_TESTS.md](./E2E_TESTS.md)
