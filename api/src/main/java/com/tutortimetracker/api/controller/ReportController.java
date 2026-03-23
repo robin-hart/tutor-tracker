@@ -20,6 +20,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Generates and retrieves tutoring session reports across projects.
+ *
+ * <p>Provides global report aggregation, project-scoped reporting, and monthly report generation
+ * for analytics and time tracking.
+ */
 @RestController
 @RequestMapping("/api")
 @CrossOrigin(origins = {"http://localhost:5173"})
