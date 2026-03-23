@@ -2,7 +2,7 @@ import { test, expect, Page } from '@playwright/test';
 
 /**
  * E2E tests for Student management within projects
- * 
+ *
  * Tests user flows:
  * - Creating a student in a project
  * - Viewing students list

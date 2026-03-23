@@ -17,7 +17,7 @@ describe('projectFilter', () => {
     const sampleProjects = [
       { id: '1', name: 'FSB', category: 'GENERAL' },
       { id: '2', name: 'Math Grade 10', category: 'STEM' },
-      { id: '3', name: 'Physics University', category: 'SCIENCE' }
+      { id: '3', name: 'Physics University', category: 'SCIENCE' },
     ];
 
     it('returns all projects for empty query', () => {

@@ -2,7 +2,7 @@ import { chromium } from '@playwright/test';
 
 /**
  * Global setup for E2E tests.
- * 
+ *
  * This runs once before all test files and can be used to:
  * - Verify backend API is reachable
  * - Seed test data

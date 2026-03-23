@@ -202,7 +202,7 @@ describe('formatHoursToHM', () => {
     it('should never return minutes greater than 59', () => {
       // Test various values that could cause rounding to exceed 60
       const testValues = [0.9999, 1.9999, 2.9999, 0.99999];
-      testValues.forEach(value => {
+      testValues.forEach((value) => {
         const result = formatHoursToHM(value);
         expect(result.minutes).toBeLessThan(60);
       });

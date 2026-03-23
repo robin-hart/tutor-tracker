@@ -2,7 +2,7 @@ import { test, expect, Page } from '@playwright/test';
 
 /**
  * E2E tests for Calendar and Timeslot management
- * 
+ *
  * Tests user flows:
  * - Creating timeslots in project calendar
  * - Viewing calendar for a month

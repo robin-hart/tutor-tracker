@@ -45,7 +45,7 @@ test.beforeAll(async ({ playwright }) => {
       slug: `test-${Date.now()}`,
     },
   });
-  
+
   const project = await projectResponse.json();
   testProjectSlug = project.slug; // Use this in tests
 });
@@ -56,7 +56,7 @@ test('should create student in project', async () => {
     `${apiBaseUrl}/api/projects/${testProjectSlug}/students`,
     { data: { name: 'Test Student', notes: '', groupName: 'Group A' } }
   );
-  
+
   expect(studentResponse.ok()).toBeTruthy();
 });
 ```
@@ -80,17 +80,21 @@ frontend/
 ## Running Tests
 
 ### Run all E2E tests (headless, all 3 browsers)
+
 ```bash
 npm run e2e
 ```
 
 ### Run tests in UI mode (interactive, single browser)
+
 **This is the recommended way to develop and debug tests:**
+
 ```bash
 npm run e2e:ui
 ```
 
 Opens an interactive UI where you can:
+
 - ▶️ Run individual tests
 - 📹 Watch live browser interactions
 - 🐛 Debug failing tests
@@ -100,25 +104,31 @@ Opens an interactive UI where you can:
 UI mode uses **Chromium in headed mode** (browser window visible) for a Better development experience.
 
 ### Run specific test file
+
 ```bash
 npx playwright test tests/e2e/projects.e2e.ts
 ```
 
 ### Run tests matching a pattern
+
 ```bash
 npx playwright test -g "should create"
 ```
 
 ### Debug mode (step-through with Inspector)
+
 ```bash
 npm run e2e:debug
 ```
+
 Opens the Playwright Inspector, allowing you to step through each action and inspect the DOM.
 
 ### View test report
+
 ```bash
 npm run e2e:report
 ```
+
 Opens the HTML test report in your browser showing results, traces, and failure details.
 
 ## Configuration
@@ -168,10 +178,9 @@ test.beforeAll(async ({ playwright }) => {
   const page = await context.newPage();
 
   // Create test project
-  const projectResponse = await page.request.post(
-    `${apiBaseUrl}/api/projects`,
-    { data: { name: `Test Project ${Date.now()}`, slug: `test-${Date.now()}` } }
-  );
+  const projectResponse = await page.request.post(`${apiBaseUrl}/api/projects`, {
+    data: { name: `Test Project ${Date.now()}`, slug: `test-${Date.now()}` },
+  });
 
   const project = await projectResponse.json();
   testProjectSlug = project.slug;
@@ -202,11 +211,13 @@ expect(Array.isArray(data)).toBeTruthy();
 ## Workflow: Local Development
 
 1. **Start backend** (Terminal 1)
+
    ```bash
    cd api && mvn spring-boot:run
    ```
 
 2. **Start frontend** (Terminal 2)
+
    ```bash
    npm run dev
    ```
@@ -239,41 +250,48 @@ In GitHub Actions / GitLab CI / Jenkins:
 ```yaml
 - name: Start Backend
   run: cd api && mvn spring-boot:run &
-  
+
 - name: Run E2E Tests
   run: npm run e2e
   env:
     API_BASE_URL: http://localhost:8080
     FRONTEND_BASE_URL: http://localhost:5173
-    CI: true  # Single worker, 2 retries, parallel disabled
+    CI: true # Single worker, 2 retries, parallel disabled
 ```
 
 ## Debugging Failed Tests
 
 ### View detailed trace
+
 ```bash
 npx playwright show-trace trace.zip
 ```
 
 ### See screenshots
+
 Failed tests automatically capture screenshots (saved in `test-results/` by default).
 
 ### Use the Inspector
+
 ```bash
 npm run e2e:debug
 ```
+
 Then use the Playwright Inspector console to evaluate expressions and step through code.
 
 ### Add debug statements
+
 ```typescript
-await page.pause();  // Pauses execution, opens browser for inspection
-console.log(await page.textContent('body'));  // Log page content
+await page.pause(); // Pauses execution, opens browser for inspection
+console.log(await page.textContent('body')); // Log page content
 ```
 
 ### View recent failures
+
 ```bash
 npm run e2e:report
 ```
+
 Shows the last test run with all failures, traces, and screenshots.
 
 ## Best Practices
@@ -333,7 +351,7 @@ test.describe('Feature Name', () => {
     // Arrange: Set up data (already done in beforeAll)
     // Act: Perform action via API
     const response = await page.request.post(`${apiBaseUrl}/api/...`, { data: {...} });
-    
+
     // Assert: Verify result
     expect(response.ok()).toBeTruthy();
     const data = await response.json();
@@ -345,17 +363,20 @@ test.describe('Feature Name', () => {
 ## Troubleshooting
 
 ### Tests timeout
+
 - Increase timeout in `playwright.config.ts`
 - Verify backend is running: `curl http://localhost:8080/api/health`
 - Verify frontend is running: `curl http://localhost:5173`
 - Check network connectivity
 
 ### "Browser not found"
+
 ```bash
 npx playwright install
 ```
 
 ### Port already in use
+
 - Check what's using ports 5173 and 8080
 - Kill existing processes or use different ports:
   ```bash
@@ -363,17 +384,20 @@ npx playwright install
   ```
 
 ### UI mode doesn't open browser
+
 - Ensure you're running with `npm run e2e:ui` (not raw `playwright test --ui`)
 - UI mode only works with Chromium in headed mode
 - If it still doesn't work, use `npm run e2e:debug` instead
 
 ### Flaky tests
+
 - Remove hard waits (use auto-waiting instead)
 - Add retries for API calls
 - Use `waitForLoadState('networkidle')`
 - Use unique test data (with timestamps)
 
 ### Tests interfering with each other
+
 - Each test creates unique data with timestamps
 - If tests are deleting shared demo data, that's a test isolation issue
 - Review `beforeAll` and `beforeEach` hooks to ensure proper setup

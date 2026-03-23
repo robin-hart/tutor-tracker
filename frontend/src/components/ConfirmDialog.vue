@@ -10,8 +10,15 @@
         <slot />
       </p>
       <div class="flex gap-3 justify-end">
-        <button @click="onCancel" class="px-4 py-2 rounded-lg bg-surface-container-low text-on-surface font-bold">{{ cancelLabel }}</button>
-        <button @click="onConfirm" class="px-4 py-2 rounded-lg bg-error text-on-error font-bold">{{ confirmLabel }}</button>
+        <button
+          class="px-4 py-2 rounded-lg bg-surface-container-low text-on-surface font-bold"
+          @click="onCancel"
+        >
+          {{ cancelLabel }}
+        </button>
+        <button class="px-4 py-2 rounded-lg bg-error text-on-error font-bold" @click="onConfirm">
+          {{ confirmLabel }}
+        </button>
       </div>
     </div>
   </div>
@@ -23,20 +30,20 @@ import { onBeforeUnmount, onMounted } from 'vue';
 const props = defineProps({
   isOpen: {
     type: Boolean,
-    default: false
+    default: false,
   },
   title: {
     type: String,
-    default: 'Confirm Action'
+    default: 'Confirm Action',
   },
   confirmLabel: {
     type: String,
-    default: 'Delete'
+    default: 'Delete',
   },
   cancelLabel: {
     type: String,
-    default: 'Cancel'
-  }
+    default: 'Cancel',
+  },
 });
 
 const emit = defineEmits(['confirm', 'cancel']);

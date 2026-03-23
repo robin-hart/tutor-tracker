@@ -5,7 +5,9 @@
  * @returns {string}
  */
 export function normalizeForProjectSearch(value) {
-  return String(value ?? '').toLowerCase().trim();
+  return String(value ?? '')
+    .toLowerCase()
+    .trim();
 }
 
 /**

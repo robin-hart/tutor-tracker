@@ -15,7 +15,7 @@ async function request(path, options = {}) {
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
     headers,
-    ...options
+    ...options,
   });
 
   if (!response.ok) {
@@ -24,7 +24,7 @@ async function request(path, options = {}) {
       const errorBody = await response.json();
       apiMessage = errorBody.message ? ` - ${errorBody.message}` : '';
     } catch {
-      apiMessage = '';
+      // Ignore non-JSON error bodies and keep default empty API message.
     }
     throw new Error(`API request failed: ${response.status} ${response.statusText}${apiMessage}`);
   }
@@ -52,7 +52,7 @@ export function getProjects() {
 export function createProject(payload) {
   return request('/projects', {
     method: 'POST',
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
   });
 }
 
@@ -61,7 +61,7 @@ export function createProject(payload) {
  */
 export function deleteProject(projectId) {
   return request(`/projects/${projectId}`, {
-    method: 'DELETE'
+    method: 'DELETE',
   });
 }
 
@@ -88,7 +88,7 @@ export function getProjectGroups(projectId) {
 export function createProjectGroup(projectId, name) {
   return request(`/projects/${projectId}/groups`, {
     method: 'POST',
-    body: JSON.stringify({ name })
+    body: JSON.stringify({ name }),
   });
 }
 
@@ -98,7 +98,7 @@ export function createProjectGroup(projectId, name) {
  */
 export function deleteProjectGroup(projectId, groupName) {
   return request(`/projects/${projectId}/groups/${encodeURIComponent(groupName)}`, {
-    method: 'DELETE'
+    method: 'DELETE',
   });
 }
 
@@ -109,7 +109,7 @@ export function deleteProjectGroup(projectId, groupName) {
 export function createProjectStudent(projectId, payload) {
   return request(`/projects/${projectId}/students`, {
     method: 'POST',
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
   });
 }
 
@@ -120,7 +120,7 @@ export function createProjectStudent(projectId, payload) {
 export function updateStudentNotes(studentId, notes) {
   return request(`/students/${studentId}/notes`, {
     method: 'PATCH',
-    body: JSON.stringify({ notes })
+    body: JSON.stringify({ notes }),
   });
 }
 
@@ -131,7 +131,7 @@ export function updateStudentNotes(studentId, notes) {
 export function updateStudentGroup(studentId, groupName) {
   return request(`/students/${studentId}/group`, {
     method: 'PATCH',
-    body: JSON.stringify({ groupName })
+    body: JSON.stringify({ groupName }),
   });
 }
 
@@ -141,7 +141,7 @@ export function updateStudentGroup(studentId, groupName) {
  */
 export function deleteStudent(studentId) {
   return request(`/students/${studentId}`, {
-    method: 'DELETE'
+    method: 'DELETE',
   });
 }
 
@@ -161,7 +161,7 @@ export function getProjectReports(projectId) {
  */
 export function generateProjectReport(projectId, month) {
   return request(`/projects/${projectId}/reports/generate?month=${encodeURIComponent(month)}`, {
-    method: 'POST'
+    method: 'POST',
   });
 }
 
@@ -175,7 +175,7 @@ export function generateProjectReport(projectId, month) {
 export function saveTimeslot(projectId, payload) {
   return request(`/projects/${projectId}/timeslots`, {
     method: 'POST',
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
   });
 }
 
@@ -197,7 +197,7 @@ export function getProjectTimeslot(projectId, timeslotId) {
 export function updateProjectTimeslot(projectId, timeslotId, payload) {
   return request(`/projects/${projectId}/timeslots/${timeslotId}`, {
     method: 'PUT',
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
   });
 }
 
@@ -208,6 +208,6 @@ export function updateProjectTimeslot(projectId, timeslotId, payload) {
  */
 export function deleteProjectTimeslot(projectId, timeslotId) {
   return request(`/projects/${projectId}/timeslots/${timeslotId}`, {
-    method: 'DELETE'
+    method: 'DELETE',
   });
 }

@@ -15,7 +15,10 @@ test('user can open dashboard and create a project from UI', async ({ page }) =>
   const projectName = `PW UI Smoke ${Date.now()}`;
   await page.getByPlaceholder('Project name').fill(projectName);
 
-  await page.getByRole('button', { name: /create/i }).last().click();
+  await page
+    .getByRole('button', { name: /create/i })
+    .last()
+    .click();
 
   await expect(page.getByText(projectName)).toBeVisible();
 });

@@ -2,7 +2,7 @@ import { test, expect, Page } from '@playwright/test';
 
 /**
  * E2E tests for Reports functionality
- * 
+ *
  * Tests user flows:
  * - Generating reports from timeslots
  * - Retrieving project reports

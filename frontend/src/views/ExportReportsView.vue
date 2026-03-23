@@ -4,7 +4,9 @@
     <MainTopBar search-placeholder="Search reports or sessions...">
       <template #tabs>
         <nav class="flex items-center gap-6">
-          <a class="text-primary font-bold border-b-2 border-primary pb-1 font-manrope text-sm">All Projects</a>
+          <a class="text-primary font-bold border-b-2 border-primary pb-1 font-manrope text-sm"
+            >All Projects</a
+          >
           <a class="text-on-surface-variant font-manrope text-sm">Active Sessions</a>
         </nav>
       </template>
@@ -13,26 +15,48 @@
     <main class="ml-72 pt-32 px-12 pb-20">
       <div class="mb-12">
         <h1 class="font-headline text-5xl font-extrabold tracking-tight mb-2">Reports & Exports</h1>
-        <p class="text-on-surface-variant text-lg max-w-2xl">Analyze performance trends and generate professional documentation for your billing and session history.</p>
+        <p class="text-on-surface-variant text-lg max-w-2xl">
+          Analyze performance trends and generate professional documentation for your billing and
+          session history.
+        </p>
       </div>
 
       <section class="mb-8 grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
         <label class="block">
           <span class="text-xs text-on-surface-variant uppercase tracking-widest">Project</span>
-          <select v-model="selectedProjectId" class="mt-2 w-full bg-surface-container-lowest rounded-xl px-4 py-3 border-none focus:ring-2 focus:ring-primary/20">
-            <option v-for="project in projects" :key="project.id" :value="project.id">{{ project.name }}</option>
+          <select
+            v-model="selectedProjectId"
+            class="mt-2 w-full bg-surface-container-lowest rounded-xl px-4 py-3 border-none focus:ring-2 focus:ring-primary/20"
+          >
+            <option v-for="project in projects" :key="project.id" :value="project.id">
+              {{ project.name }}
+            </option>
           </select>
         </label>
         <label class="block">
-          <span class="text-xs text-on-surface-variant uppercase tracking-widest">Filter by project</span>
-          <input v-model.trim="projectFilter" class="mt-2 w-full bg-surface-container-lowest rounded-xl px-4 py-3 border-none focus:ring-2 focus:ring-primary/20" placeholder="Project name" type="text" />
+          <span class="text-xs text-on-surface-variant uppercase tracking-widest"
+            >Filter by project</span
+          >
+          <input
+            v-model.trim="projectFilter"
+            class="mt-2 w-full bg-surface-container-lowest rounded-xl px-4 py-3 border-none focus:ring-2 focus:ring-primary/20"
+            placeholder="Project name"
+            type="text"
+          />
         </label>
         <label class="block">
           <span class="text-xs text-on-surface-variant uppercase tracking-widest">Month Key</span>
-          <input v-model.trim="monthFilter" class="mt-2 w-full bg-surface-container-lowest rounded-xl px-4 py-3 border-none focus:ring-2 focus:ring-primary/20" placeholder="2026-03" type="text" />
+          <input
+            v-model.trim="monthFilter"
+            class="mt-2 w-full bg-surface-container-lowest rounded-xl px-4 py-3 border-none focus:ring-2 focus:ring-primary/20"
+            placeholder="2026-03"
+            type="text"
+          />
         </label>
         <div class="bg-surface-container-lowest rounded-xl px-4 py-3">
-          <p class="text-xs text-on-surface-variant uppercase tracking-widest mb-1">Filtered Gross Amount</p>
+          <p class="text-xs text-on-surface-variant uppercase tracking-widest mb-1">
+            Filtered Gross Amount
+          </p>
           <p class="font-headline text-2xl font-bold">${{ filteredGross.toFixed(2) }}</p>
         </div>
       </section>
@@ -47,8 +71,12 @@
         </button>
       </section>
 
-      <div class="bg-surface-container-low rounded-2xl overflow-hidden shadow-[0_20px_40px_rgba(11,28,48,0.04)]">
-        <div class="p-8 flex items-center justify-between bg-surface-container-low border-b border-outline-variant/10">
+      <div
+        class="bg-surface-container-low rounded-2xl overflow-hidden shadow-[0_20px_40px_rgba(11,28,48,0.04)]"
+      >
+        <div
+          class="p-8 flex items-center justify-between bg-surface-container-low border-b border-outline-variant/10"
+        >
           <h2 class="font-headline font-bold text-2xl">Monthly Breakdowns</h2>
         </div>
         <div class="overflow-x-auto">
@@ -63,11 +91,20 @@
               </tr>
             </thead>
             <tbody class="text-sm font-body divide-y divide-outline-variant/5">
-              <tr v-for="row in filteredReports" :key="`${row.month}-${row.projectName}`" class="hover:bg-surface-container-lowest transition-colors">
+              <tr
+                v-for="row in filteredReports"
+                :key="`${row.month}-${row.projectName}`"
+                class="hover:bg-surface-container-lowest transition-colors"
+              >
                 <td class="px-8 py-6 font-bold">{{ row.month }}</td>
                 <td class="px-8 py-6">{{ row.projectName }}</td>
                 <td class="px-8 py-6 text-on-surface-variant">{{ row.totalHours }} hrs</td>
-                <td class="px-8 py-6"><span class="px-3 py-1 bg-secondary-fixed text-on-secondary-fixed rounded-full text-xs font-bold">{{ row.sessions }} sessions</span></td>
+                <td class="px-8 py-6">
+                  <span
+                    class="px-3 py-1 bg-secondary-fixed text-on-secondary-fixed rounded-full text-xs font-bold"
+                    >{{ row.sessions }} sessions</span
+                  >
+                </td>
                 <td class="px-8 py-6 font-bold">${{ row.grossAmount.toFixed(2) }}</td>
               </tr>
             </tbody>
@@ -97,13 +134,20 @@ const errorMessage = ref('');
 
 const filteredReports = computed(() => {
   return reports.value.filter((row) => {
-    const byProject = projectFilter.value ? row.projectName.toLowerCase().includes(projectFilter.value.toLowerCase()) : true;
-    const byMonth = monthFilter.value ? row.month.toLowerCase().includes(monthFilter.value.toLowerCase()) || row.month.includes(monthFilter.value) : true;
+    const byProject = projectFilter.value
+      ? row.projectName.toLowerCase().includes(projectFilter.value.toLowerCase())
+      : true;
+    const byMonth = monthFilter.value
+      ? row.month.toLowerCase().includes(monthFilter.value.toLowerCase()) ||
+        row.month.includes(monthFilter.value)
+      : true;
     return byProject && byMonth;
   });
 });
 
-const filteredGross = computed(() => filteredReports.value.reduce((sum, row) => sum + Number(row.grossAmount), 0));
+const filteredGross = computed(() =>
+  filteredReports.value.reduce((sum, row) => sum + Number(row.grossAmount), 0)
+);
 
 async function loadProjectReports() {
   if (!selectedProjectId.value) {
@@ -138,7 +182,13 @@ onMounted(async () => {
     projects.value = [{ id: 'math-grade-10', name: 'Math Grade 10' }];
     selectedProjectId.value = 'math-grade-10';
     reports.value = [
-      { month: 'March 2026', projectName: 'Math Grade 10', totalHours: 6.5, sessions: 3, grossAmount: 390 }
+      {
+        month: 'March 2026',
+        projectName: 'Math Grade 10',
+        totalHours: 6.5,
+        sessions: 3,
+        grossAmount: 390,
+      },
     ];
   }
 });
