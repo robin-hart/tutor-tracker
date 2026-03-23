@@ -11,6 +11,8 @@
 - Java: Follow Google Java Style Guide. Use Checkstyle enforcement.
 - JavaScript/TypeScript: Use ESLint enforcement and Prettier for formatting. Continuously change the prettier file to match the style of the existing codebase (carefully).
 
+SonarQube is running in the background and should be used to identify and fix code smells, bugs, and security vulnerabilities. Aim for a clean SonarQube report with no critical issues.
+
 Continuously run linting and formatting checks during development.
 
 ## Testing
