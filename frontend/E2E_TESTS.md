@@ -34,6 +34,24 @@ Tests **do NOT use pre-populated demo data**. Instead:
 
 Since tests create unique data (using timestamps), they won't conflict with demo data or other test runs.
 
+## Browser Installation
+
+Before running E2E tests, you must install Playwright browser binaries. By default, the project uses **Chromium**.
+
+### Install Browser Binaries
+
+```bash
+npx playwright install chromium
+```
+
+This downloads the Chromium browser needed for E2E test execution. This step is required once per development environment.
+
+For all browsers (Chromium, Firefox, WebKit):
+
+```bash
+npx playwright install
+```
+
 ### Example: How Tests Create Data
 
 ```typescript

@@ -81,6 +81,12 @@ npm run test:run      # Run once and exit
 
 ### End-to-End Tests
 
+First, install browser binaries for Playwright:
+
+```bash
+npx playwright install chromium
+```
+
 Run user workflow tests with Playwright (tests both frontend and backend):
 
 ```bash
@@ -92,6 +98,7 @@ npm run e2e:report       # View last test report
 ```
 
 **E2E test suites:**
+
 - `projects.e2e.ts` - Project CRUD and dashboard workflows
 - `students.e2e.ts` - Student management and group assignments
 - `timeslots.e2e.ts` - Calendar timeslot operations

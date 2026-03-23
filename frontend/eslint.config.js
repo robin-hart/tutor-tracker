@@ -2,6 +2,7 @@ import js from '@eslint/js';
 import tsParser from '@typescript-eslint/parser';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import pluginVue from 'eslint-plugin-vue';
+import tsPlugin from '@typescript-eslint/eslint-plugin';
 import globals from 'globals';
 
 export default [
@@ -38,6 +39,9 @@ export default [
   },
   {
     files: ['**/*.ts'],
+    plugins: {
+      '@typescript-eslint': tsPlugin,
+    },
     languageOptions: {
       parser: tsParser,
       parserOptions: {
@@ -49,9 +53,15 @@ export default [
         ...globals.node,
       },
     },
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'warn',
+    },
   },
   {
     files: ['tests/e2e/**/*.ts'],
+    plugins: {
+      '@typescript-eslint': tsPlugin,
+    },
     languageOptions: {
       parser: tsParser,
       parserOptions: {
@@ -67,6 +77,9 @@ export default [
         beforeEach: 'readonly',
         afterEach: 'readonly',
       },
+    },
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
     },
   },
   eslintConfigPrettier,
