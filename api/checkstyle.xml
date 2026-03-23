@@ -42,6 +42,18 @@
         <module name="MemberName" />
         <module name="ConstantName" />
 
+        <!-- Documentation -->
+        <module name="JavadocType">
+            <property name="tokens" value="INTERFACE_DEF,CLASS_DEF" />
+            <property name="scope" value="public" />
+        </module>
+        <module name="JavadocMethod">
+            <property name="tokens" value="METHOD_DEF" />
+            <property name="accessModifiers" value="public" />
+            <property name="allowMissingParamTags" value="true" />
+            <property name="allowMissingReturnTag" value="true" />
+        </module>
+
         <!-- Readability and safety -->
         <module name="NeedBraces" />
         <module name="WhitespaceAfter" />
