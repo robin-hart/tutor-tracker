@@ -31,7 +31,11 @@ test.describe('Calendar & Timeslots', () => {
       },
     });
 
-    expect(projectResponse.ok()).toBeTruthy();
+    if (!projectResponse.ok()) {
+      throw new Error(
+        `Failed to create test project: ${projectResponse.status()} ${projectResponse.statusText()}`
+      );
+    }
     const project = await projectResponse.json();
     testProjectId = project.id;
 

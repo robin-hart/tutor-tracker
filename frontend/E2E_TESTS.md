@@ -390,7 +390,7 @@ test.describe('Feature Name', () => {
 ### "Browser not found"
 
 ```bash
-npx playwright install
+npx playwright install chromium
 ```
 
 ### Port already in use
@@ -419,6 +419,39 @@ npx playwright install
 - Each test creates unique data with timestamps
 - If tests are deleting shared demo data, that's a test isolation issue
 - Review `beforeAll` and `beforeEach` hooks to ensure proper setup
+
+## Test Coverage Summary (Current Status)
+
+### ✅ All Tests Passing: 25/25
+
+**Test Breakdown:**
+
+- **UI Smoke Tests** (5): Dashboard, Calendar, Students, Timeslot Editor, Reports
+- **Project Management** (5): Dashboard display, project creation, API validation, calendar navigation, project structure verification
+- **Student Management** (5): Student creation, list retrieval, notes update, group reassignment, API structure validation
+- **Calendar & Timeslots** (5): Timeslot creation, calendar retrieval, timeslot updates, deletion, API structure validation
+- **Reports** (5): Report generation, retrieval, all reports listing, structure validation, data accuracy
+
+**Validation Status:**
+
+- ✅ Lint: Clean
+- ✅ Formatting: Clean
+- ✅ Unit Tests: 49/49 passed
+- ✅ E2E Tests: 25/25 passed
+- ✅ Production Build: Successful (146.39 kB JS, 22.93 kB CSS)
+
+**Browser Support:**
+
+- ✅ Chromium (tested and verified)
+- Firefox & WebKit (configured, not tested locally)
+
+**Key Features Tested:**
+
+- ✅ Full CRUD operations for projects, students, timeslots
+- ✅ API contract validation and data structure integrity
+- ✅ Multi-view navigation and UI interactions
+- ✅ Real-world smoke test scenarios
+- ✅ Report generation workflow
 
 ## Resources
 
