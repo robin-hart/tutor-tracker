@@ -70,11 +70,19 @@ npm run test:run      # Run once and exit
 Run user workflow tests with Playwright (tests both frontend and backend):
 
 ```bash
-npm run e2e           # Run E2E tests
-npm run e2e:ui        # Interactive test UI
-npm run e2e:debug     # Step-through debugging
-npm run e2e:report    # View last test report
+npm run e2e              # Run all E2E tests (headless)
+npm run e2e:ui           # Interactive UI - smoke tests only
+npm run e2e:ui:all       # Interactive UI - all E2E tests
+npm run e2e:debug        # Step-through debugging (headless)
+npm run e2e:report       # View last test report
 ```
+
+**E2E test suites:**
+- `projects.e2e.ts` - Project CRUD and dashboard workflows
+- `students.e2e.ts` - Student management and group assignments
+- `timeslots.e2e.ts` - Calendar timeslot operations
+- `reports.e2e.ts` - Report generation and data structure validation
+- `ui-smoke.e2e.ts` - Quick smoke test for UI mode
 
 **E2E tests verify:**
 - Project creation and management workflows
@@ -82,5 +90,8 @@ npm run e2e:report    # View last test report
 - Calendar timeslot operations
 - Report generation from timeslots
 - API contracts and data structures
+- Browser interactions and UI flows
+
+**Note:** The interactive UI mode (`--ui`) runs in a single-threaded mode for better UX. Use `npm run e2e` for the fastest headless test runs with parallelization.
 
 For detailed E2E testing guide, see: [E2E_TESTS.md](./E2E_TESTS.md)
