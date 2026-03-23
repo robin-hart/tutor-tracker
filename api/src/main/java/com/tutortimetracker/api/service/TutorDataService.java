@@ -711,17 +711,6 @@ public class TutorDataService {
    * Maps timeslot entity to API model.
    *
    * @param entity timeslot entity
-   * @return API payload
-   */
-  private TimeslotResponse toTimeslotResponse(TimeslotEntity entity) {
-    String projectId = entity.getProject() == null ? null : entity.getProject().getSlug();
-    return toTimeslotResponse(entity, projectId);
-  }
-
-  /**
-   * Maps timeslot entity to API model.
-   *
-   * @param entity timeslot entity
    * @param projectId owning project id
    * @return API payload
    */

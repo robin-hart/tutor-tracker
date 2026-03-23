@@ -416,20 +416,20 @@ class TutorDataServiceTest {
   @Test
   void updateStudentGroup_shouldThrowWhenStudentNotFound() {
     when(studentRepository.findByStudentKey("missing")).thenReturn(Optional.empty());
+    StudentGroupUpdateRequest request = new StudentGroupUpdateRequest("Group A");
 
     assertThrows(
-        StudentNotFoundException.class,
-        () -> service.updateStudentGroup("missing", new StudentGroupUpdateRequest("Group A")));
+        StudentNotFoundException.class, () -> service.updateStudentGroup("missing", request));
     verify(studentRepository, never()).save(any(StudentEntity.class));
   }
 
   @Test
   void updateStudentNotes_shouldThrowWhenStudentNotFound() {
     when(studentRepository.findByStudentKey("missing")).thenReturn(Optional.empty());
+    StudentNotesUpdateRequest request = new StudentNotesUpdateRequest("note");
 
     assertThrows(
-        StudentNotFoundException.class,
-        () -> service.updateStudentNotes("missing", new StudentNotesUpdateRequest("note")));
+        StudentNotFoundException.class, () -> service.updateStudentNotes("missing", request));
   }
 
   @Test
@@ -594,10 +594,10 @@ class TutorDataServiceTest {
   @Test
   void createProjectStudent_shouldThrowWhenProjectNotFound() {
     when(projectRepository.findBySlug("missing")).thenReturn(Optional.empty());
+    StudentCreateRequest request = new StudentCreateRequest("Alice", "", null);
 
     assertThrows(
-        ProjectNotFoundException.class,
-        () -> service.createProjectStudent("missing", new StudentCreateRequest("Alice", "", null)));
+        ProjectNotFoundException.class, () -> service.createProjectStudent("missing", request));
   }
 
   @Test
