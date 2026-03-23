@@ -69,9 +69,10 @@ public class StudentController {
                       examples =
                           @ExampleObject(
                               value =
-                                  "{\n"
-                                      + "  \"notes\": \"Improved in fractions and equations.\"\n"
-                                      + "}")))
+                                  """
+                                  {
+                                    "notes": "Improved in fractions and equations."
+                                  }""")))
           @Valid
           @RequestBody
           StudentNotesUpdateRequest request) {

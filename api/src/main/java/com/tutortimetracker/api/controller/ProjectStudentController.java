@@ -97,11 +97,12 @@ public class ProjectStudentController {
                       examples =
                           @ExampleObject(
                               value =
-                                  "{\n"
-                                      + "  \"name\": \"Alex Thompson\",\n"
-                                      + "  \"notes\": \"Needs extra practice on quadratics.\",\n"
-                                      + "  \"groupName\": \"Group A\"\n"
-                                      + "}")))
+                                  """
+                                  {
+                                    "name": "Alex Thompson",
+                                    "notes": "Needs extra practice on quadratics.",
+                                    "groupName": "Group A"
+                                  }""")))
           @Valid
           @RequestBody
           StudentCreateRequest request) {

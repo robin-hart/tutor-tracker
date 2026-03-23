@@ -63,10 +63,10 @@
         <module name="SimplifyBooleanReturn" />
         <module name="FallThrough" />
         <module name="RegexpSinglelineJavaCheck">
-            <property name="format" value="\+ \&quot;" />
+            <property name="format" value="\&quot;.*\\n.*\&quot;\s*\+\s*\&quot;" />
             <property name="ignoreComments" value="true" />
             <property name="message"
-                value="String concatenation detected: consider using text blocks (Java 15+) instead" />
+                value="JSON or multi-line string literal concatenation detected: consider using text blocks" />
         </module>
     </module>
 </module>

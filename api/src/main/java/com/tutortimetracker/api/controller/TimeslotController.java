@@ -69,13 +69,14 @@ public class TimeslotController {
                       examples =
                           @ExampleObject(
                               value =
-                                  "{\n"
-                                      + "  \"title\": \"Integration Workshop\",\n"
-                                      + "  \"description\": \"Focused revision session\",\n"
-                                      + "  \"durationMinutes\": 90,\n"
-                                      + "  \"date\": \"2026-03-20\",\n"
-                                      + "  \"startTime\": \"14:00\"\n"
-                                      + "}")))
+                                  """
+                                  {
+                                    "title": "Integration Workshop",
+                                    "description": "Focused revision session",
+                                    "durationMinutes": 90,
+                                    "date": "2026-03-20",
+                                    "startTime": "14:00"
+                                  }""")))
           @Valid
           @RequestBody
           TimeslotCreateRequest request) {
