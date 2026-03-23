@@ -62,5 +62,11 @@
         <module name="SimplifyBooleanExpression" />
         <module name="SimplifyBooleanReturn" />
         <module name="FallThrough" />
+        <module name="RegexpSinglelineJavaCheck">
+            <property name="format" value="\+ \&quot;" />
+            <property name="ignoreComments" value="true" />
+            <property name="message"
+                value="String concatenation detected: consider using text blocks (Java 15+) instead" />
+        </module>
     </module>
 </module>
