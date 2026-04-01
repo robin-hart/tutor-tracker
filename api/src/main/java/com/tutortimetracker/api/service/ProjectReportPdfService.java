@@ -4,8 +4,6 @@ import com.tutortimetracker.api.entity.ProjectEntity;
 import com.tutortimetracker.api.entity.TimeslotEntity;
 import com.tutortimetracker.api.repository.ProjectRepository;
 import com.tutortimetracker.api.repository.TimeslotRepository;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.time.LocalDate;
@@ -15,8 +13,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
 /** Builds a project month report document and compiles it to PDF with LaTeX. */
@@ -30,22 +26,61 @@ public class ProjectReportPdfService {
   private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
   private static final DateTimeFormatter GENERATED_AT_FORMATTER =
       DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss");
+  private static final String LATEX_TEMPLATE =
+      """
+      \\documentclass[11pt]{article}
+      \\usepackage[margin=1in]{geometry}
+      \\usepackage[T1]{fontenc}
+      \\usepackage{booktabs}
+      \\usepackage{longtable}
+
+      \\begin{document}
+
+      \\begin{center}
+      {\\LARGE Monthly Project Report}\\\\[0.6em]
+      {\\large {{PROJECT_NAME}}}\\\\
+      Project ID: {{PROJECT_ID}}\\\\
+      Month: {{MONTH_LABEL}}
+      \\end{center}
+
+      \\vspace{1em}
+      \\noindent Generated at: {{GENERATED_AT}}
+
+      \\vspace{1em}
+      \\begin{tabular}{ll}
+      \\textbf{Sessions} & {{SESSION_COUNT}} \\\\
+      \\textbf{Total Hours} & {{TOTAL_HOURS}} \\\\
+      \\textbf{Hourly Rate} & ${{HOURLY_RATE}}$ \\\\
+      \\textbf{Gross Amount} & ${{GROSS_AMOUNT}}$ \\\\
+      \\end{tabular}
+
+      \\vspace{1.2em}
+      \\noindent\\textbf{Timeslots in Selected Month}
+
+      \\begin{longtable}{p{0.45\\linewidth}p{0.18\\linewidth}p{0.14\\linewidth}p{0.14\\linewidth}}
+      \\toprule
+      \\textbf{Title} & \\textbf{Date} & \\textbf{Start} & \\textbf{Minutes} \\\\
+      \\midrule
+      \\endhead
+      {{TIMESLOT_ROWS}}
+      \\\\
+      \\bottomrule
+      \\end{longtable}
+
+      \\end{document}
+      """;
 
   private final ProjectRepository projectRepository;
   private final TimeslotRepository timeslotRepository;
   private final LatexCompiler latexCompiler;
-  private final String templatePath;
 
   public ProjectReportPdfService(
       ProjectRepository projectRepository,
       TimeslotRepository timeslotRepository,
-      LatexCompiler latexCompiler,
-      @Value("${report.export.latex.template:templates/project-monthly-report.tpl}")
-          String templatePath) {
+      LatexCompiler latexCompiler) {
     this.projectRepository = projectRepository;
     this.timeslotRepository = timeslotRepository;
     this.latexCompiler = latexCompiler;
-    this.templatePath = templatePath;
   }
 
   /**
@@ -95,12 +130,7 @@ public class ProjectReportPdfService {
   }
 
   private String readTemplate() {
-    ClassPathResource resource = new ClassPathResource(templatePath);
-    try {
-      return new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-    } catch (IOException ex) {
-      throw new PdfReportGenerationException("Could not load LaTeX template: " + templatePath, ex);
-    }
+    return LATEX_TEMPLATE;
   }
 
   private String buildTimeslotRows(List<TimeslotEntity> monthSlots) {

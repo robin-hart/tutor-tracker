@@ -34,12 +34,7 @@ class ProjectReportPdfServiceTest {
 
   @BeforeEach
   void setUp() {
-    service =
-        new ProjectReportPdfService(
-            projectRepository,
-            timeslotRepository,
-            latexCompiler,
-            "templates/project-monthly-report.tpl");
+    service = new ProjectReportPdfService(projectRepository, timeslotRepository, latexCompiler);
   }
 
   @Test
