@@ -153,7 +153,7 @@ public class ProjectReportPdfService {
 
   private String buildTimeslotRows(List<TimeslotEntity> monthSlots) {
     if (monthSlots.isEmpty()) {
-      return "- & - & - & Keine Einträge in diesem Monat & 0h 00min \\\\\n\\hline";
+      return "";
     }
 
     return monthSlots.stream()
