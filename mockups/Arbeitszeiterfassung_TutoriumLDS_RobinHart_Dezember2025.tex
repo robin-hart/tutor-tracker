@@ -1,0 +1,159 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[ngerman]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\geometry{
+    left=2.5cm,
+    right=2cm,
+    top=2cm,
+    bottom=2cm
+}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{booktabs}
+
+\usepackage{pgf} % für Berechnungen
+
+% JEDES MAL ändern (Stunden * 60min/h):
+\pgfmathtruncatemacro{\uebertragVormonat}{150}
+
+% Counter Zeitübertrag aus dem Vormonat 
+\newcounter{variablezeituebertragvormonat}
+\setcounter{variablezeituebertragvormonat}{\uebertragVormonat}
+
+\newcommand{\zeituebertragvormonat}{
+    \pgfmathtruncatemacro{\hours}{\value{variablezeituebertragvormonat}/60}
+    \pgfmathtruncatemacro{\minutes}{\value{variablezeituebertragvormonat}-\hours*60}
+    \hours h \ifnum\minutes<10 0\fi\minutes min
+}
+
+
+% Counter für IST-Arbeitszeit in Minuten
+\newcounter{totalminutes}
+\setcounter{totalminutes}{0}
+
+
+% Befehl zum Hinzufügen von Zeit (Stunden, Minuten)
+\newcommand{\addtime}[2]{%
+    % Gesamtminuten berechnen
+    \pgfmathtruncatemacro{\tmpminutes}{#1*60+#2}%
+    \addtocounter{totalminutes}{\tmpminutes}%
+    % Zeit in der Tabelle ausgeben
+    #1h \ifnum#2<10 0\fi#2min%
+}
+
+% Befehl um Gesamtsumme auszugeben
+\newcommand{\istarbeitszeit}{
+    \pgfmathtruncatemacro{\hours}{\value{totalminutes}/60}
+    \pgfmathtruncatemacro{\minutes}{\value{totalminutes}-\hours*60}
+    \hours h \ifnum\minutes<10 0\fi\minutes min
+}
+
+
+% Counter für Summe (IST+Übertrag)
+\newcommand{\summeistunduebertrag}{
+    \pgfmathtruncatemacro{\hours}{(\value{totalminutes} + \value{variablezeituebertragvormonat})/60}
+    \pgfmathtruncatemacro{\minutes}{(\value{totalminutes} + \value{variablezeituebertragvormonat})-\hours*60}
+    \hours h \ifnum\minutes<10 0\fi\minutes min
+}
+
+% Constant für SOLL-Arbeitszeit in Minuten
+\pgfmathtruncatemacro{\sollarbeitszeit}{1560} % 26h * 60min/h = 1560min
+
+% Counter für SOLL-Arbeitszeit in Minuten
+\newcounter{variablesollarbeitszeit}
+\setcounter{variablesollarbeitszeit}{\sollarbeitszeit}
+
+
+% Counter für Zeitübertrag auf nächsten Monat
+\newcommand{\zeituebertragnaechstermonat}{
+    \pgfmathtruncatemacro{\hours}{(\value{totalminutes} + \value{variablezeituebertragvormonat} - \value{variablesollarbeitszeit})/60}
+    \pgfmathtruncatemacro{\minutes}{abs((\value{totalminutes} + \value{variablezeituebertragvormonat} - \value{variablesollarbeitszeit})-\hours*60)}
+    \hours h \ifnum\minutes<10 0\fi\minutes min
+}
+
+
+
+\begin{document}
+
+\begin{center}
+    {\LARGE \textbf{Arbeitszeitblatt}}\\[0.8cm]
+    
+\end{center}
+
+\textbf{Für Monat:} Dezember 2025 % Monat eintragen 
+
+\textbf{Name:} Robin Hart
+
+\textbf{Einrichtung:} FMI, Universität Stuttgart
+
+
+
+\renewcommand{\arraystretch}{1.3}
+
+\noindent
+\begin{tabularx}{\textwidth}{| l | p{2cm} | p{2cm} | X | p{3cm} |}
+\hline
+\textbf{Tagesdatum} & \textbf{Uhrzeit Beginn} & \textbf{Uhrzeit Ende} & \textbf{Bemerkung} & \textbf{Arbeitszeit ohne Pause} \\
+\noalign{\hrule height 2pt} % dicke Linie
+02.12.2025 & 15:30 & 18:00 & Korrektur Scheinklausur & \addtime{2}{30}  \\
+\hline
+03.12.2025 & 9:45 & 11:45 & Gruppe 12 Blatt 3 & \addtime{2}{0}  \\
+\hline
+08.12.2025 & 15:00 & 20:00 & Korrektur Blatt 3 & \addtime{5}{0}  \\
+\hline
+10.12.2025 & 9:15 & 11:45 & Gruppe 11 Blatt 4 & \addtime{2}{30}  \\
+\hline
+17.12.2025 & 9:30 & 11:45 & Gruppe 12 Blatt 4 & \addtime{2}{15}  \\
+\hline
+18.12.2025 & 14:00 & 17:00 & - & \addtime{3}{0}  \\
+\hline
+19.12.2025 & 14:00 & 17:00 & - & \addtime{3}{0}  \\
+\hline
+20.12.2025 & 14:00 & 17:00 & - & \addtime{0}{15}  \\
+\hline
+21.12.2025 & 14:00 & 17:00 & - & \addtime{3}{0}  \\
+\hline
+
+
+
+\noalign{\hrule height 2pt} % dicke Linie
+
+\multicolumn{4}{|r|}{\textbf{IST-Arbeitszeit des Abrechnungsmonats:}} & \istarbeitszeit \\
+\hline
+\multicolumn{4}{|r|}{\textbf{Zeitübertrag aus dem Vormonat:}} & \zeituebertragvormonat \\
+\noalign{\hrule height 2pt} % dicke Linie
+\multicolumn{4}{|r|}{\textbf{Summe (IST+Übertrag):}} & \summeistunduebertrag \\
+\hline
+\multicolumn{4}{|r|}{\textbf{SOLL-Arbeitszeit des Abrechnungsmonats:}} & 26h 00min\\ 
+\noalign{\hrule height 2pt} % dicke Linie
+\multicolumn{4}{|r|}{\textbf{Zeitübertrag auf nächsten Monat:}} & \zeituebertragnaechstermonat \\ 
+\noalign{\hrule height 2pt} % dicke Linie
+\end{tabularx}
+
+\vspace{1cm}
+\noindent
+\begin{tabularx}{\textwidth}{@{}X@{}}
+\textbf{Mitarbeiter(in)} \\[0.3cm]
+
+\makebox[\textwidth][s]{%
+  \textbf{Datum:} \today
+  \hfill
+  \textbf{Unterschrift:}%
+  \begin{minipage}[t]{6cm}
+    \rule{\linewidth}{0.4pt}\\[-1.55cm]
+    \centering
+    \includegraphics[height=1.5cm]{../../Vorlage-Arbeitszeiterfassung/images/signature.png}
+  \end{minipage}%
+}\\[1.8cm]
+
+
+
+\textbf{Vorgesetzte(r)}\\[0.3cm]
+\textbf{Datum:} \rule{4cm}{0.4pt} \hfill \textbf{Unterschrift:} \rule{6cm}{0.4pt}\\
+\end{tabularx}
+
+
+
+\end{document}
