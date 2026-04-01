@@ -39,7 +39,7 @@ class ProjectReportPdfServiceTest {
             projectRepository,
             timeslotRepository,
             latexCompiler,
-            "templates/project-monthly-report.tex");
+            "templates/project-monthly-report.tpl");
   }
 
   @Test

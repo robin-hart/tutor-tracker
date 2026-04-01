@@ -160,7 +160,7 @@ Optional LaTeX export settings:
 ```bash
 set LATEX_COMMAND=pdflatex
 set LATEX_TIMEOUT_SECONDS=30
-set LATEX_TEMPLATE=templates/project-monthly-report.tex
+set LATEX_TEMPLATE=templates/project-monthly-report.tpl
 ```
 
 Install a LaTeX distribution (for example TeX Live or MiKTeX) so `pdflatex` is available on your

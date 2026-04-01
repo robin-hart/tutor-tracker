@@ -40,7 +40,7 @@ public class ProjectReportPdfService {
       ProjectRepository projectRepository,
       TimeslotRepository timeslotRepository,
       LatexCompiler latexCompiler,
-      @Value("${report.export.latex.template:templates/project-monthly-report.tex}")
+      @Value("${report.export.latex.template:templates/project-monthly-report.tpl}")
           String templatePath) {
     this.projectRepository = projectRepository;
     this.timeslotRepository = timeslotRepository;
