@@ -113,16 +113,20 @@ test.describe('UI smoke journeys', () => {
 
     await expect(page.getByRole('heading', { name: 'Reports & Exports' })).toBeVisible();
     await page.locator('select').first().selectOption(project.id);
-    await page.getByPlaceholder('2026-03').fill(month);
 
-    const generateResponsePromise = page.waitForResponse(
+    // Wait for the month list to load in the table
+    await page.locator('table tbody tr').first().waitFor({ state: 'visible' });
+
+    const exportResponsePromise = page.waitForResponse(
       (response) =>
-        response.url().includes(`/api/projects/${project.id}/reports/generate`) &&
-        response.request().method() === 'POST'
+        response.url().includes(`/api/projects/${project.id}/reports/export/pdf`) &&
+        response.request().method() === 'GET'
     );
-    await page.getByRole('button', { name: 'Generate Project Monthly Report' }).click();
 
-    const generateResponse = await generateResponsePromise;
-    expect(generateResponse.ok()).toBeTruthy();
+    await page.getByRole('button', { name: 'Generate Newest Monthly Report' }).click();
+    const exportResponse = await exportResponsePromise;
+    expect(exportResponse.ok()).toBeTruthy();
   });
 });
+
+

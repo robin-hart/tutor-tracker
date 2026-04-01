@@ -158,8 +158,9 @@ test.describe('Student Management', () => {
       expect(student).toHaveProperty('id');
       expect(student).toHaveProperty('name');
       expect(student).toHaveProperty('notes');
+      expect(student).toHaveProperty('groupName');
 
-      expect(typeof student.id).toBe('number');
+      expect(typeof student.id).toBe('string');
       expect(typeof student.name).toBe('string');
     }
   });

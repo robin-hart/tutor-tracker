@@ -129,4 +129,79 @@ test.describe('Reports', () => {
       expect(report.projectId).toBe(testProjectId);
     }
   });
+
+  test('should display project name for months with zero timeslots', async () => {
+    // Create a project with timeslots only in January 2026
+    const browser = await page.context().browser();
+    const tempContext = await browser.newContext();
+    const tempPage = await tempContext.newPage();
+
+    const projectResponse = await tempPage.request.post(`${apiBaseUrl}/api/projects`, {
+      data: {
+        name: `Zero Hours Test Project ${Date.now()}`,
+        category: 'TEST',
+        totalHours: 0,
+        monthHours: 0,
+        completionPercent: 0,
+      },
+    });
+
+    expect(projectResponse.ok()).toBeTruthy();
+    const project = await projectResponse.json();
+    const projectId = project.id;
+    const projName = 'Zero Hours Test Project';
+
+    // Create timeslots only in January 2026
+    const january2026 = '2026-01';
+    for (let i = 1; i <= 2; i++) {
+      const slotResponse = await tempPage.request.post(
+        `${apiBaseUrl}/api/projects/${projectId}/timeslots`,
+        {
+          data: {
+            title: `January Lesson ${i}`,
+            description: `January timeslot ${i}`,
+            durationMinutes: 60,
+            date: `${january2026}-${String(10 + i).padStart(2, '0')}`,
+            startTime: '10:00',
+          },
+        }
+      );
+      expect(slotResponse.ok()).toBeTruthy();
+    }
+
+    await tempContext.close();
+
+    // Now navigate to the export reports page and verify the display
+    await page.goto('/reports');
+    await expect(page.getByRole('heading', { name: 'Reports & Exports' })).toBeVisible();
+
+    const projectSelect = page.locator('select').first();
+    const projectOption = page.locator(`select option[value="${projectId}"]`);
+    await expect(projectOption).toHaveCount(1);
+    await projectSelect.selectOption({ value: projectId });
+
+    // Wait for the month list and refreshed project data
+    await page.locator('table tbody tr').first().waitFor({ state: 'visible' });
+    await expect(page.locator('table tbody tr').first().locator('td').nth(1)).toContainText(projName);
+
+    // Get all rows in the table
+    const rows = await page.locator('table tbody tr').all();
+
+    // Should have rows for January through April 2026 (based on current date 2026-04-01)
+    expect(rows.length).toBeGreaterThanOrEqual(4);
+
+    // Check that all months have the project name displayed
+    for (const row of rows) {
+      const cells = await row.locator('td').all();
+      // Second column should be project name
+      if (cells.length >= 2) {
+        const projectNameCell = await cells[1].textContent();
+        expect(projectNameCell).toContain(projName);
+        // Should NOT display the fallback '—' symbol
+        expect(projectNameCell).not.toBe('—');
+      }
+    }
+  });
 });
+
+

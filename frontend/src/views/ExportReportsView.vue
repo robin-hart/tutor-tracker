@@ -58,6 +58,9 @@
             <thead>
               <tr class="text-on-surface-variant uppercase text-[10px] font-bold tracking-[0.2em]">
                 <th class="px-8 py-6">Month / Period</th>
+                <th class="px-8 py-6">Project Name</th>
+                <th class="px-8 py-6">Total Hours</th>
+                <th class="px-8 py-6">Sessions</th>
                 <th class="px-8 py-6">Download</th>
               </tr>
             </thead>
@@ -67,13 +70,18 @@
                 :key="monthOption.key"
                 class="hover:bg-surface-container-lowest transition-colors"
               >
+                <td class="px-8 py-6 font-bold">{{ monthOption.label }}</td>
+                <td class="px-8 py-6">{{ getMonthProjectName(monthOption.key) }}</td>
+                <td class="px-8 py-6 text-on-surface-variant">{{ getMonthTotalHours(monthOption.key) }} hrs</td>
                 <td class="px-8 py-6">
-                  <span class="font-bold">{{ monthOption.label }}</span>
-                  <span class="text-on-surface-variant"> ({{ monthOption.key }})</span>
+                  <span
+                    class="px-3 py-1 bg-secondary-fixed text-on-secondary-fixed rounded-full text-xs font-bold"
+                    >{{ getMonthSessions(monthOption.key) }} sessions</span
+                  >
                 </td>
                 <td class="px-8 py-6">
                   <button
-                    class="px-3 py-1 bg-secondary-fixed text-on-secondary-fixed rounded-lg text-xs font-bold"
+                    class="px-3 py-1 bg-primary text-on-primary rounded-lg text-xs font-bold hover:bg-primary/90"
                     @click="downloadReportForMonth(monthOption.key)"
                   >
                     Download PDF
@@ -93,7 +101,11 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import AppSidebar from '../components/AppSidebar.vue';
 import MainTopBar from '../components/MainTopBar.vue';
-import { exportProjectReportPdf, getProjectCalendar, getProjects } from '../services/apiClient';
+import {
+  exportProjectReportPdf,
+  getProjectCalendar,
+  getProjects,
+} from '../services/apiClient';
 
 /**
  * Reporting screen showing monthly billing and workload exports.
@@ -101,6 +113,9 @@ import { exportProjectReportPdf, getProjectCalendar, getProjects } from '../serv
 const projects = ref([]);
 const selectedProjectId = ref('');
 const projectStartMonthKey = ref(new Date().toISOString().slice(0, 7));
+const allTimeslots = ref([]);
+const selectedProjectName = ref('');
+const calendarRequestVersion = ref(0);
 const errorMessage = ref('');
 
 const availableMonthOptions = computed(() => {
@@ -147,6 +162,32 @@ function normalizeMonthKey(dateString) {
   return dateString.slice(0, 7);
 }
 
+async function loadProjectCalendarData(projectId) {
+  if (!projectId) {
+    allTimeslots.value = [];
+    selectedProjectName.value = '';
+    return;
+  }
+
+  const requestVersion = ++calendarRequestVersion.value;
+
+  try {
+    const calendar = await getProjectCalendar(projectId);
+    if (requestVersion !== calendarRequestVersion.value || projectId !== selectedProjectId.value) {
+      return;
+    }
+    allTimeslots.value = calendar.allSlots || [];
+    selectedProjectName.value = calendar.projectName || '';
+  } catch (error) {
+    if (requestVersion !== calendarRequestVersion.value || projectId !== selectedProjectId.value) {
+      return;
+    }
+    errorMessage.value = error.message;
+    allTimeslots.value = [];
+    selectedProjectName.value = '';
+  }
+}
+
 async function resolveProjectStartMonth(projectId) {
   try {
     const calendar = await getProjectCalendar(projectId);
@@ -162,6 +203,37 @@ async function resolveProjectStartMonth(projectId) {
   } catch {
     return new Date().toISOString().slice(0, 7);
   }
+}
+
+function getMonthReportData(monthKey) {
+  const slotsInMonth = (allTimeslots.value || []).filter((slot) => {
+    const slotMonth = normalizeMonthKey(slot.date);
+    return slotMonth === monthKey;
+  });
+
+  const totalMinutes = slotsInMonth.reduce((sum, slot) => sum + (slot.durationMinutes || 0), 0);
+  const totalHours = totalMinutes / 60;
+
+  return {
+    projectName: selectedProjectName.value,
+    totalHours: totalHours,
+    sessions: slotsInMonth.length,
+  };
+}
+
+function getMonthProjectName(monthKey) {
+  const data = getMonthReportData(monthKey);
+  return data?.projectName || '—';
+}
+
+function getMonthTotalHours(monthKey) {
+  const data = getMonthReportData(monthKey);
+  return data?.totalHours != null ? data.totalHours.toFixed(1) : '0.0';
+}
+
+function getMonthSessions(monthKey) {
+  const data = getMonthReportData(monthKey);
+  return data?.sessions || '0';
 }
 
 async function downloadReportForMonth(monthKey) {
@@ -196,6 +268,7 @@ onMounted(async () => {
     projects.value = await getProjects();
     selectedProjectId.value = projects.value[0]?.id || '';
     projectStartMonthKey.value = await resolveProjectStartMonth(selectedProjectId.value);
+    await loadProjectCalendarData(selectedProjectId.value);
   } catch (error) {
     console.warn('Using fallback report/project data because API is unavailable.', error);
     errorMessage.value = error.message;
@@ -206,5 +279,6 @@ onMounted(async () => {
 
 watch(selectedProjectId, async () => {
   projectStartMonthKey.value = await resolveProjectStartMonth(selectedProjectId.value);
+  await loadProjectCalendarData(selectedProjectId.value);
 });
 </script>
