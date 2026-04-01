@@ -41,6 +41,7 @@ Frontend service module `src/services/apiClient.js` maps one function per endpoi
 | `getReports()` | `GET /api/reports` | Reports table |
 | `getProjectReports(projectId)` | `GET /api/projects/{id}/reports` | Project reports list |
 | `generateProjectReport(projectId, month)` | `POST /api/projects/{id}/reports/generate` | Monthly report generation |
+| `exportProjectReportPdf(projectId, month)` | `GET /api/projects/{id}/reports/export/pdf?month=yyyy-MM` | Monthly PDF export |
 | `saveTimeslot(projectId, payload)` | `POST /api/projects/{id}/timeslots` | Create timeslot |
 | `getProjectTimeslot(projectId, timeslotId)` | `GET /api/projects/{id}/timeslots/{timeslotId}` | Load timeslot for edit |
 | `updateProjectTimeslot(projectId, timeslotId, payload)` | `PUT /api/projects/{id}/timeslots/{timeslotId}` | Update timeslot |
