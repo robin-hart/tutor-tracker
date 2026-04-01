@@ -7,6 +7,7 @@ import com.tutortimetracker.api.service.StudentNotFoundException;
 import com.tutortimetracker.api.service.TimeslotNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -113,6 +114,26 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(IllegalArgumentException.class)
   public ResponseEntity<ApiErrorResponse> handleIllegalArgument(
       IllegalArgumentException exception, HttpServletRequest request) {
+    ApiErrorResponse body =
+        new ApiErrorResponse(
+            Instant.now(),
+            HttpStatus.BAD_REQUEST.value(),
+            HttpStatus.BAD_REQUEST.getReasonPhrase(),
+            exception.getMessage(),
+            request.getRequestURI());
+    return ResponseEntity.badRequest().body(body);
+  }
+
+  /**
+   * Handles date/time parsing failures as bad requests.
+   *
+   * @param exception thrown exception
+   * @param request incoming HTTP request
+   * @return standardized 400 payload
+   */
+  @ExceptionHandler(DateTimeParseException.class)
+  public ResponseEntity<ApiErrorResponse> handleDateTimeParse(
+      DateTimeParseException exception, HttpServletRequest request) {
     ApiErrorResponse body =
         new ApiErrorResponse(
             Instant.now(),

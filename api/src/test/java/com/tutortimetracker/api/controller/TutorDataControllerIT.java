@@ -535,6 +535,37 @@ class TutorDataControllerIT {
   }
 
   @Test
+  void getProjectReports_shouldReturnNotFoundForMissingProject() throws Exception {
+    mockMvc
+        .perform(get("/api/projects/{projectId}/reports", "missing-project"))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.message").value("Project not found: missing-project"));
+  }
+
+  @Test
+  void exportProjectReportPdf_shouldReturnBadRequestForInvalidMonth() throws Exception {
+    ProjectEntity project = projectRepository.save(newProject("proj-export-invalid", "Project"));
+
+    mockMvc
+        .perform(
+            get("/api/projects/{projectId}/reports/export/pdf", project.getSlug())
+                .param("month", "2026-99"))
+        .andExpect(status().isBadRequest())
+        .andExpect(
+            jsonPath("$.path").value("/api/projects/proj-export-invalid/reports/export/pdf"));
+  }
+
+  @Test
+  void exportProjectReportPdf_shouldReturnNotFoundForMissingProject() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/projects/{projectId}/reports/export/pdf", "missing-project")
+                .param("month", "2026-01"))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.message").value("Project not found: missing-project"));
+  }
+
+  @Test
   void createTimeslot_shouldCreateGlobalTimeslot() throws Exception {
     // Ensure the default project exists
     projectRepository
