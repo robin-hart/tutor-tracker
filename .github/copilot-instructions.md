@@ -15,6 +15,8 @@ SonarQube is running in the background and should be used to identify and fix co
 
 Continuously run linting and formatting checks during development.
 
+And also build teh frontend sometimes to fix typescript errors early.
+
 ## Testing
 
 - Backend: Use JUnit 5 for unit tests and Spring Boot Test for integration tests. Aim for a very high line and branch coverage. Use Mockito for mocking dependencies in unit tests. Use an in-memory H2 database for integration tests to ensure isolation and repeatability.
