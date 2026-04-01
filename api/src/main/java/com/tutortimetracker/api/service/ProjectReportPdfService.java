@@ -41,14 +41,14 @@ public class ProjectReportPdfService {
     {\\LARGE \\textbf{Arbeitszeitblatt}}\\\\[0.8cm]
       \\end{center}
 
-    \\textbf{Für Monat:} {{REPORT_MONTH}} \\\\[0.2cm]
+    \\noindent\\textbf{Für Monat:} {{REPORT_MONTH}} \\\\[0.2cm]
     \\textbf{Name:} {{PROJECT_NAME}} \\\\[0.2cm]
     \\textbf{Einrichtung:} Projekt {{PROJECT_ID}}
 
     \\renewcommand{\\arraystretch}{1.3}
 
     \\noindent
-    \\begin{tabularx}{\\textwidth}{| l | p{2cm} | p{2cm} | X | p{3cm} |}
+    \\begin{tabularx}{\\textwidth}{| l | p{2cm} | p{2cm} | >{\\footnotesize\\raggedright\\arraybackslash}X | p{3cm} |}
     \\hline
     \\textbf{Tagesdatum} & \\textbf{Uhrzeit Beginn} & \\textbf{Uhrzeit Ende} & \\textbf{Bemerkung} & \\textbf{Arbeitszeit ohne Pause} \\\\
     \\hline\\hline
