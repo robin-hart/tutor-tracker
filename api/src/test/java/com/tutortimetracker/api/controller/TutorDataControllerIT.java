@@ -320,9 +320,6 @@ class TutorDataControllerIT {
   @Test
   void getProjectCalendar_shouldReturnCalendarData() throws Exception {
     ProjectEntity project = projectRepository.save(newProject("proj-calendar", "Calendar Project"));
-    project.setTotalHours(100.0);
-    project.setMonthHours(50.0);
-    projectRepository.save(project);
 
     LocalDate today = LocalDate.now();
     createTimeslot(project, "Today Session", today, 60);
@@ -332,8 +329,8 @@ class TutorDataControllerIT {
         .perform(get("/api/projects/{projectId}/calendar", project.getSlug()))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.projectName").value("Calendar Project"))
-        .andExpect(jsonPath("$.totalHours").value(100.0))
-        .andExpect(jsonPath("$.monthHours").value(50.0));
+        .andExpect(jsonPath("$.totalHours").value(2.5))
+        .andExpect(jsonPath("$.monthHours").value(2.5));
   }
 
   @Test

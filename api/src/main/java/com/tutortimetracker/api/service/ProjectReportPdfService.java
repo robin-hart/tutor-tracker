@@ -48,21 +48,29 @@ public class ProjectReportPdfService {
     \\renewcommand{\\arraystretch}{1.3}
 
     \\noindent
-    \\begin{tabularx}{\\textwidth}{| l | p{2cm} | p{2cm} | >{\\footnotesize\\raggedright\\arraybackslash}X | p{3cm} |}
+     \\begin{tabularx}{\\textwidth}{
+     | l | p{2cm} | p{2cm} |
+     >{\\footnotesize\\raggedright\\arraybackslash}X | p{3cm} |
+     }
     \\hline
-    \\textbf{Tagesdatum} & \\textbf{Uhrzeit Beginn} & \\textbf{Uhrzeit Ende} & \\textbf{Bemerkung} & \\textbf{Arbeitszeit ohne Pause} \\\\
+     \\textbf{Tagesdatum} & \\textbf{Uhrzeit Beginn} & \\textbf{Uhrzeit Ende}
+       & \\textbf{Bemerkung} & \\textbf{Arbeitszeit ohne Pause} \\\\
     \\hline\\hline
     {{TIMESLOT_ROWS}}
     \\hline\\hline
-    \\multicolumn{4}{|r|}{\\textbf{IST-Arbeitszeit des Abrechnungsmonats:}} & {{IST_ARBEITSZEIT}} \\\\
+     \\multicolumn{4}{|r|}{\\textbf{IST-Arbeitszeit des Abrechnungsmonats:}}
+       & {{IST_ARBEITSZEIT}} \\\\
     \\hline
-    \\multicolumn{4}{|r|}{\\textbf{Zeitübertrag aus dem Vormonat:}} & {{ZEITUEBERTRAG_VORMONAT}} \\\\
+     \\multicolumn{4}{|r|}{\\textbf{Zeitübertrag aus dem Vormonat:}}
+       & {{ZEITUEBERTRAG_VORMONAT}} \\\\
     \\hline\\hline
     \\multicolumn{4}{|r|}{\\textbf{Summe (IST+Übertrag):}} & {{SUMME_IST_UEBERTRAG}} \\\\
     \\hline
-    \\multicolumn{4}{|r|}{\\textbf{SOLL-Arbeitszeit des Abrechnungsmonats:}} & {{SOLL_ARBEITSZEIT}} \\\\
+     \\multicolumn{4}{|r|}{\\textbf{SOLL-Arbeitszeit des Abrechnungsmonats:}}
+       & {{SOLL_ARBEITSZEIT}} \\\\
     \\hline\\hline
-    \\multicolumn{4}{|r|}{\\textbf{Zeitübertrag auf nächsten Monat:}} & {{ZEITUEBERTRAG_NAECHSTER_MONAT}} \\\\
+     \\multicolumn{4}{|r|}{\\textbf{Zeitübertrag auf nächsten Monat:}}
+       & {{ZEITUEBERTRAG_NAECHSTER_MONAT}} \\\\
     \\hline\\hline
     \\end{tabularx}
 
@@ -70,7 +78,8 @@ public class ProjectReportPdfService {
     \\noindent
     \\begin{tabularx}{\\textwidth}{@{}X@{}}
     \\textbf{Mitarbeiter(in)} \\\\[0.3cm]
-    \\textbf{Datum:} {{GENERATED_DATE}} \\hfill \\textbf{Unterschrift:} \\rule{6cm}{0.4pt}\\\\[1.8cm]
+     \\textbf{Datum:} {{GENERATED_DATE}} \\hfill
+       \\textbf{Unterschrift:} \\rule{6cm}{0.4pt}\\\\[1.8cm]
     \\textbf{Vorgesetzte(r)}\\\\[0.3cm]
     \\textbf{Datum:} \\rule{4cm}{0.4pt} \\hfill \\textbf{Unterschrift:} \\rule{6cm}{0.4pt}\\
     \\end{tabularx}
