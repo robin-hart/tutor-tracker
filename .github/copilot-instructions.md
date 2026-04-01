@@ -15,6 +15,8 @@ SonarQube is running in the background and should be used to identify and fix co
 
 Continuously run linting and formatting checks during development.
 
+And also build teh frontend sometimes to fix typescript errors early.
+
 ## Testing
 
 - Backend: Use JUnit 5 for unit tests and Spring Boot Test for integration tests. Aim for a very high line and branch coverage. Use Mockito for mocking dependencies in unit tests. Use an in-memory H2 database for integration tests to ensure isolation and repeatability.
@@ -29,3 +31,7 @@ Provide good names and clear assertions in tests to ensure they are human-readab
 - Update the architecture documentation in `ARCHITECTURE.md` as design decisions evolve.
 - Keep the README files in sync with the actual project structure and setup instructions.
 - Ensure API endpoint contracts are clearly documented in both the architecture docs and the backend code.
+
+## Development platform
+
+- All development happens on a windows machine. Do not use linux only commands at all.

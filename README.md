@@ -57,6 +57,7 @@ The frontend runs at `http://localhost:5173` and calls `http://localhost:8080/ap
 - `GET /api/reports`
 - `GET /api/projects/{projectId}/reports`
 - `POST /api/projects/{projectId}/reports/generate?month=yyyy-MM`
+- `GET /api/projects/{projectId}/reports/export/pdf?month=yyyy-MM`
 
 Legacy compatibility endpoint still available:
 - `POST /api/timeslots`

@@ -140,7 +140,10 @@ public class TutorDataService {
    * @return project summaries for the dashboard
    */
   public List<ProjectSummary> getProjects() {
-    return projectRepository.findAll().stream().map(this::toProjectSummary).toList();
+    return projectRepository.findAll().stream()
+        .peek(this::refreshProjectMetrics)
+        .map(this::toProjectSummary)
+        .toList();
   }
 
   /**
@@ -217,6 +220,7 @@ public class TutorDataService {
    */
   public ProjectCalendarResponse getProjectCalendar(String projectId, String monthKey) {
     ProjectEntity project = findProjectBySlug(projectId);
+    refreshProjectMetrics(project);
     YearMonth month = parseMonthKeyOrNow(monthKey);
     LocalDate from = month.atDay(1);
     LocalDate to = month.plusMonths(1).atDay(1);
@@ -687,7 +691,8 @@ public class TutorDataService {
         project.getCategory(),
         project.getTotalHours(),
         project.getMonthHours(),
-        project.getCompletionPercent());
+      project.getCompletionPercent(),
+      project.getCreatedAt());
   }
 
   /**

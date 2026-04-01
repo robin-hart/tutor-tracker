@@ -1,6 +1,7 @@
 package com.tutortimetracker.api.controller;
 
 import com.tutortimetracker.api.model.ApiErrorResponse;
+import com.tutortimetracker.api.service.PdfReportGenerationException;
 import com.tutortimetracker.api.service.ProjectNotFoundException;
 import com.tutortimetracker.api.service.StudentNotFoundException;
 import com.tutortimetracker.api.service.TimeslotNotFoundException;
@@ -120,5 +121,25 @@ public class GlobalExceptionHandler {
             exception.getMessage(),
             request.getRequestURI());
     return ResponseEntity.badRequest().body(body);
+  }
+
+  /**
+   * Handles failures during LaTeX report compilation/export.
+   *
+   * @param exception thrown exception
+   * @param request incoming HTTP request
+   * @return standardized 503 payload
+   */
+  @ExceptionHandler(PdfReportGenerationException.class)
+  public ResponseEntity<ApiErrorResponse> handlePdfGenerationError(
+      PdfReportGenerationException exception, HttpServletRequest request) {
+    ApiErrorResponse body =
+        new ApiErrorResponse(
+            Instant.now(),
+            HttpStatus.SERVICE_UNAVAILABLE.value(),
+            HttpStatus.SERVICE_UNAVAILABLE.getReasonPhrase(),
+            exception.getMessage(),
+            request.getRequestURI());
+    return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(body);
   }
 }

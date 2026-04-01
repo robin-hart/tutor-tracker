@@ -21,3 +21,21 @@ frontend/dist/
 # Dependency caches
 **/node_modules/
 **/.pnpm-store/
+
+# LaTeX build artifacts
+*.aux
+*.fdb_latexmk
+*.fls
+*.idx
+*.ilg
+*.ind
+*.lof
+*.log
+*.lot
+*.nav
+*.out
+*.pdfsync
+*.snm
+*.synctex.gz
+*.toc
+*.vrb

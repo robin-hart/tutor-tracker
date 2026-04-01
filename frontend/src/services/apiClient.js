@@ -166,6 +166,30 @@ export function generateProjectReport(projectId, month) {
 }
 
 /**
+ * @param {string} projectId
+ * @param {string} month yyyy-MM
+ * @returns {Promise<Blob>}
+ */
+export async function exportProjectReportPdf(projectId, month) {
+  const response = await fetch(
+    `${API_BASE_URL}/projects/${projectId}/reports/export/pdf?month=${encodeURIComponent(month)}`
+  );
+
+  if (!response.ok) {
+    let apiMessage = '';
+    try {
+      const errorBody = await response.json();
+      apiMessage = errorBody.message ? ` - ${errorBody.message}` : '';
+    } catch {
+      // Ignore non-JSON error bodies and keep default empty API message.
+    }
+    throw new Error(`API request failed: ${response.status} ${response.statusText}${apiMessage}`);
+  }
+
+  return response.blob();
+}
+
+/**
  * Saves a timeslot payload.
  *
  * @param {string} projectId

@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 /**
  * E2E tests for Student management within projects
@@ -32,7 +32,7 @@ test.describe('Student Management', () => {
     });
 
     expect(projectResponse.ok()).toBeTruthy();
-    const project = await projectResponse.json();
+    const project = (await projectResponse.json()) as { id: string };
     testProjectId = project.id;
 
     // Seed explicit groups used in test cases.
@@ -66,7 +66,7 @@ test.describe('Student Management', () => {
     );
 
     expect(createResponse.ok()).toBeTruthy();
-    const createdStudent = await createResponse.json();
+    const createdStudent = (await createResponse.json()) as { id: string; name: string };
     expect(createdStudent.name).toBe(studentName);
     expect(createdStudent.id).toBeTruthy();
   });
@@ -94,7 +94,7 @@ test.describe('Student Management', () => {
       }
     );
 
-    const student = await createResponse.json();
+    const student = (await createResponse.json()) as { id: string };
     const studentId = student.id;
 
     // Update notes
@@ -109,7 +109,7 @@ test.describe('Student Management', () => {
     );
 
     expect(updateResponse.ok()).toBeTruthy();
-    const updatedStudent = await updateResponse.json();
+    const updatedStudent = (await updateResponse.json()) as { notes: string };
     expect(updatedStudent.notes).toBe(newNotes);
   });
 
@@ -126,7 +126,7 @@ test.describe('Student Management', () => {
       }
     );
 
-    const student = await createResponse.json();
+    const student = (await createResponse.json()) as { id: string };
     const studentId = student.id;
 
     // Reassign to Group B
@@ -140,7 +140,7 @@ test.describe('Student Management', () => {
     );
 
     expect(reassignResponse.ok()).toBeTruthy();
-    const updatedStudent = await reassignResponse.json();
+    const updatedStudent = (await reassignResponse.json()) as { groupName: string };
     expect(updatedStudent.groupName).toBe('Group B');
   });
 
@@ -158,8 +158,9 @@ test.describe('Student Management', () => {
       expect(student).toHaveProperty('id');
       expect(student).toHaveProperty('name');
       expect(student).toHaveProperty('notes');
+      expect(student).toHaveProperty('groupName');
 
-      expect(typeof student.id).toBe('number');
+      expect(typeof student.id).toBe('string');
       expect(typeof student.name).toBe('string');
     }
   });
