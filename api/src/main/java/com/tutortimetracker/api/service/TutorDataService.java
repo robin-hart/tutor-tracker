@@ -691,8 +691,8 @@ public class TutorDataService {
         project.getCategory(),
         project.getTotalHours(),
         project.getMonthHours(),
-      project.getCompletionPercent(),
-      project.getCreatedAt());
+        project.getCompletionPercent(),
+        project.getCreatedAt());
   }
 
   /**
