@@ -118,6 +118,22 @@ public class DemoDataSeeder {
                 75,
                 LocalDate.now(),
                 LocalTime.of(17, 15),
+                persistedMath),
+            buildTimeslot(
+                "slot-january-1",
+                "January Session 1",
+                "Algebra fundamentals and linear equations.",
+                120,
+                LocalDate.of(2026, 1, 10),
+                LocalTime.of(10, 0),
+                persistedMath),
+            buildTimeslot(
+                "slot-january-2",
+                "January Session 2",
+                "Practice problems and formula review.",
+                90,
+                LocalDate.of(2026, 1, 24),
+                LocalTime.of(15, 0),
                 persistedMath)));
 
     reportRepository.saveAll(

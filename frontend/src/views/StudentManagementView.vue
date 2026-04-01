@@ -4,8 +4,14 @@
     <MainTopBar v-model="searchText" search-placeholder="Search students...">
       <template #tabs>
         <nav class="flex gap-6">
-          <RouterLink :to="{ name: 'project-calendar', params: { projectId } }" class="text-on-surface-variant font-manrope font-medium text-sm">Calendar</RouterLink>
-          <a class="text-primary font-bold border-b-2 border-primary pb-1 font-manrope text-sm">Students</a>
+          <RouterLink
+            :to="{ name: 'project-calendar', params: { projectId } }"
+            class="text-on-surface-variant font-manrope font-medium text-sm"
+            >Calendar</RouterLink
+          >
+          <a class="text-primary font-bold border-b-2 border-primary pb-1 font-manrope text-sm"
+            >Students</a
+          >
         </nav>
       </template>
     </MainTopBar>
@@ -15,18 +21,43 @@
         <div>
           <h2 class="text-5xl font-extrabold tracking-tighter">Manage Students</h2>
         </div>
-        <button @click="showAddStudent = !showAddStudent" class="flex items-center gap-3 bg-white border-2 border-primary text-primary px-8 py-4 rounded-2xl font-bold">Add New Student</button>
+        <button
+          class="flex items-center gap-3 bg-white border-2 border-primary text-primary px-8 py-4 rounded-2xl font-bold"
+          @click="showAddStudent = !showAddStudent"
+        >
+          Add New Student
+        </button>
       </div>
 
       <section class="space-y-8">
-        <div v-if="showAddStudent" class="bg-surface-container-lowest rounded-xl p-6 grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
-          <input v-model.trim="newStudent.name" class="bg-surface-container-low rounded-lg px-3 py-2" placeholder="Name" type="text" />
-          <input v-model.trim="newStudent.notes" class="bg-surface-container-low rounded-lg px-3 py-2" placeholder="Initial notes (optional)" type="text" />
-          <select v-model="newStudent.groupName" class="bg-surface-container-low rounded-lg px-3 py-2">
+        <div
+          v-if="showAddStudent"
+          class="bg-surface-container-lowest rounded-xl p-6 grid grid-cols-1 md:grid-cols-4 gap-3 items-end"
+        >
+          <input
+            v-model.trim="newStudent.name"
+            class="bg-surface-container-low rounded-lg px-3 py-2"
+            placeholder="Name"
+            type="text"
+          />
+          <input
+            v-model.trim="newStudent.notes"
+            class="bg-surface-container-low rounded-lg px-3 py-2"
+            placeholder="Initial notes (optional)"
+            type="text"
+          />
+          <select
+            v-model="newStudent.groupName"
+            class="bg-surface-container-low rounded-lg px-3 py-2"
+          >
             <option value="">Ungrouped (default)</option>
-            <option v-for="group in selectableGroups" :key="group" :value="group">{{ group }}</option>
+            <option v-for="group in selectableGroups" :key="group" :value="group">
+              {{ group }}
+            </option>
           </select>
-          <button @click="addStudent" class="bg-primary text-white rounded-lg px-4 py-2 font-bold">Add</button>
+          <button class="bg-primary text-white rounded-lg px-4 py-2 font-bold" @click="addStudent">
+            Add
+          </button>
         </div>
 
         <SearchActiveIndicator
@@ -53,14 +84,16 @@
             class="bg-surface-container-lowest rounded-2xl p-6 transition-all duration-200"
             :class="[
               isDragging ? 'py-3' : '',
-              hoveredGroupName === group.name ? 'ring-2 ring-primary/50' : ''
+              hoveredGroupName === group.name ? 'ring-2 ring-primary/50' : '',
             ]"
           >
             <div class="flex items-center justify-between gap-4 mb-5">
               <div class="flex items-center gap-4">
                 <div class="h-[2px] w-8 bg-primary-container/30"></div>
                 <h3 class="text-xl font-bold text-on-surface-variant">{{ group.name }}</h3>
-                <span class="text-xs px-2 py-1 rounded-md bg-primary/10 text-primary font-bold">{{ group.students.length }}</span>
+                <span class="text-xs px-2 py-1 rounded-md bg-primary/10 text-primary font-bold">{{
+                  group.students.length
+                }}</span>
               </div>
               <button
                 v-if="group.name !== 'Ungrouped'"
@@ -82,7 +115,7 @@
                 class="bg-white p-6 rounded-2xl shadow-[0_20px_40px_rgba(11,28,48,0.03)]"
                 :class="[
                   isDragging && draggedStudentId !== student.id ? 'hidden' : '',
-                  draggedStudentId === student.id ? 'opacity-60' : ''
+                  draggedStudentId === student.id ? 'opacity-60' : '',
                 ]"
               >
                 <div class="flex justify-between items-start">
@@ -92,63 +125,114 @@
                   <button
                     type="button"
                     class="drag-handle h-8 w-8 rounded-md bg-surface-container-low text-on-surface-variant flex items-center justify-center"
-                    @mousedown.left.prevent="onDragStart(student.id, $event)"
                     title="Drag student"
+                    @mousedown.left.prevent="onDragStart(student.id, $event)"
                   >
                     <span class="material-symbols-outlined text-base">drag_indicator</span>
                   </button>
                 </div>
                 <div class="relative mt-5">
-                  <p class="absolute -top-3 left-4 px-2 bg-white text-[10px] font-black uppercase tracking-widest text-primary">Progress Notes</p>
+                  <p
+                    class="absolute -top-3 left-4 px-2 bg-white text-[10px] font-black uppercase tracking-widest text-primary"
+                  >
+                    Progress Notes
+                  </p>
                   <textarea
-                    class="w-full h-28 bg-surface-container-low rounded-2xl p-4 focus:ring-2 ring-primary/20 resize-none"
-                    :class="noteValidationErrors[student.id] ? 'border border-error focus:ring-error/30' : 'border-none'"
                     v-model="student.notes"
+                    class="w-full h-28 bg-surface-container-low rounded-2xl p-4 focus:ring-2 ring-primary/20 resize-none"
+                    :class="
+                      noteValidationErrors[student.id]
+                        ? 'border border-error focus:ring-error/30'
+                        : 'border-none'
+                    "
                     draggable="false"
                     @dragstart.prevent
                     @input="onNotesInput(student.id)"
                   />
                 </div>
-                <p v-if="noteValidationErrors[student.id]" class="mt-2 text-xs font-semibold text-error">{{ noteValidationErrors[student.id] }}</p>
-                <p v-else-if="noteSaveSuccess[student.id]" class="mt-2 text-xs font-semibold text-primary">{{ noteSaveSuccess[student.id] }}</p>
+                <p
+                  v-if="noteValidationErrors[student.id]"
+                  class="mt-2 text-xs font-semibold text-error"
+                >
+                  {{ noteValidationErrors[student.id] }}
+                </p>
+                <p
+                  v-else-if="noteSaveSuccess[student.id]"
+                  class="mt-2 text-xs font-semibold text-primary"
+                >
+                  {{ noteSaveSuccess[student.id] }}
+                </p>
                 <div class="mt-3 flex justify-end">
-                  <button @click="openDeleteConfirm(student)" class="text-sm font-bold text-error mr-4">Delete</button>
                   <button
-                    @click="saveNotes(student)"
+                    class="text-sm font-bold text-error mr-4"
+                    @click="openDeleteConfirm(student)"
+                  >
+                    Delete
+                  </button>
+                  <button
                     :disabled="!hasNoteChanges(student)"
                     class="text-sm font-bold"
-                    :class="hasNoteChanges(student) ? 'text-primary' : 'text-on-surface-variant/50 cursor-not-allowed'"
+                    :class="
+                      hasNoteChanges(student)
+                        ? 'text-primary'
+                        : 'text-on-surface-variant/50 cursor-not-allowed'
+                    "
+                    @click="saveNotes(student)"
                   >
                     {{ hasNoteChanges(student) ? 'Save Notes' : 'No Changes' }}
                   </button>
                 </div>
               </article>
 
-              <div v-if="isDragging" class="col-span-full border-2 border-dashed border-primary/40 rounded-xl py-3 px-4 text-sm text-on-surface-variant bg-white/50">
-                Drop here to move student to <span class="font-bold text-primary">{{ group.name }}</span>
+              <div
+                v-if="isDragging"
+                class="col-span-full border-2 border-dashed border-primary/40 rounded-xl py-3 px-4 text-sm text-on-surface-variant bg-white/50"
+              >
+                Drop here to move student to
+                <span class="font-bold text-primary">{{ group.name }}</span>
               </div>
             </div>
           </section>
 
-          <p v-if="groupedStudents.length === 0" class="text-on-surface-variant">No students found for this filter.</p>
+          <p v-if="groupedStudents.length === 0" class="text-on-surface-variant">
+            No students found for this filter.
+          </p>
         </div>
 
         <div class="pt-6 pb-4 flex flex-col items-center gap-3">
           <button
             type="button"
             class="h-12 w-12 rounded-full bg-primary text-white shadow-lg flex items-center justify-center"
-            @click="showAddGroup = !showAddGroup"
             title="Add group"
+            @click="showAddGroup = !showAddGroup"
           >
             <span class="material-symbols-outlined">add</span>
           </button>
 
-          <div v-if="showAddGroup" class="w-full max-w-md bg-white rounded-xl border border-outline-variant/30 shadow-xl p-4 space-y-3">
+          <div
+            v-if="showAddGroup"
+            class="w-full max-w-md bg-white rounded-xl border border-outline-variant/30 shadow-xl p-4 space-y-3"
+          >
             <p class="text-sm font-black">Create New Group</p>
-            <input v-model.trim="newGroupName" class="w-full bg-surface-container-low rounded-lg px-3 py-2" placeholder="e.g. Group C" type="text" />
+            <input
+              v-model.trim="newGroupName"
+              class="w-full bg-surface-container-low rounded-lg px-3 py-2"
+              placeholder="e.g. Group C"
+              type="text"
+            />
             <div class="flex justify-end gap-2">
-              <button class="px-3 py-2 text-sm font-bold text-on-surface-variant" @click="showAddGroup = false">Cancel</button>
-              <button class="px-3 py-2 text-sm font-bold rounded-lg bg-primary text-white" @click="addGroup">Add Group</button>
+              <button
+                class="px-3 py-2 text-sm font-bold text-on-surface-variant"
+                @click="showAddGroup = false"
+              >
+                Cancel
+              </button>
+              <button
+                class="px-3 py-2 text-sm font-bold rounded-lg bg-primary text-white"
+                @click="addGroup"
+              >
+                Add Group
+              </button>
             </div>
           </div>
         </div>
@@ -159,7 +243,8 @@
           @cancel="cancelDelete"
           @confirm="confirmDelete"
         >
-          Are you sure you want to delete <strong>{{ studentToDelete?.name }}</strong>? This action cannot be undone.
+          Are you sure you want to delete <strong>{{ studentToDelete?.name }}</strong
+          >? This action cannot be undone.
         </ConfirmDialog>
       </section>
     </main>
@@ -181,7 +266,7 @@ import {
   getProjectGroups,
   getProjectStudents,
   updateStudentGroup,
-  updateStudentNotes
+  updateStudentNotes,
 } from '../services/apiClient';
 
 const route = useRoute();
@@ -207,7 +292,7 @@ const groupScrollContainer = ref(null);
 const newStudent = ref({
   name: '',
   notes: '',
-  groupName: ''
+  groupName: '',
 });
 
 const filteredStudents = computed(() => {
@@ -259,12 +344,12 @@ async function loadStudentContext() {
   try {
     const [loadedStudents, loadedGroups] = await Promise.all([
       getProjectStudents(projectId.value),
-      getProjectGroups(projectId.value)
+      getProjectGroups(projectId.value),
     ]);
 
     students.value = loadedStudents.map((student) => ({
       ...student,
-      groupName: normalizeGroupName(student.groupName)
+      groupName: normalizeGroupName(student.groupName),
     }));
     noteBaselineByStudentId.value = Object.fromEntries(
       students.value.map((student) => [student.id, normalizeNotes(student.notes)])
@@ -284,15 +369,16 @@ async function loadStudentContext() {
       {
         id: 'alex-thompson',
         name: 'Alex Thompson',
-        notes: 'Struggling with quadratic equations. Requires focus on discriminant formula next session.',
-        groupName: 'Group A'
+        notes:
+          'Struggling with quadratic equations. Requires focus on discriminant formula next session.',
+        groupName: 'Group A',
       },
       {
         id: 'maya-rodriguez',
         name: 'Maya Rodriguez',
         notes: 'Excellent grasp of trigonometry. Ready for advanced circle theorem exercises.',
-        groupName: 'Ungrouped'
-      }
+        groupName: 'Ungrouped',
+      },
     ];
     noteBaselineByStudentId.value = Object.fromEntries(
       students.value.map((student) => [student.id, normalizeNotes(student.notes)])
@@ -355,12 +441,15 @@ async function addStudent() {
   try {
     const created = await createProjectStudent(projectId.value, {
       ...newStudent.value,
-      groupName: selectedGroup
+      groupName: selectedGroup,
     });
-    students.value = [{ ...created, groupName: normalizeGroupName(created.groupName) }, ...students.value];
+    students.value = [
+      { ...created, groupName: normalizeGroupName(created.groupName) },
+      ...students.value,
+    ];
     noteBaselineByStudentId.value = {
       ...noteBaselineByStudentId.value,
-      [created.id]: normalizeNotes(created.notes)
+      [created.id]: normalizeNotes(created.notes),
     };
     if (!groups.value.includes(selectedGroup)) {
       groups.value = [...groups.value, selectedGroup];
@@ -476,7 +565,7 @@ async function saveNotes(student) {
     student.notes = normalizedNotes;
     noteBaselineByStudentId.value = {
       ...noteBaselineByStudentId.value,
-      [student.id]: normalizedNotes
+      [student.id]: normalizedNotes,
     };
     noteSaveSuccess.value = { ...noteSaveSuccess.value, [student.id]: 'Notes saved.' };
     clearNoteSuccessTimer(student.id);
@@ -567,9 +656,13 @@ async function confirmDelete() {
   }
 }
 
-watch(projectId, () => {
-  loadStudentContext();
-}, { immediate: true });
+watch(
+  projectId,
+  () => {
+    loadStudentContext();
+  },
+  { immediate: true }
+);
 
 onBeforeUnmount(() => {
   for (const timeoutId of noteSuccessTimers.values()) {

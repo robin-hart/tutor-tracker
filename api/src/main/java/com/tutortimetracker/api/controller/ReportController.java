@@ -2,6 +2,7 @@ package com.tutortimetracker.api.controller;
 
 import com.tutortimetracker.api.model.ApiErrorResponse;
 import com.tutortimetracker.api.model.ReportRow;
+import com.tutortimetracker.api.service.ProjectReportPdfService;
 import com.tutortimetracker.api.service.TutorDataService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -12,6 +13,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,6 +25,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Generates and retrieves tutoring session reports across projects.
+ *
+ * <p>Provides global report aggregation, project-scoped reporting, and monthly report generation
+ * for analytics and time tracking.
+ */
 @RestController
 @RequestMapping("/api")
 @CrossOrigin(origins = {"http://localhost:5173"})
@@ -27,9 +38,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class ReportController {
 
   private final TutorDataService tutorDataService;
+  private final ProjectReportPdfService projectReportPdfService;
 
-  public ReportController(TutorDataService tutorDataService) {
+  public ReportController(
+      TutorDataService tutorDataService, ProjectReportPdfService projectReportPdfService) {
     this.tutorDataService = tutorDataService;
+    this.projectReportPdfService = projectReportPdfService;
   }
 
   @Operation(summary = "List reports", description = "Returns report rows across all projects.")
@@ -87,5 +101,42 @@ public class ReportController {
       @Parameter(description = "Month key in yyyy-MM format", example = "2026-03") @RequestParam
           String month) {
     return tutorDataService.generateProjectMonthlyReport(projectId, month);
+  }
+
+  @Operation(
+      summary = "Export monthly project report PDF",
+      description =
+          "Builds a LaTeX report from project timeslots in the selected month and returns a PDF"
+              + " download.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "PDF generated"),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid month format",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Project not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+        @ApiResponse(
+            responseCode = "503",
+            description = "LaTeX compiler unavailable or generation failed",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+      })
+  @GetMapping(value = "/projects/{projectId}/reports/export/pdf", produces = "application/pdf")
+  public ResponseEntity<byte[]> exportProjectReportPdf(
+      @Parameter(description = "Project slug", example = "math-grade-10") @PathVariable
+          String projectId,
+      @Parameter(description = "Month key in yyyy-MM format", example = "2026-03") @RequestParam
+          String month) {
+    byte[] pdf = projectReportPdfService.exportProjectMonthPdf(projectId, month);
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_PDF);
+    headers.setContentDisposition(
+        ContentDisposition.attachment().filename(projectId + "-" + month + "-report.pdf").build());
+
+    return ResponseEntity.ok().headers(headers).body(pdf);
   }
 }

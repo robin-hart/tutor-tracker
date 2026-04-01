@@ -112,6 +112,10 @@ Returns monthly reports for one project.
 ### `POST /api/projects/{projectId}/reports/generate?month=yyyy-MM`
 Generates or refreshes one monthly report from the selected project's timeslots.
 
+### `GET /api/projects/{projectId}/reports/export/pdf?month=yyyy-MM`
+Builds a LaTeX document from the selected project's timeslots in the month and returns a PDF
+download.
+
 ### `POST /api/timeslots` (legacy compatibility)
 Creates a new timeslot through the non-project-scoped route.
 
@@ -151,6 +155,15 @@ set DB_URL=jdbc:mariadb://localhost:3307/tutortimetracker
 set DB_USERNAME=tutortime
 set DB_PASSWORD=tutortime
 ```
+
+Optional LaTeX export settings:
+```bash
+set LATEX_COMMAND=pdflatex
+set LATEX_TIMEOUT_SECONDS=30
+```
+
+Install a LaTeX distribution (for example TeX Live or MiKTeX) so `pdflatex` is available on your
+PATH when using PDF export.
 
 Note: Docker maps MariaDB to host port `3307` by default to avoid collisions with local MariaDB services on `3306`.
 

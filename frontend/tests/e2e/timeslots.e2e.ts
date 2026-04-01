@@ -2,7 +2,7 @@ import { test, expect, Page } from '@playwright/test';
 
 /**
  * E2E tests for Calendar and Timeslot management
- * 
+ *
  * Tests user flows:
  * - Creating timeslots in project calendar
  * - Viewing calendar for a month
@@ -31,7 +31,11 @@ test.describe('Calendar & Timeslots', () => {
       },
     });
 
-    expect(projectResponse.ok()).toBeTruthy();
+    if (!projectResponse.ok()) {
+      throw new Error(
+        `Failed to create test project: ${projectResponse.status()} ${projectResponse.statusText()}`
+      );
+    }
     const project = await projectResponse.json();
     testProjectId = project.id;
 

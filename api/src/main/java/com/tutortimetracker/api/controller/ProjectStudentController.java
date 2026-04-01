@@ -25,6 +25,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Manages student enrollment and listing within project scope.
+ *
+ * <p>Handles listing all students in a project and creating new student profiles for project
+ * participation.
+ */
 @RestController
 @RequestMapping("/api")
 @CrossOrigin(origins = {"http://localhost:5173"})
@@ -91,11 +97,12 @@ public class ProjectStudentController {
                       examples =
                           @ExampleObject(
                               value =
-                                  "{\n"
-                                      + "  \"name\": \"Alex Thompson\",\n"
-                                      + "  \"notes\": \"Needs extra practice on quadratics.\",\n"
-                                      + "  \"groupName\": \"Group A\"\n"
-                                      + "}")))
+                                  """
+                                  {
+                                    "name": "Alex Thompson",
+                                    "notes": "Needs extra practice on quadratics.",
+                                    "groupName": "Group A"
+                                  }""")))
           @Valid
           @RequestBody
           StudentCreateRequest request) {

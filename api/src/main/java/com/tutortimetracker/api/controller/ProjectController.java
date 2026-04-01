@@ -27,6 +27,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Manages project CRUD operations and project-scoped calendar views.
+ *
+ * <p>Handles listing, creating, and deleting projects, as well as retrieving calendar data for
+ * project timeline visualization.
+ */
 @RestController
 @RequestMapping("/api")
 @CrossOrigin(origins = {"http://localhost:5173"})

@@ -2,7 +2,7 @@ import { test, expect, Page } from '@playwright/test';
 
 /**
  * E2E tests for Project management workflow
- * 
+ *
  * Tests user flows:
  * - Creating a new project
  * - Viewing projects in dashboard
@@ -49,11 +49,13 @@ test.describe('Project Management', () => {
 
     // Look for project in UI (adapt selector based on actual DOM structure)
     const projectCard = page.locator(`text=${projectName}`);
-    await expect(projectCard).toBeVisible({ timeout: 5000 }).catch(() => {
-      // Project might be visible but selector needs adjustment
-      // This is a flexible assertion
-      console.log('Note: Project name not found in expected location - CSS may differ');
-    });
+    await expect(projectCard)
+      .toBeVisible({ timeout: 5000 })
+      .catch(() => {
+        // Project might be visible but selector needs adjustment
+        // This is a flexible assertion
+        console.log('Note: Project name not found in expected location - CSS may differ');
+      });
   });
 
   test('should load projects from API', async () => {

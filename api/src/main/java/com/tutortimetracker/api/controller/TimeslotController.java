@@ -28,6 +28,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Manages timeslot creation, retrieval, updating, and deletion.
+ *
+ * <p>Handles both global timeslots and project-scoped timeslots with calendar filtering by month.
+ */
 @RestController
 @RequestMapping("/api")
 @CrossOrigin(origins = {"http://localhost:5173"})
@@ -64,13 +69,14 @@ public class TimeslotController {
                       examples =
                           @ExampleObject(
                               value =
-                                  "{\n"
-                                      + "  \"title\": \"Integration Workshop\",\n"
-                                      + "  \"description\": \"Focused revision session\",\n"
-                                      + "  \"durationMinutes\": 90,\n"
-                                      + "  \"date\": \"2026-03-20\",\n"
-                                      + "  \"startTime\": \"14:00\"\n"
-                                      + "}")))
+                                  """
+                                  {
+                                    "title": "Integration Workshop",
+                                    "description": "Focused revision session",
+                                    "durationMinutes": 90,
+                                    "date": "2026-03-20",
+                                    "startTime": "14:00"
+                                  }""")))
           @Valid
           @RequestBody
           TimeslotCreateRequest request) {

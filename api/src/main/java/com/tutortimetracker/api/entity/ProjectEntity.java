@@ -5,7 +5,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import java.time.LocalDate;
 
 /** Project entity persisted in MariaDB. */
 @Entity
@@ -33,6 +35,9 @@ public class ProjectEntity {
 
   @Column(nullable = false)
   private int completionPercent;
+
+  @Column(name = "created_at")
+  private LocalDate createdAt;
 
   public Long getId() {
     return id;
@@ -84,5 +89,20 @@ public class ProjectEntity {
 
   public void setCompletionPercent(int completionPercent) {
     this.completionPercent = completionPercent;
+  }
+
+  public LocalDate getCreatedAt() {
+    return createdAt;
+  }
+
+  public void setCreatedAt(LocalDate createdAt) {
+    this.createdAt = createdAt;
+  }
+
+  @PrePersist
+  void initializeCreatedAt() {
+    if (createdAt == null) {
+      createdAt = LocalDate.now();
+    }
   }
 }

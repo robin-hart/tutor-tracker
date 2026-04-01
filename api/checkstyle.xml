@@ -42,6 +42,18 @@
         <module name="MemberName" />
         <module name="ConstantName" />
 
+        <!-- Documentation -->
+        <module name="JavadocType">
+            <property name="tokens" value="INTERFACE_DEF,CLASS_DEF" />
+            <property name="scope" value="public" />
+        </module>
+        <module name="JavadocMethod">
+            <property name="tokens" value="METHOD_DEF" />
+            <property name="accessModifiers" value="public" />
+            <property name="allowMissingParamTags" value="true" />
+            <property name="allowMissingReturnTag" value="true" />
+        </module>
+
         <!-- Readability and safety -->
         <module name="NeedBraces" />
         <module name="WhitespaceAfter" />
@@ -50,5 +62,11 @@
         <module name="SimplifyBooleanExpression" />
         <module name="SimplifyBooleanReturn" />
         <module name="FallThrough" />
+        <module name="RegexpSinglelineJavaCheck">
+            <property name="format" value="\&quot;.*\\n.*\&quot;\s*\+\s*\&quot;" />
+            <property name="ignoreComments" value="true" />
+            <property name="message"
+                value="JSON or multi-line string literal concatenation detected: consider using text blocks" />
+        </module>
     </module>
 </module>

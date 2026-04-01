@@ -24,6 +24,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Manages student profile updates and deletions across projects.
+ *
+ * <p>Handles updates to student notes, group reassignments, and student deletion operations.
+ */
 @RestController
 @RequestMapping("/api")
 @CrossOrigin(origins = {"http://localhost:5173"})
@@ -64,9 +69,10 @@ public class StudentController {
                       examples =
                           @ExampleObject(
                               value =
-                                  "{\n"
-                                      + "  \"notes\": \"Improved in fractions and equations.\"\n"
-                                      + "}")))
+                                  """
+                                  {
+                                    "notes": "Improved in fractions and equations."
+                                  }""")))
           @Valid
           @RequestBody
           StudentNotesUpdateRequest request) {

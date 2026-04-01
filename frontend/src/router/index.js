@@ -11,15 +11,23 @@ import ExportReportsView from '../views/ExportReportsView.vue';
 const routes = [
   { path: '/', redirect: '/projects' },
   { path: '/projects', name: 'projects-dashboard', component: ProjectsDashboardView },
-  { path: '/projects/:projectId/calendar', name: 'project-calendar', component: ProjectCalendarView },
-  { path: '/projects/:projectId/students', name: 'student-management', component: StudentManagementView },
+  {
+    path: '/projects/:projectId/calendar',
+    name: 'project-calendar',
+    component: ProjectCalendarView,
+  },
+  {
+    path: '/projects/:projectId/students',
+    name: 'student-management',
+    component: StudentManagementView,
+  },
   { path: '/timeslots/edit', name: 'timeslot-editor', component: TimeslotEditorView },
-  { path: '/reports', name: 'export-reports', component: ExportReportsView }
+  { path: '/reports', name: 'export-reports', component: ExportReportsView },
 ];
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
 });
 
 export default router;

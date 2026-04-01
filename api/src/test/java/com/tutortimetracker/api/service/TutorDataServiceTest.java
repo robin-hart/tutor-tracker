@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -42,6 +43,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 
 @ExtendWith(MockitoExtension.class)
 class TutorDataServiceTest {
@@ -84,6 +86,26 @@ class TutorDataServiceTest {
 
     assertEquals("math-grade-10-2", summary.id());
     assertEquals("Math Grade 10", summary.name());
+    verify(projectGroupRepository).save(any(ProjectGroupEntity.class));
+  }
+
+  @Test
+  void createProject_shouldRetryWhenInsertCollidesOnSlug() {
+    when(projectRepository.findBySlug("timeslot-test-project")).thenReturn(Optional.empty());
+    when(projectRepository.save(any(ProjectEntity.class)))
+        .thenThrow(
+            new DataIntegrityViolationException(
+                "Duplicate entry 'timeslot-test-project' for key 'project_slug'"))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+    when(projectGroupRepository.findByProjectAndName(any(ProjectEntity.class), eq("Ungrouped")))
+        .thenReturn(Optional.empty());
+
+    ProjectSummary summary =
+        service.createProject(
+            new ProjectCreateRequest("Timeslot Test Project", "GENERAL", 0.0, 0.0, 0));
+
+    assertTrue(summary.id().startsWith("timeslot-test-project"));
+    verify(projectRepository, times(2)).save(any(ProjectEntity.class));
     verify(projectGroupRepository).save(any(ProjectGroupEntity.class));
   }
 
@@ -394,20 +416,20 @@ class TutorDataServiceTest {
   @Test
   void updateStudentGroup_shouldThrowWhenStudentNotFound() {
     when(studentRepository.findByStudentKey("missing")).thenReturn(Optional.empty());
+    StudentGroupUpdateRequest request = new StudentGroupUpdateRequest("Group A");
 
     assertThrows(
-        StudentNotFoundException.class,
-        () -> service.updateStudentGroup("missing", new StudentGroupUpdateRequest("Group A")));
+        StudentNotFoundException.class, () -> service.updateStudentGroup("missing", request));
     verify(studentRepository, never()).save(any(StudentEntity.class));
   }
 
   @Test
   void updateStudentNotes_shouldThrowWhenStudentNotFound() {
     when(studentRepository.findByStudentKey("missing")).thenReturn(Optional.empty());
+    StudentNotesUpdateRequest request = new StudentNotesUpdateRequest("note");
 
     assertThrows(
-        StudentNotFoundException.class,
-        () -> service.updateStudentNotes("missing", new StudentNotesUpdateRequest("note")));
+        StudentNotFoundException.class, () -> service.updateStudentNotes("missing", request));
   }
 
   @Test
@@ -572,10 +594,10 @@ class TutorDataServiceTest {
   @Test
   void createProjectStudent_shouldThrowWhenProjectNotFound() {
     when(projectRepository.findBySlug("missing")).thenReturn(Optional.empty());
+    StudentCreateRequest request = new StudentCreateRequest("Alice", "", null);
 
     assertThrows(
-        ProjectNotFoundException.class,
-        () -> service.createProjectStudent("missing", new StudentCreateRequest("Alice", "", null)));
+        ProjectNotFoundException.class, () -> service.createProjectStudent("missing", request));
   }
 
   @Test

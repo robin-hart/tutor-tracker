@@ -34,6 +34,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 /**
@@ -139,7 +140,10 @@ public class TutorDataService {
    * @return project summaries for the dashboard
    */
   public List<ProjectSummary> getProjects() {
-    return projectRepository.findAll().stream().map(this::toProjectSummary).toList();
+    return projectRepository.findAll().stream()
+        .peek(this::refreshProjectMetrics)
+        .map(this::toProjectSummary)
+        .toList();
   }
 
   /**
@@ -149,20 +153,33 @@ public class TutorDataService {
    * @return created project summary
    */
   public ProjectSummary createProject(ProjectCreateRequest request) {
-    String baseSlug = slugify(request.name());
-    String slug = ensureUniqueProjectSlug(baseSlug);
+    String normalizedName = request.name().trim();
+    String normalizedCategory = request.category().trim();
+    String baseSlug = slugify(normalizedName);
 
-    ProjectEntity entity = new ProjectEntity();
-    entity.setSlug(slug);
-    entity.setName(request.name().trim());
-    entity.setCategory(request.category().trim());
-    entity.setTotalHours(request.totalHours());
-    entity.setMonthHours(request.monthHours());
-    entity.setCompletionPercent(request.completionPercent());
+    for (int attempt = 0; attempt < 5; attempt++) {
+      String candidateSlug = generateProjectSlugCandidate(baseSlug, attempt);
 
-    ProjectEntity created = projectRepository.save(entity);
-    ensureDefaultGroup(created);
-    return toProjectSummary(created);
+      ProjectEntity entity = new ProjectEntity();
+      entity.setSlug(candidateSlug);
+      entity.setName(normalizedName);
+      entity.setCategory(normalizedCategory);
+      entity.setTotalHours(request.totalHours());
+      entity.setMonthHours(request.monthHours());
+      entity.setCompletionPercent(request.completionPercent());
+
+      try {
+        ProjectEntity created = projectRepository.save(entity);
+        ensureDefaultGroup(created);
+        return toProjectSummary(created);
+      } catch (DataIntegrityViolationException ex) {
+        if (!isDuplicateSlugInsert(ex, candidateSlug)) {
+          throw ex;
+        }
+      }
+    }
+
+    throw new IllegalStateException("Could not create project due to repeated slug collisions.");
   }
 
   /**
@@ -203,6 +220,7 @@ public class TutorDataService {
    */
   public ProjectCalendarResponse getProjectCalendar(String projectId, String monthKey) {
     ProjectEntity project = findProjectBySlug(projectId);
+    refreshProjectMetrics(project);
     YearMonth month = parseMonthKeyOrNow(monthKey);
     LocalDate from = month.atDay(1);
     LocalDate to = month.plusMonths(1).atDay(1);
@@ -673,7 +691,8 @@ public class TutorDataService {
         project.getCategory(),
         project.getTotalHours(),
         project.getMonthHours(),
-        project.getCompletionPercent());
+      project.getCompletionPercent(),
+      project.getCreatedAt());
   }
 
   /**
@@ -691,17 +710,6 @@ public class TutorDataService {
         report.getTotalHours(),
         report.getSessions(),
         report.getGrossAmount());
-  }
-
-  /**
-   * Maps timeslot entity to API model.
-   *
-   * @param entity timeslot entity
-   * @return API payload
-   */
-  private TimeslotResponse toTimeslotResponse(TimeslotEntity entity) {
-    String projectId = entity.getProject() == null ? null : entity.getProject().getSlug();
-    return toTimeslotResponse(entity, projectId);
   }
 
   /**
@@ -809,5 +817,44 @@ public class TutorDataService {
       candidate = normalizedBase + "-" + suffix;
     }
     return candidate;
+  }
+
+  /**
+   * Generates a slug candidate for project creation retries.
+   *
+   * @param baseSlug raw slug stem
+   * @param attempt current retry index
+   * @return slug candidate
+   */
+  private String generateProjectSlugCandidate(String baseSlug, int attempt) {
+    if (attempt == 0) {
+      return ensureUniqueProjectSlug(baseSlug);
+    }
+
+    String normalizedBase = baseSlug.isBlank() ? "project" : baseSlug;
+    String randomSuffix = UUID.randomUUID().toString().substring(0, 8);
+    return normalizedBase + "-" + randomSuffix;
+  }
+
+  /**
+   * Detects duplicate-key inserts for project slug writes.
+   *
+   * @param exception persistence exception
+   * @param slugCandidate attempted slug
+   * @return true when duplicate key points to the attempted slug
+   */
+  private boolean isDuplicateSlugInsert(
+      DataIntegrityViolationException exception, String slugCandidate) {
+    Throwable current = exception;
+    while (current != null) {
+      String message = current.getMessage();
+      if (message != null
+          && message.contains("Duplicate entry")
+          && message.contains("'" + slugCandidate + "'")) {
+        return true;
+      }
+      current = current.getCause();
+    }
+    return false;
   }
 }
