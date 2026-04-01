@@ -148,24 +148,17 @@ function normalizeMonthKey(dateString) {
 }
 
 async function resolveProjectStartMonth(projectId) {
-  const selectedProject = projects.value.find((project) => project.id === projectId);
-  const createdMonthKey = normalizeMonthKey(selectedProject?.createdAt);
-  if (createdMonthKey) {
-    return createdMonthKey;
-  }
-
   try {
     const calendar = await getProjectCalendar(projectId);
     const slotMonthKeys = (calendar.allSlots || [])
       .map((slot) => normalizeMonthKey(slot.date))
       .filter(Boolean);
-    const candidates = [...slotMonthKeys];
 
-    if (candidates.length === 0) {
+    if (slotMonthKeys.length === 0) {
       return new Date().toISOString().slice(0, 7);
     }
 
-    return candidates.sort()[0];
+    return slotMonthKeys.sort()[0];
   } catch {
     return new Date().toISOString().slice(0, 7);
   }
