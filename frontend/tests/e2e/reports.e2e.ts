@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 /**
  * E2E tests for Reports functionality
@@ -32,7 +32,7 @@ test.describe('Reports', () => {
     });
 
     expect(projectResponse.ok()).toBeTruthy();
-    const project = await projectResponse.json();
+    const project = (await projectResponse.json()) as { id: string };
     testProjectId = project.id;
 
     // Create some timeslots for the current month
@@ -132,7 +132,11 @@ test.describe('Reports', () => {
 
   test('should display project name for months with zero timeslots', async () => {
     // Create a project with timeslots only in January 2026
-    const browser = await page.context().browser();
+    const browser = page.context().browser();
+    expect(browser).not.toBeNull();
+    if (!browser) {
+      throw new Error('Browser instance is not available in Playwright context.');
+    }
     const tempContext = await browser.newContext();
     const tempPage = await tempContext.newPage();
 
@@ -147,7 +151,7 @@ test.describe('Reports', () => {
     });
 
     expect(projectResponse.ok()).toBeTruthy();
-    const project = await projectResponse.json();
+    const project = (await projectResponse.json()) as { id: string };
     const projectId = project.id;
     const projName = 'Zero Hours Test Project';
 

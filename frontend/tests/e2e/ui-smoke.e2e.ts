@@ -1,11 +1,14 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type APIRequestContext } from '@playwright/test';
 
 const apiBaseUrl = process.env.API_BASE_URL || 'http://localhost:8080';
 
 /**
  * Creates a project for smoke tests using the public API.
  */
-async function createSmokeProject(request, suffix) {
+async function createSmokeProject(
+  request: APIRequestContext,
+  suffix: string
+): Promise<{ id: string; name: string }> {
   const projectName = `Smoke ${suffix} ${Date.now()}`;
   const response = await request.post(`${apiBaseUrl}/api/projects`, {
     data: {
@@ -18,7 +21,7 @@ async function createSmokeProject(request, suffix) {
   });
 
   expect(response.ok()).toBeTruthy();
-  const project = await response.json();
+  const project = (await response.json()) as { id: string };
   return { id: project.id, name: projectName };
 }
 
