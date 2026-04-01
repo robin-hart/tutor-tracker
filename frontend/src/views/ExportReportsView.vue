@@ -67,7 +67,7 @@
           :disabled="!selectedProjectId || !monthFilter"
           @click="generateMonthlyReport"
         >
-          Generate Project Monthly Report
+          Generate Project Monthly Report (PDF)
         </button>
       </section>
 
@@ -120,7 +120,11 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import AppSidebar from '../components/AppSidebar.vue';
 import MainTopBar from '../components/MainTopBar.vue';
-import { generateProjectReport, getProjectReports, getProjects } from '../services/apiClient';
+import {
+  exportProjectReportPdf,
+  getProjectReports,
+  getProjects,
+} from '../services/apiClient';
 
 /**
  * Reporting screen showing monthly billing and workload exports.
@@ -164,7 +168,18 @@ async function loadProjectReports() {
 async function generateMonthlyReport() {
   errorMessage.value = '';
   try {
-    await generateProjectReport(selectedProjectId.value, monthFilter.value);
+    const blob = await exportProjectReportPdf(selectedProjectId.value, monthFilter.value);
+    const filename = `${selectedProjectId.value}-${monthFilter.value}-report.pdf`;
+    const objectUrl = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = objectUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    URL.revokeObjectURL(objectUrl);
     await loadProjectReports();
   } catch (error) {
     errorMessage.value = error.message;
