@@ -33,41 +33,15 @@
             </option>
           </select>
         </label>
-        <label class="block">
-          <span class="text-xs text-on-surface-variant uppercase tracking-widest"
-            >Filter by project</span
-          >
-          <input
-            v-model.trim="projectFilter"
-            class="mt-2 w-full bg-surface-container-lowest rounded-xl px-4 py-3 border-none focus:ring-2 focus:ring-primary/20"
-            placeholder="Project name"
-            type="text"
-          />
-        </label>
-        <label class="block">
-          <span class="text-xs text-on-surface-variant uppercase tracking-widest">Month Key</span>
-          <input
-            v-model.trim="monthFilter"
-            class="mt-2 w-full bg-surface-container-lowest rounded-xl px-4 py-3 border-none focus:ring-2 focus:ring-primary/20"
-            placeholder="2026-03"
-            type="text"
-          />
-        </label>
-        <div class="bg-surface-container-lowest rounded-xl px-4 py-3">
-          <p class="text-xs text-on-surface-variant uppercase tracking-widest mb-1">
-            Filtered Gross Amount
-          </p>
-          <p class="font-headline text-2xl font-bold">${{ filteredGross.toFixed(2) }}</p>
-        </div>
       </section>
 
       <section class="mb-8 flex items-center gap-3">
         <button
           class="premium-gradient text-white px-4 py-2 rounded-lg font-bold text-sm"
-          :disabled="!selectedProjectId || !monthFilter"
-          @click="generateMonthlyReport"
+          :disabled="!selectedProjectId || !newestMonthKey"
+          @click="generateNewestMonthlyReport"
         >
-          Generate Project Monthly Report (PDF)
+          Generate Newest Monthly Report
         </button>
       </section>
 
@@ -84,28 +58,27 @@
             <thead>
               <tr class="text-on-surface-variant uppercase text-[10px] font-bold tracking-[0.2em]">
                 <th class="px-8 py-6">Month / Period</th>
-                <th class="px-8 py-6">Project Name</th>
-                <th class="px-8 py-6">Total Hours</th>
-                <th class="px-8 py-6">Sessions</th>
-                <th class="px-8 py-6">Gross Amount</th>
+                <th class="px-8 py-6">Download</th>
               </tr>
             </thead>
             <tbody class="text-sm font-body divide-y divide-outline-variant/5">
               <tr
-                v-for="row in filteredReports"
-                :key="`${row.month}-${row.projectName}`"
+                v-for="monthOption in availableMonthOptions"
+                :key="monthOption.key"
                 class="hover:bg-surface-container-lowest transition-colors"
               >
-                <td class="px-8 py-6 font-bold">{{ row.month }}</td>
-                <td class="px-8 py-6">{{ row.projectName }}</td>
-                <td class="px-8 py-6 text-on-surface-variant">{{ row.totalHours }} hrs</td>
                 <td class="px-8 py-6">
-                  <span
-                    class="px-3 py-1 bg-secondary-fixed text-on-secondary-fixed rounded-full text-xs font-bold"
-                    >{{ row.sessions }} sessions</span
-                  >
+                  <span class="font-bold">{{ monthOption.label }}</span>
+                  <span class="text-on-surface-variant"> ({{ monthOption.key }})</span>
                 </td>
-                <td class="px-8 py-6 font-bold">${{ row.grossAmount.toFixed(2) }}</td>
+                <td class="px-8 py-6">
+                  <button
+                    class="px-3 py-1 bg-secondary-fixed text-on-secondary-fixed rounded-lg text-xs font-bold"
+                    @click="downloadReportForMonth(monthOption.key)"
+                  >
+                    Download PDF
+                  </button>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -120,56 +93,89 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import AppSidebar from '../components/AppSidebar.vue';
 import MainTopBar from '../components/MainTopBar.vue';
-import {
-  exportProjectReportPdf,
-  getProjectReports,
-  getProjects,
-} from '../services/apiClient';
+import { exportProjectReportPdf, getProjectCalendar, getProjects } from '../services/apiClient';
 
 /**
  * Reporting screen showing monthly billing and workload exports.
  */
-const reports = ref([]);
 const projects = ref([]);
 const selectedProjectId = ref('');
-const projectFilter = ref('');
-const monthFilter = ref(new Date().toISOString().slice(0, 7));
+const projectStartMonthKey = ref(new Date().toISOString().slice(0, 7));
 const errorMessage = ref('');
 
-const filteredReports = computed(() => {
-  return reports.value.filter((row) => {
-    const byProject = projectFilter.value
-      ? row.projectName.toLowerCase().includes(projectFilter.value.toLowerCase())
-      : true;
-    const byMonth = monthFilter.value
-      ? row.month.toLowerCase().includes(monthFilter.value.toLowerCase()) ||
-        row.month.includes(monthFilter.value)
-      : true;
-    return byProject && byMonth;
-  });
+const availableMonthOptions = computed(() => {
+  const start = monthKeyToDate(projectStartMonthKey.value);
+  const end = monthKeyToDate(new Date().toISOString().slice(0, 7));
+  const months = [];
+  const startTime = start.getTime();
+  let cursorTime = new Date(end.getFullYear(), end.getMonth(), 1).getTime();
+
+  while (cursorTime >= startTime) {
+    const cursor = new Date(cursorTime);
+    const monthKey = dateToMonthKey(cursor);
+    months.push({ key: monthKey, label: formatMonthLabel(monthKey) });
+    cursor.setMonth(cursor.getMonth() - 1);
+    cursorTime = cursor.getTime();
+  }
+
+  return months;
 });
 
-const filteredGross = computed(() =>
-  filteredReports.value.reduce((sum, row) => sum + Number(row.grossAmount), 0)
-);
+const newestMonthKey = computed(() => availableMonthOptions.value[0]?.key || '');
 
-async function loadProjectReports() {
-  if (!selectedProjectId.value) {
-    reports.value = [];
-    return;
+function monthKeyToDate(monthKey) {
+  const [year, month] = monthKey.split('-').map(Number);
+  return new Date(year, month - 1, 1);
+}
+
+function dateToMonthKey(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}`;
+}
+
+function formatMonthLabel(monthKey) {
+  const [year, month] = monthKey.split('-').map(Number);
+  const date = new Date(year, month - 1, 1);
+  return date.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+}
+
+function normalizeMonthKey(dateString) {
+  if (!dateString) {
+    return null;
   }
+  return dateString.slice(0, 7);
+}
+
+async function resolveProjectStartMonth(projectId) {
+  const selectedProject = projects.value.find((project) => project.id === projectId);
+  const createdMonthKey = normalizeMonthKey(selectedProject?.createdAt);
+  if (createdMonthKey) {
+    return createdMonthKey;
+  }
+
   try {
-    reports.value = await getProjectReports(selectedProjectId.value);
-  } catch (error) {
-    errorMessage.value = error.message;
+    const calendar = await getProjectCalendar(projectId);
+    const slotMonthKeys = (calendar.allSlots || [])
+      .map((slot) => normalizeMonthKey(slot.date))
+      .filter(Boolean);
+    const candidates = [...slotMonthKeys];
+
+    if (candidates.length === 0) {
+      return new Date().toISOString().slice(0, 7);
+    }
+
+    return candidates.sort()[0];
+  } catch {
+    return new Date().toISOString().slice(0, 7);
   }
 }
 
-async function generateMonthlyReport() {
+async function downloadReportForMonth(monthKey) {
   errorMessage.value = '';
   try {
-    const blob = await exportProjectReportPdf(selectedProjectId.value, monthFilter.value);
-    const filename = `${selectedProjectId.value}-${monthFilter.value}-report.pdf`;
+    const blob = await exportProjectReportPdf(selectedProjectId.value, monthKey);
+    const filename = `${selectedProjectId.value}-${monthKey}-report.pdf`;
     const objectUrl = URL.createObjectURL(blob);
 
     const link = document.createElement('a');
@@ -180,35 +186,32 @@ async function generateMonthlyReport() {
     link.remove();
 
     URL.revokeObjectURL(objectUrl);
-    await loadProjectReports();
   } catch (error) {
     errorMessage.value = error.message;
   }
+}
+
+async function generateNewestMonthlyReport() {
+  if (!newestMonthKey.value) {
+    return;
+  }
+  await downloadReportForMonth(newestMonthKey.value);
 }
 
 onMounted(async () => {
   try {
     projects.value = await getProjects();
     selectedProjectId.value = projects.value[0]?.id || '';
-    await loadProjectReports();
+    projectStartMonthKey.value = await resolveProjectStartMonth(selectedProjectId.value);
   } catch (error) {
     console.warn('Using fallback report/project data because API is unavailable.', error);
     errorMessage.value = error.message;
     projects.value = [{ id: 'math-grade-10', name: 'Math Grade 10' }];
     selectedProjectId.value = 'math-grade-10';
-    reports.value = [
-      {
-        month: 'March 2026',
-        projectName: 'Math Grade 10',
-        totalHours: 6.5,
-        sessions: 3,
-        grossAmount: 390,
-      },
-    ];
   }
 });
 
 watch(selectedProjectId, async () => {
-  await loadProjectReports();
+  projectStartMonthKey.value = await resolveProjectStartMonth(selectedProjectId.value);
 });
 </script>
