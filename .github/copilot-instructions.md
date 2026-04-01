@@ -29,3 +29,7 @@ Provide good names and clear assertions in tests to ensure they are human-readab
 - Update the architecture documentation in `ARCHITECTURE.md` as design decisions evolve.
 - Keep the README files in sync with the actual project structure and setup instructions.
 - Ensure API endpoint contracts are clearly documented in both the architecture docs and the backend code.
+
+## Development platform
+
+- All development happens on a windows machine. Do not use linux only commands at all.
