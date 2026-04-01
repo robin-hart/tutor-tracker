@@ -4,10 +4,9 @@ import com.tutortimetracker.api.entity.ProjectEntity;
 import com.tutortimetracker.api.entity.TimeslotEntity;
 import com.tutortimetracker.api.repository.ProjectRepository;
 import com.tutortimetracker.api.repository.TimeslotRepository;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
@@ -19,53 +18,62 @@ import org.springframework.stereotype.Service;
 @Service
 public class ProjectReportPdfService {
 
-  private static final double DEFAULT_HOURLY_RATE = 60.0;
   private static final DateTimeFormatter MONTH_LABEL_FORMATTER =
-      DateTimeFormatter.ofPattern("MMMM uuuu", Locale.ENGLISH);
-  private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
+      DateTimeFormatter.ofPattern("MMMM uuuu", Locale.GERMAN);
+  private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.uuuu");
   private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
-  private static final DateTimeFormatter GENERATED_AT_FORMATTER =
-      DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss");
+  private static final DateTimeFormatter GENERATED_DATE_FORMATTER =
+      DateTimeFormatter.ofPattern("dd.MM.uuuu");
   private static final String LATEX_TEMPLATE =
       """
-      \\documentclass[11pt]{article}
-      \\usepackage[margin=1in]{geometry}
+    \\documentclass[a4paper,12pt]{article}
+    \\usepackage[utf8]{inputenc}
       \\usepackage[T1]{fontenc}
+    \\usepackage{geometry}
+    \\geometry{left=2.5cm,right=2cm,top=2cm,bottom=2cm}
+    \\usepackage{array}
+    \\usepackage{tabularx}
       \\usepackage{booktabs}
-      \\usepackage{longtable}
 
       \\begin{document}
 
       \\begin{center}
-      {\\LARGE Monthly Project Report}\\\\[0.6em]
-      {\\large {{PROJECT_NAME}}}\\\\
-      Project ID: {{PROJECT_ID}}\\\\
-      Month: {{MONTH_LABEL}}
+    {\\LARGE \\textbf{Arbeitszeitblatt}}\\\\[0.8cm]
       \\end{center}
 
-      \\vspace{1em}
-      \\noindent Generated at: {{GENERATED_AT}}
+    \\textbf{Für Monat:} {{REPORT_MONTH}} \\\\[0.2cm]
+    \\textbf{Name:} {{PROJECT_NAME}} \\\\[0.2cm]
+    \\textbf{Einrichtung:} Projekt {{PROJECT_ID}}
 
-      \\vspace{1em}
-      \\begin{tabular}{ll}
-      \\textbf{Sessions} & {{SESSION_COUNT}} \\\\
-      \\textbf{Total Hours} & {{TOTAL_HOURS}} \\\\
-      \\textbf{Hourly Rate} & ${{HOURLY_RATE}}$ \\\\
-      \\textbf{Gross Amount} & ${{GROSS_AMOUNT}}$ \\\\
-      \\end{tabular}
+    \\renewcommand{\\arraystretch}{1.3}
 
-      \\vspace{1.2em}
-      \\noindent\\textbf{Timeslots in Selected Month}
+    \\noindent
+    \\begin{tabularx}{\\textwidth}{| l | p{2cm} | p{2cm} | X | p{3cm} |}
+    \\hline
+    \\textbf{Tagesdatum} & \\textbf{Uhrzeit Beginn} & \\textbf{Uhrzeit Ende} & \\textbf{Bemerkung} & \\textbf{Arbeitszeit ohne Pause} \\\\
+    \\hline\\hline
+    {{TIMESLOT_ROWS}}
+    \\hline\\hline
+    \\multicolumn{4}{|r|}{\\textbf{IST-Arbeitszeit des Abrechnungsmonats:}} & {{IST_ARBEITSZEIT}} \\\\
+    \\hline
+    \\multicolumn{4}{|r|}{\\textbf{Zeitübertrag aus dem Vormonat:}} & {{ZEITUEBERTRAG_VORMONAT}} \\\\
+    \\hline\\hline
+    \\multicolumn{4}{|r|}{\\textbf{Summe (IST+Übertrag):}} & {{SUMME_IST_UEBERTRAG}} \\\\
+    \\hline
+    \\multicolumn{4}{|r|}{\\textbf{SOLL-Arbeitszeit des Abrechnungsmonats:}} & {{SOLL_ARBEITSZEIT}} \\\\
+    \\hline\\hline
+    \\multicolumn{4}{|r|}{\\textbf{Zeitübertrag auf nächsten Monat:}} & {{ZEITUEBERTRAG_NAECHSTER_MONAT}} \\\\
+    \\hline\\hline
+    \\end{tabularx}
 
-      \\begin{longtable}{p{0.45\\linewidth}p{0.18\\linewidth}p{0.14\\linewidth}p{0.14\\linewidth}}
-      \\toprule
-      \\textbf{Title} & \\textbf{Date} & \\textbf{Start} & \\textbf{Minutes} \\\\
-      \\midrule
-      \\endhead
-      {{TIMESLOT_ROWS}}
-      \\\\
-      \\bottomrule
-      \\end{longtable}
+    \\vspace{1cm}
+    \\noindent
+    \\begin{tabularx}{\\textwidth}{@{}X@{}}
+    \\textbf{Mitarbeiter(in)} \\\\[0.3cm]
+    \\textbf{Datum:} {{GENERATED_DATE}} \\hfill \\textbf{Unterschrift:} \\rule{6cm}{0.4pt}\\\\[1.8cm]
+    \\textbf{Vorgesetzte(r)}\\\\[0.3cm]
+    \\textbf{Datum:} \\rule{4cm}{0.4pt} \\hfill \\textbf{Unterschrift:} \\rule{6cm}{0.4pt}\\
+    \\end{tabularx}
 
       \\end{document}
       """;
@@ -109,21 +117,31 @@ public class ProjectReportPdfService {
             .toList();
 
     int totalMinutes = monthSlots.stream().mapToInt(TimeslotEntity::getDurationMinutes).sum();
-    double totalHours = totalMinutes / 60.0;
-    double grossAmount = totalHours * DEFAULT_HOURLY_RATE;
+    int transferFromPreviousMonthMinutes = 0;
+    int sumIstAndTransferMinutes = totalMinutes + transferFromPreviousMonthMinutes;
+    int sollArbeitszeitMinutes = totalMinutes;
+    int transferToNextMonthMinutes = sumIstAndTransferMinutes - sollArbeitszeitMinutes;
 
     String template = readTemplate();
     String latex =
         template
             .replace("{{PROJECT_ID}}", escapeLatex(project.getSlug()))
             .replace("{{PROJECT_NAME}}", escapeLatex(project.getName()))
-            .replace("{{MONTH_LABEL}}", escapeLatex(month.format(MONTH_LABEL_FORMATTER)))
-            .replace("{{SESSION_COUNT}}", Integer.toString(monthSlots.size()))
-            .replace("{{TOTAL_HOURS}}", formatDecimal(totalHours))
-            .replace("{{HOURLY_RATE}}", formatDecimal(DEFAULT_HOURLY_RATE))
-            .replace("{{GROSS_AMOUNT}}", formatDecimal(grossAmount))
             .replace(
-                "{{GENERATED_AT}}", escapeLatex(LocalDateTime.now().format(GENERATED_AT_FORMATTER)))
+                "{{REPORT_MONTH}}",
+                escapeLatex(capitalizeMonth(month.format(MONTH_LABEL_FORMATTER))))
+            .replace("{{IST_ARBEITSZEIT}}", formatHoursAndMinutes(totalMinutes))
+            .replace(
+                "{{ZEITUEBERTRAG_VORMONAT}}",
+                formatHoursAndMinutes(transferFromPreviousMonthMinutes))
+            .replace("{{SUMME_IST_UEBERTRAG}}", formatHoursAndMinutes(sumIstAndTransferMinutes))
+            .replace("{{SOLL_ARBEITSZEIT}}", formatHoursAndMinutes(sollArbeitszeitMinutes))
+            .replace(
+                "{{ZEITUEBERTRAG_NAECHSTER_MONAT}}",
+                formatSignedHoursAndMinutes(transferToNextMonthMinutes))
+            .replace(
+                "{{GENERATED_DATE}}",
+                escapeLatex(LocalDateTime.now().format(GENERATED_DATE_FORMATTER)))
             .replace("{{TIMESLOT_ROWS}}", buildTimeslotRows(monthSlots));
 
     return latexCompiler.compileToPdf(latex);
@@ -135,27 +153,51 @@ public class ProjectReportPdfService {
 
   private String buildTimeslotRows(List<TimeslotEntity> monthSlots) {
     if (monthSlots.isEmpty()) {
-      return "\\multicolumn{4}{l}{No sessions were scheduled in this month.} \\\\";
+      return "- & - & - & Keine Einträge in diesem Monat & 0h 00min \\\\\n\\hline";
     }
 
     return monthSlots.stream()
-        .map(
-            slot ->
-                String.format(
-                    Locale.ENGLISH,
-                    "%s & %s & %s & %d \\\\",
-                    escapeLatex(slot.getTitle()),
-                    slot.getDate().format(DATE_FORMATTER),
-                    slot.getStartTime().format(TIME_FORMATTER),
-                    slot.getDurationMinutes()))
+        .map(this::toTimeslotRow)
         .reduce((left, right) -> left + "\n" + right)
         .orElse("");
   }
 
-  private String formatDecimal(double value) {
-    DecimalFormat format =
-        new DecimalFormat("0.00", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
-    return format.format(value);
+  private String toTimeslotRow(TimeslotEntity slot) {
+    String date = slot.getDate().format(DATE_FORMATTER);
+    String start = slot.getStartTime().format(TIME_FORMATTER);
+    LocalTime endTime = slot.getStartTime().plusMinutes(slot.getDurationMinutes());
+    String end = endTime.format(TIME_FORMATTER);
+    String remark =
+        slot.getDescription() == null || slot.getDescription().isBlank()
+            ? slot.getTitle()
+            : slot.getDescription();
+
+    return String.format(
+        Locale.ENGLISH,
+        "%s & %s & %s & %s & %s \\\\\n\\hline",
+        date,
+        start,
+        end,
+        escapeLatex(remark),
+        formatHoursAndMinutes(slot.getDurationMinutes()));
+  }
+
+  private String formatHoursAndMinutes(int totalMinutes) {
+    int hours = Math.floorDiv(totalMinutes, 60);
+    int minutes = Math.floorMod(totalMinutes, 60);
+    return String.format(Locale.ENGLISH, "%dh %02dmin", hours, minutes);
+  }
+
+  private String formatSignedHoursAndMinutes(int totalMinutes) {
+    String sign = totalMinutes < 0 ? "-" : "";
+    return sign + formatHoursAndMinutes(Math.abs(totalMinutes));
+  }
+
+  private String capitalizeMonth(String value) {
+    if (value == null || value.isBlank()) {
+      return value;
+    }
+    return value.substring(0, 1).toUpperCase(Locale.GERMAN) + value.substring(1);
   }
 
   private YearMonth parseMonthKeyOrNow(String monthKey) {

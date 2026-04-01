@@ -68,13 +68,15 @@ class ProjectReportPdfServiceTest {
     verify(latexCompiler).compileToPdf(latexCaptor.capture());
 
     String latex = latexCaptor.getValue();
+    assertTrue(latex.contains("Arbeitszeitblatt"));
     assertTrue(latex.contains("Math"));
     assertTrue(latex.contains("Science"));
     assertTrue(latex.contains("Session"));
-    assertTrue(latex.contains("2026-03-12"));
+    assertTrue(latex.contains("12.03.2026"));
     assertTrue(latex.contains("14:30"));
-    assertTrue(latex.contains("1.50"));
-    assertTrue(latex.contains("90.00"));
+    assertTrue(latex.contains("16:00"));
+    assertTrue(latex.contains("1h 30min"));
+    assertTrue(latex.contains("Unterschrift"));
   }
 
   @Test

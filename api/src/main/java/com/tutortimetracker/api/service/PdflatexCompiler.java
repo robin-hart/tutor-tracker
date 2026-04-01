@@ -87,18 +87,40 @@ public class PdflatexCompiler implements LatexCompiler {
 
     String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
     if (process.exitValue() != 0) {
-      LOGGER.error("LaTeX compilation failed. Compiler output:\n{}", abbreviate(output));
+      LOGGER.error(
+          "LaTeX compilation failed. Error snippet:\n{}\n--- Full output tail ---\n{}",
+          extractErrorSnippet(output),
+          abbreviate(output));
       throw new PdfReportGenerationException(
           "LaTeX compilation failed. Please check template data or server logs.");
     }
   }
 
   private String abbreviate(String text) {
-    int max = 500;
+    int max = 6000;
     if (text == null || text.length() <= max) {
       return text;
     }
-    return text.substring(0, max) + "...";
+    return "..." + text.substring(text.length() - max);
+  }
+
+  private String extractErrorSnippet(String output) {
+    if (output == null || output.isBlank()) {
+      return "No compiler output available.";
+    }
+
+    int marker = output.indexOf("! ");
+    if (marker < 0) {
+      marker = output.toLowerCase().indexOf("error");
+    }
+
+    if (marker < 0) {
+      return abbreviate(output);
+    }
+
+    int from = Math.max(0, marker - 250);
+    int to = Math.min(output.length(), marker + 1200);
+    return output.substring(from, to);
   }
 
   private void deleteDirectoryQuietly(Path directory) {
