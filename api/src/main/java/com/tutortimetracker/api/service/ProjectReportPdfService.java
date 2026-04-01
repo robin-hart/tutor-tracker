@@ -167,10 +167,7 @@ public class ProjectReportPdfService {
     String start = slot.getStartTime().format(TIME_FORMATTER);
     LocalTime endTime = slot.getStartTime().plusMinutes(slot.getDurationMinutes());
     String end = endTime.format(TIME_FORMATTER);
-    String remark =
-        slot.getDescription() == null || slot.getDescription().isBlank()
-            ? slot.getTitle()
-            : slot.getDescription();
+    String remark = slot.getTitle();
 
     return String.format(
         Locale.ENGLISH,
