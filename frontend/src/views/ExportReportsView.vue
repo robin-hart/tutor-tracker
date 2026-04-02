@@ -21,11 +21,12 @@
         </p>
       </div>
 
-      <section class="mb-8 grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+      <section class="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
         <label class="block">
           <span class="text-xs text-on-surface-variant uppercase tracking-widest">Project</span>
           <select
             v-model="selectedProjectId"
+            data-testid="report-project-select"
             class="mt-2 w-full bg-surface-container-lowest rounded-xl px-4 py-3 border-none focus:ring-2 focus:ring-primary/20"
           >
             <option v-for="project in projects" :key="project.id" :value="project.id">
@@ -33,6 +34,22 @@
             </option>
           </select>
         </label>
+        <div
+          class="bg-surface-container-lowest rounded-xl px-4 py-3"
+          data-testid="report-project-institution"
+        >
+          <p class="text-xs text-on-surface-variant uppercase tracking-widest">Institution</p>
+          <p class="mt-2 font-semibold">{{ selectedProjectInstitution }}</p>
+        </div>
+        <div
+          class="bg-surface-container-lowest rounded-xl px-4 py-3"
+          data-testid="report-project-target"
+        >
+          <p class="text-xs text-on-surface-variant uppercase tracking-widest">
+            Monthly Target Working Time
+          </p>
+          <p class="mt-2 font-semibold">{{ selectedProjectTargetLabel }}</p>
+        </div>
       </section>
 
       <section class="mb-8 flex items-center gap-3">
@@ -60,6 +77,7 @@
                 <th class="px-8 py-6">Month / Period</th>
                 <th class="px-8 py-6">Project Name</th>
                 <th class="px-8 py-6">Total Hours</th>
+                <th class="px-8 py-6">Zeituebertrag auf naechsten Monat</th>
                 <th class="px-8 py-6">Sessions</th>
                 <th class="px-8 py-6">Download</th>
               </tr>
@@ -72,7 +90,12 @@
               >
                 <td class="px-8 py-6 font-bold">{{ monthOption.label }}</td>
                 <td class="px-8 py-6">{{ getMonthProjectName(monthOption.key) }}</td>
-                <td class="px-8 py-6 text-on-surface-variant">{{ getMonthTotalHours(monthOption.key) }} hrs</td>
+                <td class="px-8 py-6 text-on-surface-variant" data-testid="month-total-hours">
+                  {{ getMonthTotalHours(monthOption.key) }}
+                </td>
+                <td class="px-8 py-6 text-on-surface-variant" data-testid="month-transfer-next">
+                  {{ getMonthTransferToNextLabel(monthOption.key) }}
+                </td>
                 <td class="px-8 py-6">
                   <span
                     class="px-3 py-1 bg-secondary-fixed text-on-secondary-fixed rounded-full text-xs font-bold"
@@ -118,6 +141,23 @@ const selectedProjectName = ref('');
 const calendarRequestVersion = ref(0);
 const errorMessage = ref('');
 
+const selectedProject = computed(
+  () => projects.value.find((project) => project.id === selectedProjectId.value) || null
+);
+
+const selectedProjectInstitution = computed(() => selectedProject.value?.institution || '—');
+
+const selectedProjectTargetMinutes = computed(() => {
+  const targetHours = Number(selectedProject.value?.targetMonthHours || 0);
+  return Math.round(targetHours * 60);
+});
+
+const selectedProjectTargetLabel = computed(() =>
+  selectedProjectTargetMinutes.value > 0
+    ? formatDurationMinutes(selectedProjectTargetMinutes.value)
+    : '—'
+);
+
 const availableMonthOptions = computed(() => {
   const start = monthKeyToDate(projectStartMonthKey.value);
   const end = monthKeyToDate(new Date().toISOString().slice(0, 7));
@@ -160,6 +200,37 @@ function normalizeMonthKey(dateString) {
     return null;
   }
   return dateString.slice(0, 7);
+}
+
+function compareMonthKeys(left, right) {
+  return left.localeCompare(right);
+}
+
+function monthDistanceInclusive(startMonthKey, endMonthKey) {
+  const start = monthKeyToDate(startMonthKey);
+  const end = monthKeyToDate(endMonthKey);
+  const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+  return months + 1;
+}
+
+function formatDurationMinutes(totalMinutes) {
+  const normalized = Math.max(0, Math.round(totalMinutes || 0));
+  const hours = Math.floor(normalized / 60);
+  const minutes = normalized % 60;
+  return `${hours}h ${String(minutes).padStart(2, '0')}min`;
+}
+
+function formatSignedDurationMinutes(totalMinutes) {
+  const sign = totalMinutes < 0 ? '-' : '';
+  return `${sign}${formatDurationMinutes(Math.abs(totalMinutes))}`;
+}
+
+function findFirstTimeslotMonthKey() {
+  const monthKeys = (allTimeslots.value || [])
+    .map((slot) => normalizeMonthKey(slot.date))
+    .filter(Boolean)
+    .sort(compareMonthKeys);
+  return monthKeys[0] || null;
 }
 
 async function loadProjectCalendarData(projectId) {
@@ -212,12 +283,36 @@ function getMonthReportData(monthKey) {
   });
 
   const totalMinutes = slotsInMonth.reduce((sum, slot) => sum + (slot.durationMinutes || 0), 0);
-  const totalHours = totalMinutes / 60;
+  const firstTimeslotMonthKey = findFirstTimeslotMonthKey();
+  const targetMinutes = selectedProjectTargetMinutes.value;
+
+  let transferToNextMonthMinutes = 0;
+  if (
+    firstTimeslotMonthKey &&
+    targetMinutes > 0 &&
+    compareMonthKeys(monthKey, firstTimeslotMonthKey) >= 0
+  ) {
+    const cumulativeMinutes = (allTimeslots.value || [])
+      .filter((slot) => {
+        const slotMonth = normalizeMonthKey(slot.date);
+        return (
+          slotMonth &&
+          compareMonthKeys(slotMonth, firstTimeslotMonthKey) >= 0 &&
+          compareMonthKeys(slotMonth, monthKey) <= 0
+        );
+      })
+      .reduce((sum, slot) => sum + (slot.durationMinutes || 0), 0);
+
+    const targetForCoveredMonths =
+      monthDistanceInclusive(firstTimeslotMonthKey, monthKey) * targetMinutes;
+    transferToNextMonthMinutes = cumulativeMinutes - targetForCoveredMonths;
+  }
 
   return {
     projectName: selectedProjectName.value,
-    totalHours: totalHours,
+    totalMinutes,
     sessions: slotsInMonth.length,
+    transferToNextMonthMinutes,
   };
 }
 
@@ -228,12 +323,17 @@ function getMonthProjectName(monthKey) {
 
 function getMonthTotalHours(monthKey) {
   const data = getMonthReportData(monthKey);
-  return data?.totalHours != null ? data.totalHours.toFixed(1) : '0.0';
+  return formatDurationMinutes(data?.totalMinutes || 0);
 }
 
 function getMonthSessions(monthKey) {
   const data = getMonthReportData(monthKey);
   return data?.sessions || '0';
+}
+
+function getMonthTransferToNextLabel(monthKey) {
+  const data = getMonthReportData(monthKey);
+  return formatSignedDurationMinutes(data?.transferToNextMonthMinutes || 0);
 }
 
 async function downloadReportForMonth(monthKey) {
@@ -272,7 +372,14 @@ onMounted(async () => {
   } catch (error) {
     console.warn('Using fallback report/project data because API is unavailable.', error);
     errorMessage.value = error.message;
-    projects.value = [{ id: 'math-grade-10', name: 'Math Grade 10' }];
+    projects.value = [
+      {
+        id: 'math-grade-10',
+        name: 'Math Grade 10',
+        institution: 'University Teaching Lab',
+        targetMonthHours: 12.5,
+      },
+    ];
     selectedProjectId.value = 'math-grade-10';
   }
 });
