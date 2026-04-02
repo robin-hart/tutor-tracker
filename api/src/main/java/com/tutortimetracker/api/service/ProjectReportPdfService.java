@@ -5,10 +5,10 @@ import com.tutortimetracker.api.entity.TimeslotEntity;
 import com.tutortimetracker.api.repository.ProjectRepository;
 import com.tutortimetracker.api.repository.TimeslotRepository;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -22,13 +22,12 @@ public class ProjectReportPdfService {
       DateTimeFormatter.ofPattern("MMMM uuuu", Locale.GERMAN);
   private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.uuuu");
   private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
-  private static final DateTimeFormatter GENERATED_DATE_FORMATTER =
-      DateTimeFormatter.ofPattern("dd.MM.uuuu");
   private static final String LATEX_TEMPLATE =
       """
     \\documentclass[a4paper,12pt]{article}
     \\usepackage[utf8]{inputenc}
       \\usepackage[T1]{fontenc}
+    \\usepackage[german]{babel}
     \\usepackage{geometry}
     \\geometry{left=2.5cm,right=2cm,top=2cm,bottom=2cm}
     \\usepackage{array}
@@ -43,7 +42,7 @@ public class ProjectReportPdfService {
 
     \\noindent\\textbf{Für Monat:} {{REPORT_MONTH}} \\\\[0.2cm]
     \\textbf{Name:} {{PROJECT_NAME}} \\\\[0.2cm]
-    \\textbf{Einrichtung:} Projekt {{PROJECT_ID}}
+  \\textbf{Einrichtung:} {{PROJECT_INSTITUTION}}
 
     \\renewcommand{\\arraystretch}{1.3}
 
@@ -78,7 +77,7 @@ public class ProjectReportPdfService {
     \\noindent
     \\begin{tabularx}{\\textwidth}{@{}X@{}}
     \\textbf{Mitarbeiter(in)} \\\\[0.3cm]
-     \\textbf{Datum:} {{GENERATED_DATE}} \\hfill
+     \\textbf{Datum:} \\today \\hfill
        \\textbf{Unterschrift:} \\rule{6cm}{0.4pt}\\\\[1.8cm]
     \\textbf{Vorgesetzte(r)}\\\\[0.3cm]
     \\textbf{Datum:} \\rule{4cm}{0.4pt} \\hfill \\textbf{Unterschrift:} \\rule{6cm}{0.4pt}\\
@@ -126,16 +125,18 @@ public class ProjectReportPdfService {
             .toList();
 
     int totalMinutes = monthSlots.stream().mapToInt(TimeslotEntity::getDurationMinutes).sum();
-    int transferFromPreviousMonthMinutes = 0;
+    int targetMinutes = (int) Math.round(project.getTargetMonthHours() * 60.0);
+    int transferFromPreviousMonthMinutes =
+        calculateTransferFromPreviousMonthMinutes(project, month, targetMinutes);
     int sumIstAndTransferMinutes = totalMinutes + transferFromPreviousMonthMinutes;
-    int sollArbeitszeitMinutes = totalMinutes;
+    int sollArbeitszeitMinutes = targetMinutes;
     int transferToNextMonthMinutes = sumIstAndTransferMinutes - sollArbeitszeitMinutes;
 
     String template = readTemplate();
     String latex =
         template
-            .replace("{{PROJECT_ID}}", escapeLatex(project.getSlug()))
             .replace("{{PROJECT_NAME}}", escapeLatex(project.getName()))
+            .replace("{{PROJECT_INSTITUTION}}", escapeLatex(project.getInstitution()))
             .replace(
                 "{{REPORT_MONTH}}",
                 escapeLatex(capitalizeMonth(month.format(MONTH_LABEL_FORMATTER))))
@@ -148,9 +149,6 @@ public class ProjectReportPdfService {
             .replace(
                 "{{ZEITUEBERTRAG_NAECHSTER_MONAT}}",
                 formatSignedHoursAndMinutes(transferToNextMonthMinutes))
-            .replace(
-                "{{GENERATED_DATE}}",
-                escapeLatex(LocalDateTime.now().format(GENERATED_DATE_FORMATTER)))
             .replace("{{TIMESLOT_ROWS}}", buildTimeslotRows(monthSlots));
 
     return latexCompiler.compileToPdf(latex);
@@ -197,6 +195,29 @@ public class ProjectReportPdfService {
   private String formatSignedHoursAndMinutes(int totalMinutes) {
     String sign = totalMinutes < 0 ? "-" : "";
     return sign + formatHoursAndMinutes(Math.abs(totalMinutes));
+  }
+
+  private int calculateTransferFromPreviousMonthMinutes(
+      ProjectEntity project, YearMonth month, int targetMinutes) {
+    if (project.getCreatedAt() == null) {
+      return 0;
+    }
+
+    YearMonth projectStartMonth = YearMonth.from(project.getCreatedAt());
+    if (month.isBefore(projectStartMonth)) {
+      return 0;
+    }
+
+    LocalDate historyFrom = projectStartMonth.atDay(1);
+    LocalDate historyTo = month.atDay(1);
+    int historicalMinutes =
+        timeslotRepository
+            .findByProjectAndDateGreaterThanEqualAndDateLessThan(project, historyFrom, historyTo)
+            .stream()
+            .mapToInt(TimeslotEntity::getDurationMinutes)
+            .sum();
+    int monthsBeforeReport = (int) ChronoUnit.MONTHS.between(projectStartMonth.atDay(1), historyTo);
+    return historicalMinutes - (monthsBeforeReport * targetMinutes);
   }
 
   private String capitalizeMonth(String value) {

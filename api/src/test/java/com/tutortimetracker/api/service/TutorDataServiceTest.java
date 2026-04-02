@@ -82,10 +82,13 @@ class TutorDataServiceTest {
         .thenReturn(Optional.empty());
 
     ProjectSummary summary =
-        service.createProject(new ProjectCreateRequest("Math Grade 10", "STEM", 0.0, 0.0, 0));
+        service.createProject(
+            new ProjectCreateRequest("Math Grade 10", "STEM", "University Teaching Lab", 12.5, 0));
 
     assertEquals("math-grade-10-2", summary.id());
     assertEquals("Math Grade 10", summary.name());
+    assertEquals("University Teaching Lab", summary.institution());
+    assertEquals(12.5, summary.targetMonthHours());
     verify(projectGroupRepository).save(any(ProjectGroupEntity.class));
   }
 
@@ -102,11 +105,45 @@ class TutorDataServiceTest {
 
     ProjectSummary summary =
         service.createProject(
-            new ProjectCreateRequest("Timeslot Test Project", "GENERAL", 0.0, 0.0, 0));
+            new ProjectCreateRequest(
+                "Timeslot Test Project", "GENERAL", "Physics Institute", 8.0, 0));
 
     assertTrue(summary.id().startsWith("timeslot-test-project"));
     verify(projectRepository, times(2)).save(any(ProjectEntity.class));
     verify(projectGroupRepository).save(any(ProjectGroupEntity.class));
+  }
+
+  @Test
+  void updateProject_shouldPersistProjectAttributesAndKeepComputedHours() {
+    ProjectEntity project = new ProjectEntity();
+    project.setSlug("project-1");
+    project.setName("Old Name");
+    project.setCategory("OLD");
+    project.setInstitution("Old Institute");
+    project.setTargetMonthHours(10.0);
+    project.setTotalHours(24.0);
+    project.setMonthHours(6.0);
+    project.setCompletionPercent(25);
+
+    when(projectRepository.findBySlug("project-1")).thenReturn(Optional.of(project));
+    when(timeslotRepository.findByProjectAndDateGreaterThanEqualAndDateLessThan(
+            any(), any(), any()))
+        .thenReturn(List.of());
+    when(projectRepository.save(any(ProjectEntity.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    ProjectSummary updated =
+        service.updateProject(
+            "project-1", new ProjectCreateRequest("New Name", "STEM", "New Institute", 12.5, 55));
+
+    assertEquals("New Name", updated.name());
+    assertEquals("STEM", updated.category());
+    assertEquals("New Institute", updated.institution());
+    assertEquals(12.5, updated.targetMonthHours());
+    assertEquals(55, updated.completionPercent());
+    assertEquals(0.0, updated.totalHours());
+    assertEquals(0.0, updated.monthHours());
+    verify(projectRepository, times(2)).save(any(ProjectEntity.class));
   }
 
   @Test
@@ -214,6 +251,8 @@ class TutorDataServiceTest {
     proj1.setSlug("proj-1");
     proj1.setName("Project 1");
     proj1.setCategory("STEM");
+    proj1.setInstitution("Institute 1");
+    proj1.setTargetMonthHours(12.5);
     proj1.setTotalHours(100.0);
     proj1.setMonthHours(20.0);
     proj1.setCompletionPercent(50);
@@ -222,6 +261,8 @@ class TutorDataServiceTest {
     proj2.setSlug("proj-2");
     proj2.setName("Project 2");
     proj2.setCategory("HUMANITIES");
+    proj2.setInstitution("Institute 2");
+    proj2.setTargetMonthHours(8.0);
     proj2.setTotalHours(150.0);
     proj2.setMonthHours(30.0);
     proj2.setCompletionPercent(75);
@@ -233,6 +274,8 @@ class TutorDataServiceTest {
     assertEquals(2, projects.size());
     assertEquals("proj-1", projects.get(0).id());
     assertEquals("Project 1", projects.get(0).name());
+    assertEquals("Institute 1", projects.get(0).institution());
+    assertEquals(12.5, projects.get(0).targetMonthHours());
     assertEquals("proj-2", projects.get(1).id());
   }
 

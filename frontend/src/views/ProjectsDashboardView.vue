@@ -27,7 +27,7 @@
         </div>
         <button
           class="premium-gradient flex items-center gap-2 px-8 py-4 rounded-xl text-on-primary font-headline font-bold shadow-xl"
-          @click="showCreateProject = !showCreateProject"
+          @click="openCreateProjectForm"
         >
           <span class="material-symbols-outlined">add</span>
           New Project
@@ -35,16 +35,18 @@
       </section>
 
       <section
-        v-if="showCreateProject"
+        v-if="showProjectForm"
         class="mb-8 bg-surface-container-lowest rounded-xl p-6 grid grid-cols-1 md:grid-cols-6 gap-4"
       >
         <div class="md:col-span-6 flex items-center justify-between">
-          <h2 class="text-lg font-bold font-headline">Create New Project</h2>
+          <h2 class="text-lg font-bold font-headline">
+            {{ isEditingProject ? 'Edit Project' : 'Create New Project' }}
+          </h2>
           <button
             type="button"
             class="h-9 w-9 rounded-lg bg-surface-container-low text-on-surface hover:bg-surface-container-high flex items-center justify-center"
             aria-label="Close create project form"
-            @click="closeCreateProject"
+            @click="closeProjectForm"
           >
             <span class="material-symbols-outlined text-base">close</span>
           </button>
@@ -55,7 +57,7 @@
             >Project Name</label
           >
           <input
-            v-model.trim="newProject.name"
+            v-model.trim="projectForm.name"
             class="w-full bg-surface-container-low rounded-lg px-3 py-2"
             placeholder="Project name"
             type="text"
@@ -73,7 +75,7 @@
               type="button"
               class="px-3 py-1.5 rounded-full text-xs font-bold border transition"
               :class="
-                newProject.category === category && !showNewCategoryInput
+                projectForm.category === category && !showNewCategoryInput
                   ? 'bg-primary text-white border-primary'
                   : 'bg-surface-container-low text-on-surface border-outline-variant hover:border-primary/50'
               "
@@ -103,19 +105,45 @@
           />
         </div>
 
+        <div class="md:col-span-3">
+          <label class="text-xs text-on-surface-variant uppercase tracking-wider block mb-2"
+            >Einrichtung</label
+          >
+          <input
+            v-model.trim="projectForm.institution"
+            class="w-full bg-surface-container-low rounded-lg px-3 py-2"
+            placeholder="Institute or workplace"
+            type="text"
+          />
+        </div>
+
+        <div class="md:col-span-3">
+          <label class="text-xs text-on-surface-variant uppercase tracking-wider block mb-2"
+            >Monthly Target Working Time</label
+          >
+          <input
+            v-model.number="projectForm.targetMonthHours"
+            class="w-full bg-surface-container-low rounded-lg px-3 py-2"
+            min="0"
+            placeholder="12.5"
+            step="0.25"
+            type="number"
+          />
+        </div>
+
         <div class="md:col-span-6 flex justify-end gap-3">
           <button
             type="button"
             class="px-4 py-2 rounded-lg bg-surface-container-low text-on-surface font-bold"
-            @click="closeCreateProject"
+            @click="closeProjectForm"
           >
             Cancel
           </button>
           <button
             class="px-4 py-2 rounded-lg bg-primary text-white font-bold"
-            @click="createNewProject"
+            @click="saveProject"
           >
-            Create
+            {{ isEditingProject ? 'Save Changes' : 'Create' }}
           </button>
         </div>
       </section>
@@ -216,6 +244,7 @@
             >
           </div>
           <h3 class="text-2xl font-bold font-headline mb-8">{{ project.name }}</h3>
+          <p class="text-sm text-on-surface-variant mb-6">{{ project.institution }}</p>
           <div class="flex justify-between items-end">
             <div>
               <span class="text-xs text-on-surface-variant uppercase tracking-wider block mb-1"
@@ -246,6 +275,19 @@
                 }}</span>
                 <span class="text-xs text-on-surface-variant font-medium">min</span>
               </div>
+              <span class="text-xs text-on-surface-variant uppercase tracking-wider block mt-4 mb-1"
+                >Target / Month</span
+              >
+              <div class="flex items-baseline gap-1.5 justify-end">
+                <span class="text-xl font-bold font-headline text-secondary">
+                  {{ formatProjectHours(project.targetMonthHours).hours }}
+                </span>
+                <span class="text-xs text-on-surface-variant font-medium">hrs</span>
+                <span class="text-sm font-black font-headline text-secondary">
+                  {{ formatProjectHours(project.targetMonthHours).minutes }}
+                </span>
+                <span class="text-xs text-on-surface-variant font-medium">min</span>
+              </div>
             </div>
           </div>
           <div class="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden mt-6">
@@ -266,6 +308,9 @@
               @click.stop="openDeleteConfirm(project.id, project.name)"
             >
               Delete
+            </button>
+            <button class="text-sm font-bold text-primary" @click.stop="openEditProject(project)">
+              Edit
             </button>
           </div>
         </article>
@@ -304,7 +349,7 @@ import AppSidebar from '../components/AppSidebar.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import MainTopBar from '../components/MainTopBar.vue';
 import SearchActiveIndicator from '../components/SearchActiveIndicator.vue';
-import { createProject, getProjects, deleteProject } from '../services/apiClient';
+import { createProject, deleteProject, getProjects, updateProject } from '../services/apiClient';
 import { filterProjects } from '../utils/projectFilter';
 import { formatHoursToHM } from '../utils/timeFormatter';
 
@@ -315,13 +360,15 @@ const projects = ref([]);
 const isLoading = ref(false);
 const errorMessage = ref('');
 const searchText = ref('');
-const showCreateProject = ref(false);
+const showProjectForm = ref(false);
+const projectFormMode = ref('create');
+const editingProjectId = ref('');
 const router = useRouter();
-const newProject = ref({
+const projectForm = ref({
   name: '',
   category: 'GENERAL',
-  totalHours: 0,
-  monthHours: 0,
+  institution: '',
+  targetMonthHours: 0,
   completionPercent: 0,
 });
 
@@ -350,6 +397,7 @@ const filteredProjects = computed(() => {
   return filterProjects(projects.value, searchText.value);
 });
 const hasActiveFilter = computed(() => searchText.value.trim().length > 0);
+const isEditingProject = computed(() => projectFormMode.value === 'edit');
 
 /**
  * Opens the calendar route for a selected project.
@@ -360,46 +408,84 @@ function openCalendar(projectId) {
   router.push({ name: 'project-calendar', params: { projectId } });
 }
 
-function closeCreateProject() {
-  showCreateProject.value = false;
-  showNewCategoryInput.value = false;
-  newCategory.value = '';
-  newProject.value = {
+function resetProjectForm() {
+  projectForm.value = {
     name: '',
     category: 'GENERAL',
-    totalHours: 0,
-    monthHours: 0,
+    institution: '',
+    targetMonthHours: 0,
     completionPercent: 0,
   };
 }
 
-async function createNewProject() {
+function openCreateProjectForm() {
+  projectFormMode.value = 'create';
+  editingProjectId.value = '';
+  resetProjectForm();
+  showNewCategoryInput.value = false;
+  newCategory.value = '';
+  showProjectForm.value = true;
+}
+
+function openEditProject(project) {
+  projectFormMode.value = 'edit';
+  editingProjectId.value = project.id;
+  projectForm.value = {
+    name: project.name,
+    category: project.category,
+    institution: project.institution || '',
+    targetMonthHours: Number(project.targetMonthHours) || 0,
+    completionPercent: Number(project.completionPercent) || 0,
+  };
+  showNewCategoryInput.value = false;
+  newCategory.value = '';
+  showProjectForm.value = true;
+}
+
+function closeProjectForm() {
+  showProjectForm.value = false;
+  projectFormMode.value = 'create';
+  editingProjectId.value = '';
+  showNewCategoryInput.value = false;
+  newCategory.value = '';
+  resetProjectForm();
+}
+
+async function saveProject() {
   const resolvedCategory = showNewCategoryInput.value
     ? newCategory.value.trim()
-    : String(newProject.value.category || '').trim();
+    : String(projectForm.value.category || '').trim();
 
-  if (!newProject.value.name || !resolvedCategory) {
+  if (!projectForm.value.name || !resolvedCategory || !projectForm.value.institution) {
     return;
   }
 
   try {
     const payload = {
-      ...newProject.value,
+      ...projectForm.value,
       category: resolvedCategory,
-      totalHours: 0,
-      monthHours: 0,
-      completionPercent: 0,
     };
-    const created = await createProject(payload);
-    projects.value = [created, ...projects.value];
-    closeCreateProject();
+    const saved =
+      projectFormMode.value === 'edit'
+        ? await updateProject(editingProjectId.value, payload)
+        : await createProject(payload);
+
+    if (projectFormMode.value === 'edit') {
+      projects.value = projects.value.map((project) =>
+        project.id === editingProjectId.value ? saved : project
+      );
+    } else {
+      projects.value = [saved, ...projects.value];
+    }
+
+    closeProjectForm();
   } catch (error) {
     errorMessage.value = error.message;
   }
 }
 
 function selectCategory(category) {
-  newProject.value.category = category;
+  projectForm.value.category = category;
   showNewCategoryInput.value = false;
   newCategory.value = '';
 }

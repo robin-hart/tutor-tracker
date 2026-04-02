@@ -27,6 +27,12 @@ public class ProjectEntity {
   @Column(nullable = false, length = 80)
   private String category;
 
+  @Column(nullable = false, length = 200)
+  private String institution;
+
+  @Column(nullable = false)
+  private double targetMonthHours;
+
   @Column(nullable = false)
   private double totalHours;
 
@@ -65,6 +71,22 @@ public class ProjectEntity {
 
   public void setCategory(String category) {
     this.category = category;
+  }
+
+  public String getInstitution() {
+    return institution;
+  }
+
+  public void setInstitution(String institution) {
+    this.institution = institution;
+  }
+
+  public double getTargetMonthHours() {
+    return targetMonthHours;
+  }
+
+  public void setTargetMonthHours(double targetMonthHours) {
+    this.targetMonthHours = targetMonthHours;
   }
 
   public double getTotalHours() {

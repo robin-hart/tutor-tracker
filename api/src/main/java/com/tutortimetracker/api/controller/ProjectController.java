@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -76,6 +77,32 @@ public class ProjectController {
   @ResponseStatus(HttpStatus.CREATED)
   public ProjectSummary createProject(@Valid @RequestBody ProjectCreateRequest request) {
     return tutorDataService.createProject(request);
+  }
+
+  @Operation(
+      summary = "Update project",
+      description = "Updates the editable project attributes for an existing project.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Project updated",
+            content = @Content(schema = @Schema(implementation = ProjectSummary.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Validation failed",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Project not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+      })
+  @PutMapping("/projects/{projectId}")
+  public ProjectSummary updateProject(
+      @Parameter(description = "Project slug", example = "math-grade-10") @PathVariable
+          String projectId,
+      @Valid @RequestBody ProjectCreateRequest request) {
+    return tutorDataService.updateProject(projectId, request);
   }
 
   @Operation(

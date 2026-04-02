@@ -158,6 +158,7 @@ public class TutorDataService {
   public ProjectSummary createProject(ProjectCreateRequest request) {
     String normalizedName = request.name().trim();
     String normalizedCategory = request.category().trim();
+    String normalizedInstitution = request.institution().trim();
     String baseSlug = slugify(normalizedName);
 
     for (int attempt = 0; attempt < 5; attempt++) {
@@ -167,8 +168,10 @@ public class TutorDataService {
       entity.setSlug(candidateSlug);
       entity.setName(normalizedName);
       entity.setCategory(normalizedCategory);
-      entity.setTotalHours(request.totalHours());
-      entity.setMonthHours(request.monthHours());
+      entity.setInstitution(normalizedInstitution);
+      entity.setTargetMonthHours(request.targetMonthHours());
+      entity.setTotalHours(0.0);
+      entity.setMonthHours(0.0);
       entity.setCompletionPercent(request.completionPercent());
 
       try {
@@ -183,6 +186,26 @@ public class TutorDataService {
     }
 
     throw new IllegalStateException("Could not create project due to repeated slug collisions.");
+  }
+
+  /**
+   * Updates a project.
+   *
+   * @param projectId project slug
+   * @param request incoming update request
+   * @return updated project summary
+   */
+  public ProjectSummary updateProject(String projectId, ProjectCreateRequest request) {
+    ProjectEntity project = findProjectBySlug(projectId);
+    refreshProjectMetrics(project);
+
+    project.setName(request.name().trim());
+    project.setCategory(request.category().trim());
+    project.setInstitution(request.institution().trim());
+    project.setTargetMonthHours(request.targetMonthHours());
+    project.setCompletionPercent(request.completionPercent());
+
+    return toProjectSummary(projectRepository.save(project));
   }
 
   /**
@@ -692,6 +715,8 @@ public class TutorDataService {
         project.getSlug(),
         project.getName(),
         project.getCategory(),
+        project.getInstitution(),
+        project.getTargetMonthHours(),
         project.getTotalHours(),
         project.getMonthHours(),
         project.getCompletionPercent(),

@@ -47,11 +47,22 @@ export function getProjects() {
 }
 
 /**
- * @param {{name: string, category: string, totalHours: number, monthHours: number, completionPercent: number}} payload
+ * @param {{name: string, category: string, institution: string, targetMonthHours: number, completionPercent: number}} payload
  */
 export function createProject(payload) {
   return request('/projects', {
     method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+/**
+ * @param {string} projectId
+ * @param {{name: string, category: string, institution: string, targetMonthHours: number, completionPercent: number}} payload
+ */
+export function updateProject(projectId, payload) {
+  return request(`/projects/${projectId}`, {
+    method: 'PUT',
     body: JSON.stringify(payload),
   });
 }

@@ -11,8 +11,8 @@ import jakarta.validation.constraints.NotNull;
  *
  * @param name display project name
  * @param category project category tag
- * @param totalHours historical tracked hours
- * @param monthHours tracked hours in current month
+ * @param institution institute or workplace name
+ * @param targetMonthHours monthly target working time
  * @param completionPercent progress percentage from 0 to 100
  */
 public record ProjectCreateRequest(
@@ -20,9 +20,10 @@ public record ProjectCreateRequest(
         String name,
     @Schema(description = "Project category label", example = "Mathematics") @NotBlank
         String category,
-    @Schema(description = "All-time tracked hours", example = "42.5") @NotNull @Min(0)
-        Double totalHours,
-    @Schema(description = "Tracked hours in the selected month", example = "6.5") @NotNull @Min(0)
-        Double monthHours,
+    @Schema(description = "Institute or workplace", example = "University of Applied Sciences")
+        @NotBlank
+        String institution,
+    @Schema(description = "Monthly target working time", example = "12.5") @NotNull @Min(0)
+        Double targetMonthHours,
     @Schema(description = "Completion percent from 0 to 100", example = "35") @Min(0) @Max(100)
         int completionPercent) {}

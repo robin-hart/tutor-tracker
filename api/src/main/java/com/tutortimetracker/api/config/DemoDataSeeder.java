@@ -59,11 +59,29 @@ public class DemoDataSeeder {
       return;
     }
 
-    ProjectEntity math = buildProject("math-grade-10", "Math Grade 10", "STEM", 48.0, 12.5, 75);
+    ProjectEntity math =
+        buildProject(
+            "math-grade-10",
+            "Math Grade 10",
+            "STEM",
+            "University Teaching Lab",
+            12.5,
+            48.0,
+            12.5,
+            75);
     ProjectEntity physics =
-        buildProject("physics-university", "Physics University", "SCIENCE", 32.2, 8.0, 50);
+        buildProject(
+            "physics-university",
+            "Physics University",
+            "SCIENCE",
+            "Physics Institute",
+            8.0,
+            32.2,
+            8.0,
+            50);
     ProjectEntity sat =
-        buildProject("sat-verbal-prep", "SAT Verbal Prep", "EXAM PREP", 15.5, 15.5, 25);
+        buildProject(
+            "sat-verbal-prep", "SAT Verbal Prep", "EXAM PREP", "Exam Center", 15.5, 15.5, 15.5, 25);
 
     List<ProjectEntity> projects = projectRepository.saveAll(List.of(math, physics, sat));
     ProjectEntity persistedMath =
@@ -168,6 +186,8 @@ public class DemoDataSeeder {
       String slug,
       String name,
       String category,
+      String institution,
+      double targetMonthHours,
       double totalHours,
       double monthHours,
       int completionPercent) {
@@ -175,6 +195,8 @@ public class DemoDataSeeder {
     entity.setSlug(slug);
     entity.setName(name);
     entity.setCategory(category);
+    entity.setInstitution(institution);
+    entity.setTargetMonthHours(targetMonthHours);
     entity.setTotalHours(totalHours);
     entity.setMonthHours(monthHours);
     entity.setCompletionPercent(completionPercent);
