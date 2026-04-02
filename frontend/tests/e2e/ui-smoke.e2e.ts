@@ -85,8 +85,12 @@ test.describe('UI smoke journeys', () => {
     await expect(page.getByRole('heading', { name: 'Session Log' })).toBeVisible();
     await page.getByLabel('Title').fill(title);
     await page.getByLabel('Description').fill('Smoke test timeslot creation');
-    await page.locator('input[type="number"]').fill('60');
-    await page.locator('input[type="time"]').fill('14:00');
+
+    const timeline = page.getByTestId('timeline-scroll');
+    await timeline.click({ position: { x: 90, y: 180 } });
+
+    await page.getByTestId('timeline-duration-edit').click();
+    await page.getByTestId('timeline-duration-option-60').click();
 
     await page.getByRole('button', { name: 'Save Session' }).click();
     await page.waitForURL(`**/projects/${project.id}/calendar**`);

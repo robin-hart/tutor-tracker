@@ -10,6 +10,7 @@
 
     <div
       ref="scrollHost"
+      data-testid="timeline-scroll"
       class="relative h-[26rem] overflow-y-auto timeline-scroll"
       @click="onTimelineClick"
     >
@@ -29,15 +30,18 @@
         </div>
 
         <div
+          data-testid="timeline-selection-zone"
           class="absolute left-14 right-3 rounded-xl border-2 border-primary bg-primary/20 shadow-sm"
           :style="selectionStyle"
           @mousedown.stop="startDrag"
         >
           <div
+            data-testid="timeline-resize-start"
             class="absolute inset-x-0 -top-2 h-4 cursor-ns-resize"
             @mousedown.stop="startResize('start', $event)"
           ></div>
           <div
+            data-testid="timeline-resize-end"
             class="absolute inset-x-0 -bottom-2 h-4 cursor-ns-resize"
             @mousedown.stop="startResize('end', $event)"
           ></div>
@@ -45,6 +49,7 @@
             <span>{{ durationLabel }}</span>
             <button
               type="button"
+              data-testid="timeline-duration-edit"
               class="rounded-md border border-primary/40 bg-white/70 px-2 py-1 text-[11px] font-bold text-primary hover:bg-white"
               @click.stop="toggleDurationMenu"
             >
@@ -54,6 +59,7 @@
 
           <div
             v-if="showDurationMenu"
+            data-testid="timeline-duration-menu"
             class="absolute left-1/2 top-1/2 z-20 w-36 -translate-x-1/2 -translate-y-1/2 rounded-lg border border-outline-variant bg-surface shadow-xl"
             @mousedown.stop
           >
@@ -69,6 +75,7 @@
               <li v-for="option in durationOptions" :key="option">
                 <button
                   type="button"
+                  :data-testid="`timeline-duration-option-${option}`"
                   class="block w-full px-3 py-2 text-left text-xs text-on-surface hover:bg-surface-container-low"
                   @click.stop="selectDuration(option)"
                 >
