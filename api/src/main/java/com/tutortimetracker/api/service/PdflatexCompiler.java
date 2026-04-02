@@ -24,10 +24,10 @@ public class PdflatexCompiler implements LatexCompiler {
   private final String dockerCommand;
   private final String dockerImage;
   private final String dockerExecutable;
-    private final String composeService;
-    private final String composeHostWorkRoot;
-    private final String composeContainerWorkRoot;
-    private final String composeProjectDirectory;
+  private final String composeService;
+  private final String composeHostWorkRoot;
+  private final String composeContainerWorkRoot;
+  private final String composeProjectDirectory;
   private final long timeoutSeconds;
 
   public PdflatexCompiler(
@@ -39,11 +39,10 @@ public class PdflatexCompiler implements LatexCompiler {
       @Value("${report.export.latex.docker.executable:docker}") String dockerExecutable,
       @Value("${report.export.latex.compose.service:latex}") String composeService,
       @Value("${report.export.latex.compose.host-work-root:.latex-work}")
-        String composeHostWorkRoot,
+          String composeHostWorkRoot,
       @Value("${report.export.latex.compose.container-work-root:/latex-work}")
-        String composeContainerWorkRoot,
-      @Value("${report.export.latex.compose.project-directory:.}")
-        String composeProjectDirectory,
+          String composeContainerWorkRoot,
+      @Value("${report.export.latex.compose.project-directory:.}") String composeProjectDirectory,
       @Value("${report.export.latex.timeout-seconds:30}") long timeoutSeconds) {
     this.runner = runner;
     this.localLatexCommand = localLatexCommand;
