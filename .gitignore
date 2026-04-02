@@ -39,3 +39,4 @@ frontend/dist/
 *.synctex.gz
 *.toc
 *.vrb
+api/.latex-work/

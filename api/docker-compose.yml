@@ -13,5 +13,15 @@ services:
     volumes:
       - mariadb_data:/var/lib/mysql
 
+  latex:
+    build:
+      context: .
+      dockerfile: docker/latex/Dockerfile
+    container_name: tutortimetracker-latex
+    restart: unless-stopped
+    entrypoint: ["tail", "-f", "/dev/null"]
+    volumes:
+      - ./.latex-work:/latex-work
+
 volumes:
   mariadb_data:

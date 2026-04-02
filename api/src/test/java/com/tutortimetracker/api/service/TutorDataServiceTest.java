@@ -66,7 +66,7 @@ class TutorDataServiceTest {
             studentRepository,
             reportRepository,
             timeslotRepository,
-          todaySlotRepository);
+            todaySlotRepository);
   }
 
   @Test
@@ -398,7 +398,7 @@ class TutorDataServiceTest {
 
     when(projectRepository.findBySlug("proj-1")).thenReturn(Optional.of(project));
     when(projectGroupRepository.findByProjectAndName(project, "Honors"))
-      .thenReturn(Optional.empty());
+        .thenReturn(Optional.empty());
     when(projectGroupRepository.save(any(ProjectGroupEntity.class)))
         .thenThrow(
             new DataIntegrityViolationException("Duplicate entry for uk_project_group_name"));

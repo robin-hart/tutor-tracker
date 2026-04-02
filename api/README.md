@@ -158,12 +158,23 @@ set DB_PASSWORD=tutortime
 
 Optional LaTeX export settings:
 ```bash
+set LATEX_RUNNER=compose
+set LATEX_COMPOSE_SERVICE=latex
+set LATEX_COMPOSE_HOST_WORK_ROOT=.latex-work
+set LATEX_COMPOSE_CONTAINER_WORK_ROOT=/latex-work
+set LATEX_COMPOSE_PROJECT_DIRECTORY=.
+set LATEX_DOCKER_IMAGE=tutor-tracker-latex:latest
+set LATEX_DOCKER_COMMAND=pdflatex
+set LATEX_DOCKER_EXECUTABLE=docker
 set LATEX_COMMAND=pdflatex
 set LATEX_TIMEOUT_SECONDS=30
 ```
 
-Install a LaTeX distribution (for example TeX Live or MiKTeX) so `pdflatex` is available on your
-PATH when using PDF export.
+The default runner is `compose`. A single `docker compose up -d` starts both MariaDB and the
+LaTeX container used by PDF export.
+
+If you prefer a local installation, set `LATEX_RUNNER=local` and ensure `LATEX_COMMAND` (for
+example `pdflatex`) is available on your PATH.
 
 Note: Docker maps MariaDB to host port `3307` by default to avoid collisions with local MariaDB services on `3306`.
 
