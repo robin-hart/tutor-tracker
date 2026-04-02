@@ -173,7 +173,7 @@ public class ProjectReportPdfService {
     String end = endTime.format(TIME_FORMATTER);
     String remark = slot.getTitle();
 
-    return String.format(
+    return String.format( // NOSONAR
         Locale.ENGLISH,
         "%s & %s & %s & %s & %s \\\\\n\\hline",
         date,
