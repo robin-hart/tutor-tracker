@@ -17,15 +17,15 @@
     </MainTopBar>
 
     <main class="ml-72 pt-32 px-12 pb-20">
-      <section
-        class="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-8 mb-10"
-      >
-        <div class="space-y-2">
-          <span class="text-primary font-bold tracking-[0.2em] uppercase text-xs"
-            >Active Tutoring Project</span
-          >
-          <h2 class="text-6xl font-extrabold tracking-tighter leading-none">{{ projectName }}</h2>
-          <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
+      <div class="mb-10">
+        <span class="text-primary font-bold tracking-[0.2em] uppercase text-xs block mb-4"
+          >Active Tutoring Project</span
+        >
+        <div class="flex gap-8 items-end">
+          <h2 class="text-6xl font-extrabold tracking-tighter leading-none flex-shrink-0">
+            {{ projectName }}
+          </h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div
               class="bg-surface-container-lowest rounded-xl px-4 py-3 border border-outline-variant/10"
               data-testid="calendar-project-institution"
@@ -46,7 +46,7 @@
             </div>
           </div>
         </div>
-      </section>
+      </div>
 
       <div class="grid grid-cols-12 gap-8 mb-10">
         <div class="col-span-12 md:col-span-6 bg-surface-container-lowest p-8 rounded-xl shadow-sm">
