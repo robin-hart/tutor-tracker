@@ -20,7 +20,10 @@
           class="absolute left-0 right-0 border-t border-outline-variant/40"
           :style="{ top: minuteToPixel(hour * 60) + 'px' }"
         >
-          <span class="absolute left-3 -top-2 bg-surface-container-low px-1 text-[11px] font-medium text-on-surface-variant">
+          <span
+            class="absolute left-3 bg-surface-container-low px-1 text-[11px] font-medium text-on-surface-variant"
+            :style="{ top: hour === dayStartHour ? '2px' : '-8px' }"
+          >
             {{ String(hour).padStart(2, '0') }}:00
           </span>
         </div>
@@ -54,6 +57,16 @@
             class="absolute left-1/2 top-1/2 z-20 w-36 -translate-x-1/2 -translate-y-1/2 rounded-lg border border-outline-variant bg-surface shadow-xl"
             @mousedown.stop
           >
+            <div class="flex items-center justify-end px-2 pt-2">
+              <button
+                type="button"
+                class="inline-flex h-5 w-5 items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-low"
+                aria-label="Close duration selector"
+                @click.stop="showDurationMenu = false"
+              >
+                <span class="material-symbols-outlined text-[14px] leading-none">close</span>
+              </button>
+            </div>
             <ul class="max-h-48 overflow-y-auto py-1 timeline-scroll">
               <li v-for="option in durationOptions" :key="option">
                 <button
@@ -74,7 +87,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 const props = defineProps({
   startTime: {
@@ -126,6 +139,7 @@ const showDurationMenu = ref(false);
 const suppressNextClick = ref(false);
 const dragPointerClientY = ref(null);
 const dragLoopFrame = ref(0);
+const hasUserInteraction = ref(false);
 
 function minuteToPixel(minute) {
   return (minute - dayStartMinute) * pixelsPerMinute;
@@ -168,6 +182,7 @@ function onTimelineClick(event) {
     suppressNextClick.value = false;
     return;
   }
+  hasUserInteraction.value = true;
   showDurationMenu.value = false;
   const rect = event.currentTarget.getBoundingClientRect();
   const y = event.clientY - rect.top + event.currentTarget.scrollTop;
@@ -180,11 +195,13 @@ function toggleDurationMenu() {
 }
 
 function selectDuration(duration) {
+  hasUserInteraction.value = true;
   showDurationMenu.value = false;
   applyStartAndDuration(startMinutes.value, duration);
 }
 
 function startDrag(event) {
+  hasUserInteraction.value = true;
   showDurationMenu.value = false;
   const pointerMinute = getPointerMinute(event);
   dragPointerClientY.value = event.clientY;
@@ -199,6 +216,7 @@ function startDrag(event) {
 }
 
 function startResize(edge, event) {
+  hasUserInteraction.value = true;
   showDurationMenu.value = false;
   dragPointerClientY.value = event.clientY;
   dragState.value = {
@@ -353,6 +371,18 @@ function stopDragLoop() {
   }
 }
 
+function scrollSelectionIntoView() {
+  if (!scrollHost.value) {
+    return;
+  }
+
+  const selectionTop = minuteToPixel(startMinutes.value);
+  const selectionHeight = Math.max(minDuration * pixelsPerMinute, props.durationMinutes * pixelsPerMinute);
+  const selectionCenter = selectionTop + selectionHeight / 2;
+  const targetScrollTop = Math.max(0, selectionCenter - scrollHost.value.clientHeight / 2);
+  scrollHost.value.scrollTop = targetScrollTop;
+}
+
 function onWindowMouseDown(event) {
   if (rootEl.value && !rootEl.value.contains(event.target)) {
     showDurationMenu.value = false;
@@ -362,6 +392,19 @@ function onWindowMouseDown(event) {
 onMounted(() => {
   globalThis.addEventListener('mousedown', onWindowMouseDown);
 });
+
+watch(
+  [startMinutes, () => props.durationMinutes],
+  () => {
+    if (dragState.value.mode || hasUserInteraction.value) {
+      return;
+    }
+    nextTick(() => {
+      scrollSelectionIntoView();
+    });
+  },
+  { immediate: true }
+);
 
 onBeforeUnmount(() => {
   unbindDragListeners();
@@ -378,6 +421,12 @@ onBeforeUnmount(() => {
 
 .timeline-scroll::-webkit-scrollbar {
   width: 10px;
+}
+
+.timeline-scroll::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .timeline-scroll::-webkit-scrollbar-track {

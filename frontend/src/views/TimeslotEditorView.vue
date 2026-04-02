@@ -134,12 +134,22 @@ const closeLink = computed(() => ({
   query: targetMonth.value ? { month: targetMonth.value } : undefined,
 }));
 
+function getRoundedCurrentTime() {
+  const now = new Date();
+  const totalMinutes = now.getHours() * 60 + now.getMinutes();
+  const rounded = Math.round(totalMinutes / 15) * 15;
+  const bounded = Math.min(23 * 60 + 45, rounded);
+  const hour = Math.floor(bounded / 60);
+  const minute = bounded % 60;
+  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+}
+
 const form = reactive({
   title: '',
   description: '',
   durationMinutes: 90,
   date: String(route.query.date || new Date().toISOString().slice(0, 10)),
-  startTime: String(route.query.startTime || '14:00').slice(0, 5),
+  startTime: getRoundedCurrentTime(),
 });
 
 async function loadExistingTimeslot() {
