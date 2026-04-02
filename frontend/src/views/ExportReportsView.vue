@@ -77,7 +77,7 @@
                 <th class="px-8 py-6">Month / Period</th>
                 <th class="px-8 py-6">Project Name</th>
                 <th class="px-8 py-6">Total Hours</th>
-                <th class="px-8 py-6">Zeituebertrag auf naechsten Monat</th>
+                <th class="px-8 py-6">Carryover to Next Month</th>
                 <th class="px-8 py-6">Sessions</th>
                 <th class="px-8 py-6">Download</th>
               </tr>
