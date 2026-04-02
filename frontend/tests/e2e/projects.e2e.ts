@@ -31,9 +31,9 @@ test.describe('Project Management', () => {
     const createResponse = await page.request.post(`${apiBaseUrl}/api/projects`, {
       data: {
         name: projectName,
+        institution: 'Project Institute',
         category: 'GENERAL',
-        totalHours: 0,
-        monthHours: 0,
+        targetMonthHours: 10,
         completionPercent: 0,
       },
     });
@@ -108,6 +108,8 @@ test.describe('Project Management', () => {
       expect(project).toHaveProperty('id');
       expect(project).toHaveProperty('name');
       expect(project).toHaveProperty('category');
+      expect(project).toHaveProperty('institution');
+      expect(project).toHaveProperty('targetMonthHours');
       expect(project).toHaveProperty('totalHours');
       expect(project).toHaveProperty('monthHours');
       expect(project).toHaveProperty('completionPercent');

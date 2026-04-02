@@ -13,9 +13,9 @@ async function createSmokeProject(
   const response = await request.post(`${apiBaseUrl}/api/projects`, {
     data: {
       name: projectName,
+      institution: `Institute ${suffix}`,
       category: 'GENERAL',
-      totalHours: 0,
-      monthHours: 0,
+      targetMonthHours: 10,
       completionPercent: 0,
     },
   });
@@ -36,6 +36,8 @@ test.describe('UI smoke journeys', () => {
     const projectName = `PW UI Smoke ${Date.now()}`;
     await page.getByRole('button', { name: /new project/i }).click();
     await page.getByPlaceholder('Project name').fill(projectName);
+    await page.getByPlaceholder('Institute or workplace').fill('Smoke Institute');
+    await page.getByPlaceholder('12.5').fill('10');
     await page
       .getByRole('button', { name: /create/i })
       .last()

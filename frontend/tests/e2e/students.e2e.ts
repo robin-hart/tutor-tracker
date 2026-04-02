@@ -24,9 +24,9 @@ test.describe('Student Management', () => {
     const projectResponse = await setupPage.request.post(`${apiBaseUrl}/api/projects`, {
       data: {
         name: `Student Test Project ${Date.now()}`,
+        institution: 'Student Institute',
         category: 'GENERAL',
-        totalHours: 0,
-        monthHours: 0,
+        targetMonthHours: 10,
         completionPercent: 0,
       },
     });
