@@ -141,10 +141,11 @@ public class TutorDataService {
    */
   public List<ProjectSummary> getProjects() {
     return projectRepository.findAll().stream()
-        .map(project -> {
-          refreshProjectMetrics(project);
-          return toProjectSummary(project);
-        })
+        .map(
+            project -> {
+              refreshProjectMetrics(project);
+              return toProjectSummary(project);
+            })
         .toList();
   }
 
