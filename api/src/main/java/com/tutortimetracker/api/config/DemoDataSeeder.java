@@ -82,11 +82,27 @@ public class DemoDataSeeder {
     ProjectEntity sat =
         buildProject(
             "sat-verbal-prep", "SAT Verbal Prep", "EXAM PREP", "Exam Center", 15.5, 15.5, 15.5, 25);
+    ProjectEntity carryoverDemo =
+        buildProject(
+            "report-carryover-demo",
+            "Report Carryover Demo",
+            "DEMO",
+            "Carryover Institute",
+            10.0,
+            43.0,
+            36.0,
+            40);
 
-    List<ProjectEntity> projects = projectRepository.saveAll(List.of(math, physics, sat));
+    List<ProjectEntity> projects =
+        projectRepository.saveAll(List.of(math, physics, sat, carryoverDemo));
     ProjectEntity persistedMath =
         projects.stream()
             .filter(project -> "math-grade-10".equals(project.getSlug()))
+            .findFirst()
+            .orElseThrow();
+    ProjectEntity persistedCarryoverDemo =
+        projects.stream()
+            .filter(project -> "report-carryover-demo".equals(project.getSlug()))
             .findFirst()
             .orElseThrow();
 
@@ -152,7 +168,71 @@ public class DemoDataSeeder {
                 90,
                 LocalDate.of(2026, 1, 24),
                 LocalTime.of(15, 0),
-                persistedMath)));
+                persistedMath),
+            buildTimeslot(
+                "carryover-jan-1",
+                "Carryover January Session 1",
+                "First month of project activity.",
+                120,
+                LocalDate.of(2026, 1, 6),
+                LocalTime.of(9, 0),
+                persistedCarryoverDemo),
+            buildTimeslot(
+                "carryover-jan-2",
+                "Carryover January Session 2",
+                "Second session to keep January below target.",
+                120,
+                LocalDate.of(2026, 1, 20),
+                LocalTime.of(9, 0),
+                persistedCarryoverDemo),
+            buildTimeslot(
+                "carryover-mar-1",
+                "Carryover March Session",
+                "Only one March session, still below target.",
+                180,
+                LocalDate.of(2026, 3, 12),
+                LocalTime.of(9, 0),
+                persistedCarryoverDemo),
+            buildTimeslot(
+                "carryover-apr-1",
+                "Carryover April Session 1",
+                "Evenly distributed month session one.",
+                432,
+                LocalDate.of(2026, 4, 3),
+                LocalTime.of(9, 0),
+                persistedCarryoverDemo),
+            buildTimeslot(
+                "carryover-apr-2",
+                "Carryover April Session 2",
+                "Evenly distributed month session two.",
+                432,
+                LocalDate.of(2026, 4, 9),
+                LocalTime.of(9, 0),
+                persistedCarryoverDemo),
+            buildTimeslot(
+                "carryover-apr-3",
+                "Carryover April Session 3",
+                "Evenly distributed month session three.",
+                432,
+                LocalDate.of(2026, 4, 15),
+                LocalTime.of(9, 0),
+                persistedCarryoverDemo),
+            buildTimeslot(
+                "carryover-apr-4",
+                "Carryover April Session 4",
+                "Evenly distributed month session four.",
+                432,
+                LocalDate.of(2026, 4, 21),
+                LocalTime.of(9, 0),
+                persistedCarryoverDemo),
+            buildTimeslot(
+                "carryover-apr-5",
+                "Carryover April Session 5",
+                "Evenly distributed month session five.",
+                432,
+                LocalDate.of(2026, 4, 27),
+                LocalTime.of(9, 0),
+                persistedCarryoverDemo)));
 
     reportRepository.saveAll(
         List.of(

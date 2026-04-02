@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -67,9 +66,7 @@ class ProjectReportPdfServiceTest {
     when(projectRepository.findBySlug("proj-1")).thenReturn(Optional.of(project));
     when(timeslotRepository.findByProjectAndDateGreaterThanEqualAndDateLessThan(project, from, to))
         .thenReturn(List.of(slot));
-    when(timeslotRepository.findByProjectAndDateGreaterThanEqualAndDateLessThan(
-            eq(project), eq(LocalDate.of(2026, 1, 1)), eq(from)))
-        .thenReturn(List.of());
+    when(timeslotRepository.findByProject(project)).thenReturn(List.of(slot));
     when(latexCompiler.compileToPdf(any(String.class))).thenReturn(expectedPdf);
 
     byte[] actual = service.exportProjectMonthPdf("proj-1", "2026-03");
@@ -125,9 +122,8 @@ class ProjectReportPdfServiceTest {
     when(projectRepository.findBySlug("proj-1")).thenReturn(Optional.of(project));
     when(timeslotRepository.findByProjectAndDateGreaterThanEqualAndDateLessThan(project, from, to))
         .thenReturn(currentSlots);
-    when(timeslotRepository.findByProjectAndDateGreaterThanEqualAndDateLessThan(
-            eq(project), eq(LocalDate.of(2026, 3, 1)), eq(from)))
-        .thenReturn(previousSlots);
+    when(timeslotRepository.findByProject(project))
+        .thenReturn(Stream.concat(previousSlots.stream(), currentSlots.stream()).toList());
     when(latexCompiler.compileToPdf(any(String.class))).thenReturn("pdf-content".getBytes());
 
     byte[] actual = service.exportProjectMonthPdf("proj-1", "2026-04");
@@ -148,8 +144,8 @@ class ProjectReportPdfServiceTest {
   private static Stream<Arguments> carryoverCases() {
     return Stream.of(
         Arguments.of(List.of(), List.of(), 0.0, "0h 00min", "0h 00min"),
-        Arguments.of(List.of(), List.of(120, 120), 8.0, "-8h 00min", "-12h 00min"),
-        Arguments.of(List.of(), List.of(360), 6.0, "-6h 00min", "-6h 00min"),
+        Arguments.of(List.of(), List.of(120, 120), 8.0, "0h 00min", "-4h 00min"),
+        Arguments.of(List.of(), List.of(360), 6.0, "0h 00min", "0h 00min"),
         Arguments.of(List.of(120), List.of(120), 6.0, "-4h 00min", "-8h 00min"),
         Arguments.of(List.of(480), List.of(0), 6.0, "2h 00min", "-4h 00min"),
         Arguments.of(List.of(180, 120), List.of(60), 5.0, "0h 00min", "-4h 00min"),
@@ -194,6 +190,7 @@ class ProjectReportPdfServiceTest {
     when(projectRepository.findBySlug("proj-1")).thenReturn(Optional.of(project));
     when(timeslotRepository.findByProjectAndDateGreaterThanEqualAndDateLessThan(project, from, to))
         .thenReturn(slots);
+    when(timeslotRepository.findByProject(project)).thenReturn(slots);
     when(latexCompiler.compileToPdf(any(String.class))).thenReturn("pdf-content".getBytes());
 
     byte[] actual = service.exportProjectMonthPdf("proj-1", "2026-03");
@@ -225,5 +222,63 @@ class ProjectReportPdfServiceTest {
         Arguments.of(List.of(90, 45, 15), "2h 30min"),
         Arguments.of(List.of(119, 2), "2h 01min"),
         Arguments.of(List.of(120, 121), "4h 01min"));
+  }
+
+  @Test
+  void
+      exportProjectMonthPdf_shouldIncludeAccumulatedDeficitSinceFirstTimeslotAndPositiveNextTransfer() {
+    ProjectEntity project = new ProjectEntity();
+    project.setSlug("proj-carryover-demo");
+    project.setName("Carryover Demo");
+    project.setInstitution("University Lab");
+    project.setTargetMonthHours(10.0);
+    project.setCreatedAt(LocalDate.of(2025, 12, 15));
+
+    YearMonth month = YearMonth.parse("2026-04");
+    LocalDate from = month.atDay(1);
+    LocalDate to = month.plusMonths(1).atDay(1);
+
+    List<TimeslotEntity> previousSlots =
+        List.of(
+            slot("january-1", LocalDate.of(2026, 1, 6), 120),
+            slot("january-2", LocalDate.of(2026, 1, 20), 120),
+            slot("march-1", LocalDate.of(2026, 3, 12), 180));
+
+    List<TimeslotEntity> currentMonthSlots =
+        List.of(
+            slot("april-1", LocalDate.of(2026, 4, 3), 432),
+            slot("april-2", LocalDate.of(2026, 4, 9), 432),
+            slot("april-3", LocalDate.of(2026, 4, 15), 432),
+            slot("april-4", LocalDate.of(2026, 4, 21), 432),
+            slot("april-5", LocalDate.of(2026, 4, 27), 432));
+
+    when(projectRepository.findBySlug("proj-carryover-demo")).thenReturn(Optional.of(project));
+    when(timeslotRepository.findByProjectAndDateGreaterThanEqualAndDateLessThan(project, from, to))
+        .thenReturn(currentMonthSlots);
+    when(timeslotRepository.findByProject(project))
+        .thenReturn(Stream.concat(previousSlots.stream(), currentMonthSlots.stream()).toList());
+    when(latexCompiler.compileToPdf(any(String.class))).thenReturn("pdf-content".getBytes());
+
+    byte[] actual = service.exportProjectMonthPdf("proj-carryover-demo", "2026-04");
+
+    assertArrayEquals("pdf-content".getBytes(), actual);
+
+    ArgumentCaptor<String> latexCaptor = ArgumentCaptor.forClass(String.class);
+    verify(latexCompiler).compileToPdf(latexCaptor.capture());
+
+    String latex = latexCaptor.getValue();
+    assertTrue(latex.contains("Zeitübertrag aus dem Vormonat:"));
+    assertTrue(latex.contains("-23h 00min"));
+    assertTrue(latex.contains("36h 00min"));
+    assertTrue(latex.contains("3h 00min"));
+  }
+
+  private static TimeslotEntity slot(String title, LocalDate date, int durationMinutes) {
+    TimeslotEntity slot = new TimeslotEntity();
+    slot.setTitle(title);
+    slot.setDate(date);
+    slot.setStartTime(LocalTime.of(9, 0));
+    slot.setDurationMinutes(durationMinutes);
+    return slot;
   }
 }

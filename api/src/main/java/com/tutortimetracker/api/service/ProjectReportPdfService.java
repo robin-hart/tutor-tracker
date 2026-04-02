@@ -12,6 +12,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import org.springframework.stereotype.Service;
 
 /** Builds a project month report document and compiles it to PDF with LaTeX. */
@@ -199,24 +200,36 @@ public class ProjectReportPdfService {
 
   private int calculateTransferFromPreviousMonthMinutes(
       ProjectEntity project, YearMonth month, int targetMinutes) {
-    if (project.getCreatedAt() == null) {
+    List<TimeslotEntity> allProjectSlots = timeslotRepository.findByProject(project);
+
+    LocalDate firstTimeslotDate =
+        allProjectSlots.stream()
+            .map(TimeslotEntity::getDate)
+            .filter(Objects::nonNull)
+            .min(LocalDate::compareTo)
+            .orElse(null);
+
+    if (firstTimeslotDate == null) {
       return 0;
     }
 
-    YearMonth projectStartMonth = YearMonth.from(project.getCreatedAt());
-    if (month.isBefore(projectStartMonth)) {
+    YearMonth targetStartMonth = YearMonth.from(firstTimeslotDate);
+    if (!month.isAfter(targetStartMonth)) {
       return 0;
     }
 
-    LocalDate historyFrom = projectStartMonth.atDay(1);
+    LocalDate historyFrom = targetStartMonth.atDay(1);
     LocalDate historyTo = month.atDay(1);
+
     int historicalMinutes =
-        timeslotRepository
-            .findByProjectAndDateGreaterThanEqualAndDateLessThan(project, historyFrom, historyTo)
-            .stream()
+        allProjectSlots.stream()
+            .filter(slot -> slot.getDate() != null)
+            .filter(
+                slot -> !slot.getDate().isBefore(historyFrom) && slot.getDate().isBefore(historyTo))
             .mapToInt(TimeslotEntity::getDurationMinutes)
             .sum();
-    int monthsBeforeReport = (int) ChronoUnit.MONTHS.between(projectStartMonth.atDay(1), historyTo);
+
+    int monthsBeforeReport = (int) ChronoUnit.MONTHS.between(targetStartMonth, month);
     return historicalMinutes - (monthsBeforeReport * targetMinutes);
   }
 

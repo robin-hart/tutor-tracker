@@ -71,11 +71,13 @@ class TutorDataControllerIT {
         Map.of(
             "name",
             "Physics Advanced",
+            "institution",
+            "University Lab",
             "category",
             "SCIENCE",
             "totalHours",
             0.0,
-            "monthHours",
+            "targetMonthHours",
             0.0,
             "completionPercent",
             0);
@@ -595,9 +597,10 @@ class TutorDataControllerIT {
     ProjectEntity project = new ProjectEntity();
     project.setSlug(slug);
     project.setName(name);
+    project.setInstitution("University Lab");
     project.setCategory("GENERAL");
     project.setTotalHours(0.0);
-    project.setMonthHours(0.0);
+    project.setTargetMonthHours(0.0);
     project.setCompletionPercent(0);
     return project;
   }
