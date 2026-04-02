@@ -141,8 +141,10 @@ public class TutorDataService {
    */
   public List<ProjectSummary> getProjects() {
     return projectRepository.findAll().stream()
-        .peek(this::refreshProjectMetrics)
-        .map(this::toProjectSummary)
+        .map(project -> {
+          refreshProjectMetrics(project);
+          return toProjectSummary(project);
+        })
         .toList();
   }
 
