@@ -22,7 +22,7 @@
         >
           <span
             class="absolute left-3 bg-surface-container-low px-1 text-[11px] font-medium text-on-surface-variant"
-            :style="{ top: hour === dayStartHour ? '2px' : '-8px' }"
+            :style="{ top: hour === dayStartHour ? '2px' : hour === dayEndHour ? '-14px' : '-8px' }"
           >
             {{ String(hour).padStart(2, '0') }}:00
           </span>
@@ -57,17 +57,15 @@
             class="absolute left-1/2 top-1/2 z-20 w-36 -translate-x-1/2 -translate-y-1/2 rounded-lg border border-outline-variant bg-surface shadow-xl"
             @mousedown.stop
           >
-            <div class="flex items-center justify-end px-2 pt-2">
-              <button
-                type="button"
-                class="inline-flex h-5 w-5 items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-low"
-                aria-label="Close duration selector"
-                @click.stop="showDurationMenu = false"
-              >
-                <span class="material-symbols-outlined text-[14px] leading-none">close</span>
-              </button>
-            </div>
-            <ul class="max-h-48 overflow-y-auto py-1 timeline-scroll">
+            <button
+              type="button"
+              class="absolute -top-6 left-1/2 inline-flex h-7 w-7 -translate-x-1/2 items-center justify-center rounded-full border border-primary/50 bg-primary text-white shadow-md hover:bg-primary-container"
+              aria-label="Close duration selector"
+              @click.stop="showDurationMenu = false"
+            >
+              <span class="material-symbols-outlined text-[16px] leading-none">close</span>
+            </button>
+            <ul class="max-h-36 overflow-y-auto py-2 timeline-scroll">
               <li v-for="option in durationOptions" :key="option">
                 <button
                   type="button"
@@ -79,6 +77,20 @@
               </li>
             </ul>
           </div>
+        </div>
+
+        <div
+          class="absolute left-2 rounded-md bg-primary px-2 py-1 text-[11px] font-bold text-on-primary shadow"
+          :style="startBadgeStyle"
+        >
+          {{ startTime }}
+        </div>
+
+        <div
+          class="absolute left-2 rounded-md bg-primary px-2 py-1 text-[11px] font-bold text-on-primary shadow"
+          :style="endBadgeStyle"
+        >
+          {{ endTime }}
         </div>
       </div>
     </div>
@@ -110,13 +122,14 @@ const minDuration = 15;
 const maxDuration = 6 * 60;
 const dayStartMinute = dayStartHour * 60;
 const dayEndMinute = dayEndHour * 60 - stepMinutes;
+const dayEndBoundaryMinute = dayEndHour * 60;
 
 const durationOptions = Array.from({ length: maxDuration / stepMinutes }, (_, i) => (i + 1) * stepMinutes);
 const visibleHours = Array.from({ length: dayEndHour - dayStartHour + 1 }, (_, i) => i + dayStartHour);
 const timelineHeightPx = (dayEndHour - dayStartHour) * 60 * pixelsPerMinute;
 
 const startMinutes = computed(() => parseTime(props.startTime));
-const endMinutes = computed(() => clampMinute(startMinutes.value + props.durationMinutes));
+const endMinutes = computed(() => clampEndMinute(startMinutes.value + props.durationMinutes));
 const endTime = computed(() => toTime(endMinutes.value));
 const durationLabel = computed(() => formatDuration(props.durationMinutes));
 
@@ -124,6 +137,24 @@ const selectionStyle = computed(() => ({
   top: `${minuteToPixel(startMinutes.value)}px`,
   height: `${Math.max(minDuration * pixelsPerMinute, props.durationMinutes * pixelsPerMinute)}px`,
   cursor: dragState.value.mode ? 'grabbing' : 'grab',
+}));
+
+const startBadgeStyle = computed(() => ({
+  left: '3.25rem',
+  top: `${minuteToPixel(startMinutes.value)}px`,
+  transform:
+    startMinutes.value === dayStartMinute
+      ? 'translate(-100%, 0)'
+      : 'translate(-100%, -50%)',
+}));
+
+const endBadgeStyle = computed(() => ({
+  left: '3.25rem',
+  top: `${minuteToPixel(endMinutes.value)}px`,
+  transform:
+    endMinutes.value >= dayEndBoundaryMinute
+      ? 'translate(-100%, -100%)'
+      : 'translate(-100%, -50%)',
 }));
 
 const scrollHost = ref(null);
@@ -151,6 +182,10 @@ function pixelToMinute(pixel) {
 
 function clampMinute(minute) {
   return Math.max(dayStartMinute, Math.min(dayEndMinute, minute));
+}
+
+function clampEndMinute(minute) {
+  return Math.max(dayStartMinute, Math.min(dayEndBoundaryMinute, minute));
 }
 
 function parseTime(value) {
@@ -427,6 +462,17 @@ onBeforeUnmount(() => {
   display: none;
   width: 0;
   height: 0;
+}
+
+.timeline-scroll::-webkit-scrollbar-button:single-button,
+.timeline-scroll::-webkit-scrollbar-button:vertical:decrement,
+.timeline-scroll::-webkit-scrollbar-button:vertical:increment,
+.timeline-scroll::-webkit-scrollbar-button:start,
+.timeline-scroll::-webkit-scrollbar-button:end {
+  display: none;
+  width: 0;
+  height: 0;
+  background: transparent;
 }
 
 .timeline-scroll::-webkit-scrollbar-track {
