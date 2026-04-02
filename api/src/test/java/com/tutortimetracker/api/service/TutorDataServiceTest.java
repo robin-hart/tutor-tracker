@@ -66,7 +66,7 @@ class TutorDataServiceTest {
             studentRepository,
             reportRepository,
             timeslotRepository,
-            todaySlotRepository);
+          todaySlotRepository);
   }
 
   @Test
@@ -299,8 +299,6 @@ class TutorDataServiceTest {
     student2.setProject(project);
 
     when(projectRepository.findBySlug("proj-1")).thenReturn(Optional.of(project));
-    when(projectGroupRepository.findByProjectAndName(project, "Ungrouped"))
-        .thenReturn(Optional.of(new ProjectGroupEntity()));
     when(studentRepository.findByProject(project)).thenReturn(List.of(student1, student2));
 
     List<StudentProfile> students = service.getProjectStudents("proj-1");
@@ -336,8 +334,6 @@ class TutorDataServiceTest {
     ungrouped.setProject(project);
 
     when(projectRepository.findBySlug("proj-1")).thenReturn(Optional.of(project));
-    when(projectGroupRepository.findByProjectAndName(project, "Ungrouped"))
-        .thenReturn(Optional.of(ungrouped));
     when(studentRepository.findByProject(project)).thenReturn(List.of(s1, s2, s3));
     when(projectGroupRepository.findByProject(project)).thenReturn(List.of(groupA, ungrouped));
 
@@ -347,6 +343,32 @@ class TutorDataServiceTest {
     assertTrue(groups.stream().anyMatch(g -> "Group A".equals(g.name()) && g.studentCount() == 2));
     assertTrue(
         groups.stream().anyMatch(g -> "Ungrouped".equals(g.name()) && g.studentCount() == 1));
+  }
+
+  @Test
+  void getProjectGroups_shouldNotPersistMissingGroupsDuringRead() {
+    ProjectEntity project = new ProjectEntity();
+    project.setSlug("proj-1");
+
+    StudentEntity s1 = new StudentEntity();
+    s1.setGroupName("Advanced");
+    s1.setProject(project);
+
+    StudentEntity s2 = new StudentEntity();
+    s2.setGroupName(null);
+    s2.setProject(project);
+
+    when(projectRepository.findBySlug("proj-1")).thenReturn(Optional.of(project));
+    when(studentRepository.findByProject(project)).thenReturn(List.of(s1, s2));
+    when(projectGroupRepository.findByProject(project)).thenReturn(List.of());
+
+    List<ProjectGroupSummary> groups = service.getProjectGroups("proj-1");
+
+    assertEquals(2, groups.size());
+    assertTrue(groups.stream().anyMatch(g -> "Advanced".equals(g.name()) && g.studentCount() == 1));
+    assertTrue(
+        groups.stream().anyMatch(g -> "Ungrouped".equals(g.name()) && g.studentCount() == 1));
+    verify(projectGroupRepository, never()).save(any(ProjectGroupEntity.class));
   }
 
   @Test
@@ -376,10 +398,10 @@ class TutorDataServiceTest {
 
     when(projectRepository.findBySlug("proj-1")).thenReturn(Optional.of(project));
     when(projectGroupRepository.findByProjectAndName(project, "Honors"))
-        .thenReturn(Optional.empty())
-        .thenReturn(Optional.of(new ProjectGroupEntity()));
+      .thenReturn(Optional.empty());
     when(projectGroupRepository.save(any(ProjectGroupEntity.class)))
-        .thenThrow(new DataIntegrityViolationException("Duplicate entry for uk_project_group_name"));
+        .thenThrow(
+            new DataIntegrityViolationException("Duplicate entry for uk_project_group_name"));
     when(studentRepository.findByProjectAndGroupName(project, "Honors")).thenReturn(List.of());
 
     ProjectGroupSummary result =

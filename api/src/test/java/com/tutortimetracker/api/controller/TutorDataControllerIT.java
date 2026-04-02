@@ -232,6 +232,22 @@ class TutorDataControllerIT {
   }
 
   @Test
+  void getProjectGroups_shouldNotPersistUngroupedOnRead() throws Exception {
+    ProjectEntity project =
+        projectRepository.save(newProject("proj-groups-readonly", "Groups Readonly Project"));
+
+    mockMvc
+        .perform(get("/api/projects/{projectId}/groups", project.getSlug()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(1))
+        .andExpect(jsonPath("$[0].name").value("Ungrouped"))
+        .andExpect(jsonPath("$[0].studentCount").value(0));
+
+    org.junit.jupiter.api.Assertions.assertEquals(
+        0, projectGroupRepository.findByProject(project).size());
+  }
+
+  @Test
   void createProjectGroup_shouldCreateNewGroup() throws Exception {
     ProjectEntity project = projectRepository.save(newProject("proj-new-group", "Project"));
 
