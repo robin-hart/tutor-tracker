@@ -370,6 +370,27 @@ class TutorDataServiceTest {
   }
 
   @Test
+  void createProjectGroup_shouldIgnoreDuplicateInsertRace() {
+    ProjectEntity project = new ProjectEntity();
+    project.setSlug("proj-1");
+
+    when(projectRepository.findBySlug("proj-1")).thenReturn(Optional.of(project));
+    when(projectGroupRepository.findByProjectAndName(project, "Honors"))
+        .thenReturn(Optional.empty())
+        .thenReturn(Optional.of(new ProjectGroupEntity()));
+    when(projectGroupRepository.save(any(ProjectGroupEntity.class)))
+        .thenThrow(new DataIntegrityViolationException("Duplicate entry for uk_project_group_name"));
+    when(studentRepository.findByProjectAndGroupName(project, "Honors")).thenReturn(List.of());
+
+    ProjectGroupSummary result =
+        service.createProjectGroup("proj-1", new ProjectGroupCreateRequest("Honors"));
+
+    assertEquals("Honors", result.name());
+    assertEquals(0, result.studentCount());
+    verify(projectGroupRepository).save(any(ProjectGroupEntity.class));
+  }
+
+  @Test
   void createProjectGroup_shouldReturnExistingGroupWithCounts() {
     ProjectEntity project = new ProjectEntity();
     project.setSlug("proj-1");

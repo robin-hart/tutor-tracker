@@ -323,12 +323,7 @@ public class TutorDataService {
     List<StudentEntity> projectStudents = studentRepository.findByProject(project);
     for (StudentEntity student : projectStudents) {
       String existingGroupName = normalizeGroupName(student.getGroupName());
-      if (projectGroupRepository.findByProjectAndName(project, existingGroupName).isEmpty()) {
-        ProjectGroupEntity group = new ProjectGroupEntity();
-        group.setName(existingGroupName);
-        group.setProject(project);
-        projectGroupRepository.save(group);
-      }
+      ensureProjectGroupExists(project, existingGroupName);
     }
 
     List<ProjectGroupEntity> groups = projectGroupRepository.findByProject(project);
@@ -360,12 +355,7 @@ public class TutorDataService {
     ProjectEntity project = findProjectBySlug(projectId);
     String groupName = normalizeGroupName(request.name());
 
-    if (projectGroupRepository.findByProjectAndName(project, groupName).isEmpty()) {
-      ProjectGroupEntity group = new ProjectGroupEntity();
-      group.setName(groupName);
-      group.setProject(project);
-      projectGroupRepository.save(group);
-    }
+    ensureProjectGroupExists(project, groupName);
 
     int count = studentRepository.findByProjectAndGroupName(project, groupName).size();
     return new ProjectGroupSummary(groupName, count);
@@ -805,11 +795,30 @@ public class TutorDataService {
    * @param project project context
    */
   private void ensureDefaultGroup(ProjectEntity project) {
-    if (projectGroupRepository.findByProjectAndName(project, UNGROUPED_GROUP).isEmpty()) {
-      ProjectGroupEntity group = new ProjectGroupEntity();
-      group.setName(UNGROUPED_GROUP);
-      group.setProject(project);
+    ensureProjectGroupExists(project, UNGROUPED_GROUP);
+  }
+
+  /**
+   * Ensures a project-scoped group exists and tolerates concurrent inserts.
+   *
+   * @param project project context
+   * @param groupName non-empty group label
+   */
+  private void ensureProjectGroupExists(ProjectEntity project, String groupName) {
+    if (projectGroupRepository.findByProjectAndName(project, groupName).isPresent()) {
+      return;
+    }
+
+    ProjectGroupEntity group = new ProjectGroupEntity();
+    group.setName(groupName);
+    group.setProject(project);
+
+    try {
       projectGroupRepository.save(group);
+    } catch (DataIntegrityViolationException ex) {
+      if (projectGroupRepository.findByProjectAndName(project, groupName).isEmpty()) {
+        throw ex;
+      }
     }
   }
 
