@@ -25,6 +25,26 @@
             >Active Tutoring Project</span
           >
           <h2 class="text-6xl font-extrabold tracking-tighter leading-none">{{ projectName }}</h2>
+          <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
+            <div
+              class="bg-surface-container-lowest rounded-xl px-4 py-3 border border-outline-variant/10"
+              data-testid="calendar-project-institution"
+            >
+              <p class="text-[11px] text-on-surface-variant uppercase tracking-widest">
+                Institution
+              </p>
+              <p class="mt-2 text-sm font-semibold">{{ projectInstitution }}</p>
+            </div>
+            <div
+              class="bg-surface-container-lowest rounded-xl px-4 py-3 border border-outline-variant/10"
+              data-testid="calendar-project-target"
+            >
+              <p class="text-[11px] text-on-surface-variant uppercase tracking-widest">
+                Monthly Target Working Time
+              </p>
+              <p class="mt-2 text-sm font-semibold">{{ projectTargetLabel }}</p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -332,7 +352,7 @@ import AppSidebar from '../components/AppSidebar.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import MainTopBar from '../components/MainTopBar.vue';
 import SearchActiveIndicator from '../components/SearchActiveIndicator.vue';
-import { deleteProjectTimeslot, getProjectCalendar } from '../services/apiClient';
+import { deleteProjectTimeslot, getProjectCalendar, getProjects } from '../services/apiClient';
 import { formatHoursToHM } from '../utils/timeFormatter';
 
 /**
@@ -342,6 +362,8 @@ const route = useRoute();
 const router = useRouter();
 const projectId = computed(() => String(route.params.projectId || 'math-grade-10'));
 const projectName = ref('Math Grade 10');
+const projectInstitution = ref('—');
+const projectTargetHours = ref(0);
 const totalHours = ref(0);
 const monthHours = ref(0);
 const monthSlots = ref([]);
@@ -371,6 +393,11 @@ const formattedTotalHours = computed(() => {
 
 const formattedMonthHours = computed(() => {
   return formatHoursToHM(monthHours.value);
+});
+
+const projectTargetLabel = computed(() => {
+  const formatted = formatHoursToHM(projectTargetHours.value);
+  return `${formatted.hours} hrs ${String(formatted.minutes).padStart(2, '0')} min`;
 });
 
 const slotCountByDate = computed(() => {
@@ -450,12 +477,19 @@ async function loadCalendar() {
   isLoading.value = true;
   errorMessage.value = '';
   try {
-    const payload = await getProjectCalendar(projectId.value, monthKey.value);
+    const [payload, projects] = await Promise.all([
+      getProjectCalendar(projectId.value, monthKey.value),
+      getProjects(),
+    ]);
+
+    const projectSummary = projects.find((project) => project.id === projectId.value);
     projectName.value = payload.projectName;
     totalHours.value = payload.totalHours;
     monthHours.value = payload.monthHours;
     monthSlots.value = payload.monthSlots || [];
     allSlots.value = payload.allSlots || payload.monthSlots || [];
+    projectInstitution.value = projectSummary?.institution || '—';
+    projectTargetHours.value = Number(projectSummary?.targetMonthHours) || 0;
 
     if (!selectedDate.value || !selectedDate.value.startsWith(monthKey.value)) {
       const todayIso = getTodayIso();
@@ -465,6 +499,8 @@ async function loadCalendar() {
     console.warn('Using fallback calendar data because API is unavailable.', error);
     errorMessage.value = error.message;
     projectName.value = 'Project Calendar';
+    projectInstitution.value = '—';
+    projectTargetHours.value = 0;
     totalHours.value = 0;
     monthHours.value = 0;
     monthSlots.value = [];

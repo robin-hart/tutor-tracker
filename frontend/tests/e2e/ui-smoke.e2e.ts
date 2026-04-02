@@ -52,6 +52,10 @@ test.describe('UI smoke journeys', () => {
     await page.goto(`/projects/${project.id}/calendar`);
 
     await expect(page.getByRole('heading', { name: project.name })).toBeVisible();
+    await expect(page.getByTestId('calendar-project-institution')).toContainText(
+      `Institute Calendar`
+    );
+    await expect(page.getByTestId('calendar-project-target')).toContainText('10 hrs 00 min');
     await expect(page.getByRole('button', { name: 'Prev' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Next' })).toBeVisible();
   });
