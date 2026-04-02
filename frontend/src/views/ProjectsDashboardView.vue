@@ -261,39 +261,21 @@
                 <span class="text-xs text-on-surface-variant font-medium">min</span>
               </div>
             </div>
-            <div class="text-right">
+            <div class="text-right max-w-[14rem]">
               <span class="text-xs text-on-surface-variant uppercase tracking-wider block mb-1"
-                >This Month</span
+                >Monthly Progress</span
               >
-              <div class="flex items-baseline gap-1.5 justify-end">
-                <span class="text-xl font-bold font-headline text-primary">{{
-                  formatProjectHours(project.monthHours).hours
-                }}</span>
-                <span class="text-xs text-on-surface-variant font-medium">hrs</span>
-                <span class="text-sm font-black font-headline text-primary">{{
-                  formatProjectHours(project.monthHours).minutes
-                }}</span>
-                <span class="text-xs text-on-surface-variant font-medium">min</span>
-              </div>
-              <span class="text-xs text-on-surface-variant uppercase tracking-wider block mt-4 mb-1"
-                >Target / Month</span
-              >
-              <div class="flex items-baseline gap-1.5 justify-end">
-                <span class="text-xl font-bold font-headline text-secondary">
-                  {{ formatProjectHours(project.targetMonthHours).hours }}
-                </span>
-                <span class="text-xs text-on-surface-variant font-medium">hrs</span>
-                <span class="text-sm font-black font-headline text-secondary">
-                  {{ formatProjectHours(project.targetMonthHours).minutes }}
-                </span>
-                <span class="text-xs text-on-surface-variant font-medium">min</span>
-              </div>
+              <p class="text-primary font-black font-headline text-xl leading-none">
+                {{ toHourMinuteLabel(project.monthHours) }}
+                <span class="text-on-surface-variant font-bold mx-1">/</span>
+                <span class="text-secondary">{{ toHourMinuteLabel(project.targetMonthHours) }}</span>
+              </p>
             </div>
           </div>
           <div class="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden mt-6">
             <div
               class="h-full bg-primary rounded-full"
-              :style="{ width: `${project.completionPercent}%` }"
+              :style="{ width: `${progressWidth(project)}%` }"
             ></div>
           </div>
           <div class="mt-6 flex gap-3">
@@ -539,6 +521,16 @@ function cancelDelete() {
  */
 function formatProjectHours(hours) {
   return formatHoursToHM(hours);
+}
+
+function toHourMinuteLabel(hours) {
+  const value = formatProjectHours(hours);
+  return `${value.hours}h ${value.minutes}m`;
+}
+
+function progressWidth(project) {
+  const completion = Number(project?.completionPercent) || 0;
+  return Math.max(0, Math.min(100, completion));
 }
 
 async function loadProjects() {
