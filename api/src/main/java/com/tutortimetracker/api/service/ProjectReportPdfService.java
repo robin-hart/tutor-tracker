@@ -5,7 +5,6 @@ import com.tutortimetracker.api.entity.TimeslotEntity;
 import com.tutortimetracker.api.repository.ProjectRepository;
 import com.tutortimetracker.api.repository.TimeslotRepository;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
@@ -22,13 +21,12 @@ public class ProjectReportPdfService {
       DateTimeFormatter.ofPattern("MMMM uuuu", Locale.GERMAN);
   private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.uuuu");
   private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
-  private static final DateTimeFormatter GENERATED_DATE_FORMATTER =
-      DateTimeFormatter.ofPattern("dd.MM.uuuu");
   private static final String LATEX_TEMPLATE =
       """
     \\documentclass[a4paper,12pt]{article}
     \\usepackage[utf8]{inputenc}
       \\usepackage[T1]{fontenc}
+    \\usepackage[german]{babel}
     \\usepackage{geometry}
     \\geometry{left=2.5cm,right=2cm,top=2cm,bottom=2cm}
     \\usepackage{array}
@@ -78,7 +76,7 @@ public class ProjectReportPdfService {
     \\noindent
     \\begin{tabularx}{\\textwidth}{@{}X@{}}
     \\textbf{Mitarbeiter(in)} \\\\[0.3cm]
-     \\textbf{Datum:} {{GENERATED_DATE}} \\hfill
+     \\textbf{Datum:} \\today \\hfill
        \\textbf{Unterschrift:} \\rule{6cm}{0.4pt}\\\\[1.8cm]
     \\textbf{Vorgesetzte(r)}\\\\[0.3cm]
     \\textbf{Datum:} \\rule{4cm}{0.4pt} \\hfill \\textbf{Unterschrift:} \\rule{6cm}{0.4pt}\\
@@ -148,9 +146,6 @@ public class ProjectReportPdfService {
             .replace(
                 "{{ZEITUEBERTRAG_NAECHSTER_MONAT}}",
                 formatSignedHoursAndMinutes(transferToNextMonthMinutes))
-            .replace(
-                "{{GENERATED_DATE}}",
-                escapeLatex(LocalDateTime.now().format(GENERATED_DATE_FORMATTER)))
             .replace("{{TIMESLOT_ROWS}}", buildTimeslotRows(monthSlots));
 
     return latexCompiler.compileToPdf(latex);
