@@ -98,14 +98,14 @@ class TutorDataServiceTest {
     when(projectRepository.save(any(ProjectEntity.class)))
         .thenThrow(
             new DataIntegrityViolationException(
-          "Duplicate entry 'timeslot-test-project' for key 'project_slug'"));
+                "Duplicate entry 'timeslot-test-project' for key 'project_slug'"));
 
     assertThrows(
-      DataIntegrityViolationException.class,
-      () ->
-        service.createProject(
-          new ProjectCreateRequest(
-            "Timeslot Test Project", "GENERAL", "Physics Institute", 8.0, 0)));
+        DataIntegrityViolationException.class,
+        () ->
+            service.createProject(
+                new ProjectCreateRequest(
+                    "Timeslot Test Project", "GENERAL", "Physics Institute", 8.0, 0)));
 
     verify(projectRepository).save(any(ProjectEntity.class));
     verify(projectGroupRepository, never()).save(any(ProjectGroupEntity.class));
@@ -402,8 +402,8 @@ class TutorDataServiceTest {
             new DataIntegrityViolationException("Duplicate entry for uk_project_group_name"));
 
     assertThrows(
-      DataIntegrityViolationException.class,
-      () -> service.createProjectGroup("proj-1", new ProjectGroupCreateRequest("Honors")));
+        DataIntegrityViolationException.class,
+        () -> service.createProjectGroup("proj-1", new ProjectGroupCreateRequest("Honors")));
 
     verify(projectGroupRepository).save(any(ProjectGroupEntity.class));
   }
