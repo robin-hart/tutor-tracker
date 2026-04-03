@@ -186,7 +186,9 @@ test.describe('Reports', () => {
 
     // Wait for the month list and refreshed project data
     await page.locator('table tbody tr').first().waitFor({ state: 'visible' });
-    await expect(page.locator('table tbody tr').first().locator('td').nth(1)).toContainText(projName);
+    await expect(page.locator('table tbody tr').first().locator('td').nth(1)).toContainText(
+      projName
+    );
 
     // Get all rows in the table
     const rows = await page.locator('table tbody tr').all();
@@ -242,15 +244,18 @@ test.describe('Reports', () => {
     ];
 
     for (const slot of slotPayloads) {
-      const slotResponse = await tempPage.request.post(`${apiBaseUrl}/api/projects/${project.id}/timeslots`, {
-        data: {
-          title: slot.title,
-          description: `Smoke slot ${slot.title}`,
-          durationMinutes: slot.durationMinutes,
-          date: slot.date,
-          startTime: '09:00',
-        },
-      });
+      const slotResponse = await tempPage.request.post(
+        `${apiBaseUrl}/api/projects/${project.id}/timeslots`,
+        {
+          data: {
+            title: slot.title,
+            description: `Smoke slot ${slot.title}`,
+            durationMinutes: slot.durationMinutes,
+            date: slot.date,
+            startTime: '09:00',
+          },
+        }
+      );
       expect(slotResponse.ok()).toBeTruthy();
     }
 
@@ -262,7 +267,9 @@ test.describe('Reports', () => {
     await page.getByTestId('report-project-select').selectOption({ value: project.id });
     await page.locator('table tbody tr').first().waitFor({ state: 'visible' });
 
-    await expect(page.getByTestId('report-project-institution')).toContainText('Carryover Institute');
+    await expect(page.getByTestId('report-project-institution')).toContainText(
+      'Carryover Institute'
+    );
     await expect(page.getByTestId('report-project-target')).toContainText('10h 00min');
 
     const firstTotalHours = page.getByTestId('month-total-hours').first();
@@ -276,8 +283,8 @@ test.describe('Reports', () => {
     const januaryRow = page.locator('table tbody tr').filter({ hasText: 'Januar 2026' }).first();
     await expect(januaryRow).toBeVisible();
     await expect(januaryRow.getByTestId('month-transfer-next')).toContainText('-6h 00min');
-    await expect(page.locator('table tbody tr').filter({ hasText: project.name }).first()).toBeVisible();
+    await expect(
+      page.locator('table tbody tr').filter({ hasText: project.name }).first()
+    ).toBeVisible();
   });
 });
-
-

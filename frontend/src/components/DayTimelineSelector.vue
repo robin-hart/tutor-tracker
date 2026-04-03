@@ -45,7 +45,9 @@
             class="absolute inset-x-0 -bottom-2 h-4 cursor-ns-resize"
             @mousedown.stop="startResize('end', $event)"
           ></div>
-          <div class="h-full flex items-center justify-center px-2 text-xs font-semibold text-primary gap-2">
+          <div
+            class="h-full flex items-center justify-center px-2 text-xs font-semibold text-primary gap-2"
+          >
             <span>{{ durationLabel }}</span>
             <button
               type="button"
@@ -101,25 +103,21 @@
         </div>
       </div>
     </div>
-
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
-const props = defineProps({
-  startTime: {
-    type: String,
-    required: true,
-  },
-  durationMinutes: {
-    type: Number,
-    required: true,
-  },
-});
+const props = defineProps<{
+  startTime: string;
+  durationMinutes: number;
+}>();
 
-const emit = defineEmits(['update:startTime', 'update:durationMinutes']);
+const emit = defineEmits<{
+  (event: 'update:startTime', value: string): void;
+  (event: 'update:durationMinutes', value: number): void;
+}>();
 
 const dayStartHour = 0;
 const dayEndHour = 24;
@@ -131,8 +129,14 @@ const dayStartMinute = dayStartHour * 60;
 const dayEndMinute = dayEndHour * 60 - stepMinutes;
 const dayEndBoundaryMinute = dayEndHour * 60;
 
-const durationOptions = Array.from({ length: maxDuration / stepMinutes }, (_, i) => (i + 1) * stepMinutes);
-const visibleHours = Array.from({ length: dayEndHour - dayStartHour + 1 }, (_, i) => i + dayStartHour);
+const durationOptions = Array.from(
+  { length: maxDuration / stepMinutes },
+  (_, i) => (i + 1) * stepMinutes
+);
+const visibleHours = Array.from(
+  { length: dayEndHour - dayStartHour + 1 },
+  (_, i) => i + dayStartHour
+);
 const timelineHeightPx = (dayEndHour - dayStartHour) * 60 * pixelsPerMinute;
 
 const startMinutes = computed(() => parseTime(props.startTime));
@@ -150,24 +154,20 @@ const startBadgeStyle = computed(() => ({
   left: '3.25rem',
   top: `${minuteToPixel(startMinutes.value)}px`,
   transform:
-    startMinutes.value === dayStartMinute
-      ? 'translate(-100%, 0)'
-      : 'translate(-100%, -50%)',
+    startMinutes.value === dayStartMinute ? 'translate(-100%, 0)' : 'translate(-100%, -50%)',
 }));
 
 const endBadgeStyle = computed(() => ({
   left: '3.25rem',
   top: `${minuteToPixel(endMinutes.value)}px`,
   transform:
-    endMinutes.value >= dayEndBoundaryMinute
-      ? 'translate(-100%, -100%)'
-      : 'translate(-100%, -50%)',
+    endMinutes.value >= dayEndBoundaryMinute ? 'translate(-100%, -100%)' : 'translate(-100%, -50%)',
 }));
 
-const scrollHost = ref(null);
-const rootEl = ref(null);
+const scrollHost = ref<HTMLElement | null>(null);
+const rootEl = ref<HTMLElement | null>(null);
 const dragState = ref({
-  mode: null,
+  mode: null as 'move' | 'start' | 'end' | null,
   baseStart: 0,
   baseDuration: 0,
   pointerOffsetMinutes: 0,
@@ -175,42 +175,47 @@ const dragState = ref({
 });
 const showDurationMenu = ref(false);
 const suppressNextClick = ref(false);
-const dragPointerClientY = ref(null);
+const dragPointerClientY = ref<number | null>(null);
 const dragLoopFrame = ref(0);
 const hasUserInteraction = ref(false);
 
-function minuteToPixel(minute) {
+/**
+ * Converts minutes in the day to timeline pixel position.
+ */
+function minuteToPixel(minute: number): number {
   return (minute - dayStartMinute) * pixelsPerMinute;
 }
 
-function pixelToMinute(pixel) {
+function pixelToMinute(pixel: number): number {
   return snapToStep(clampMinute(Math.round(pixel / pixelsPerMinute + dayStartMinute)));
 }
 
-function clampMinute(minute) {
+function clampMinute(minute: number): number {
   return Math.max(dayStartMinute, Math.min(dayEndMinute, minute));
 }
 
-function clampEndMinute(minute) {
+function clampEndMinute(minute: number): number {
   return Math.max(dayStartMinute, Math.min(dayEndBoundaryMinute, minute));
 }
 
-function parseTime(value) {
-  const [hour, minute] = String(value || '00:00').split(':').map(Number);
+function parseTime(value: string): number {
+  const [hour, minute] = String(value || '00:00')
+    .split(':')
+    .map(Number);
   return snapToStep(clampMinute(hour * 60 + minute));
 }
 
-function snapToStep(minute) {
+function snapToStep(minute: number): number {
   return Math.round(minute / stepMinutes) * stepMinutes;
 }
 
-function toTime(totalMinutes) {
+function toTime(totalMinutes: number): string {
   const hour = Math.floor(totalMinutes / 60);
   const minute = totalMinutes % 60;
   return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
 }
 
-function formatDuration(minutes) {
+function formatDuration(minutes: number): string {
   if (minutes < 60) {
     return `${minutes} min`;
   }
@@ -219,30 +224,37 @@ function formatDuration(minutes) {
   return m === 0 ? `${h} h` : `${h} h ${m} min`;
 }
 
-function onTimelineClick(event) {
+/**
+ * Sets a new slot start from a direct timeline click.
+ */
+function onTimelineClick(event: MouseEvent): void {
   if (dragState.value.mode || suppressNextClick.value) {
     suppressNextClick.value = false;
     return;
   }
   hasUserInteraction.value = true;
   showDurationMenu.value = false;
-  const rect = event.currentTarget.getBoundingClientRect();
-  const y = event.clientY - rect.top + event.currentTarget.scrollTop;
+  const currentTarget = event.currentTarget as HTMLElement | null;
+  if (!currentTarget) {
+    return;
+  }
+  const rect = currentTarget.getBoundingClientRect();
+  const y = event.clientY - rect.top + currentTarget.scrollTop;
   const newStart = pixelToMinute(y);
   applyStartAndDuration(newStart, props.durationMinutes);
 }
 
-function toggleDurationMenu() {
+function toggleDurationMenu(): void {
   showDurationMenu.value = !showDurationMenu.value;
 }
 
-function selectDuration(duration) {
+function selectDuration(duration: number): void {
   hasUserInteraction.value = true;
   showDurationMenu.value = false;
   applyStartAndDuration(startMinutes.value, duration);
 }
 
-function startDrag(event) {
+function startDrag(event: MouseEvent): void {
   hasUserInteraction.value = true;
   showDurationMenu.value = false;
   const pointerMinute = getPointerMinute(event);
@@ -257,7 +269,7 @@ function startDrag(event) {
   bindDragListeners();
 }
 
-function startResize(edge, event) {
+function startResize(edge: 'start' | 'end', event: MouseEvent): void {
   hasUserInteraction.value = true;
   showDurationMenu.value = false;
   dragPointerClientY.value = event.clientY;
@@ -271,12 +283,12 @@ function startResize(edge, event) {
   bindDragListeners();
 }
 
-function onPointerMove(event) {
+function onPointerMove(event: MouseEvent): void {
   dragPointerClientY.value = event.clientY;
   updateDragFromPointer();
 }
 
-function updateDragFromPointer() {
+function updateDragFromPointer(): void {
   const pointerMinute = getPointerMinuteFromClientY(dragPointerClientY.value);
   dragState.value.moved = true;
 
@@ -300,7 +312,7 @@ function updateDragFromPointer() {
   }
 }
 
-function onPointerUp() {
+function onPointerUp(): void {
   if (dragState.value.moved) {
     suppressNextClick.value = true;
   }
@@ -315,19 +327,22 @@ function onPointerUp() {
   unbindDragListeners();
 }
 
-function bindDragListeners() {
+function bindDragListeners(): void {
   globalThis.addEventListener('mousemove', onPointerMove);
   globalThis.addEventListener('mouseup', onPointerUp);
   startDragLoop();
 }
 
-function unbindDragListeners() {
+function unbindDragListeners(): void {
   globalThis.removeEventListener('mousemove', onPointerMove);
   globalThis.removeEventListener('mouseup', onPointerUp);
   stopDragLoop();
 }
 
-function applyStartAndDuration(rawStart, rawDuration) {
+/**
+ * Normalizes and emits the selected start time and duration.
+ */
+function applyStartAndDuration(rawStart: number, rawDuration: number): void {
   let nextStart = snapToStep(clampMinute(rawStart));
   let nextDuration = snapToStep(Math.max(minDuration, Math.min(maxDuration, rawDuration)));
 
@@ -345,11 +360,11 @@ function applyStartAndDuration(rawStart, rawDuration) {
   emit('update:durationMinutes', nextDuration);
 }
 
-function getPointerMinute(event) {
+function getPointerMinute(event: MouseEvent): number {
   return getPointerMinuteFromClientY(event.clientY);
 }
 
-function getPointerMinuteFromClientY(clientY) {
+function getPointerMinuteFromClientY(clientY: number | null): number {
   if (!scrollHost.value) {
     return startMinutes.value;
   }
@@ -363,7 +378,7 @@ function getPointerMinuteFromClientY(clientY) {
   return pixelToMinute(y);
 }
 
-function maybeAutoScroll(clientY) {
+function maybeAutoScroll(clientY: number | null): boolean {
   if (!scrollHost.value) {
     return false;
   }
@@ -387,7 +402,7 @@ function maybeAutoScroll(clientY) {
   return scrollHost.value.scrollTop !== previous;
 }
 
-function startDragLoop() {
+function startDragLoop(): void {
   stopDragLoop();
 
   const tick = () => {
@@ -406,27 +421,31 @@ function startDragLoop() {
   dragLoopFrame.value = globalThis.requestAnimationFrame(tick);
 }
 
-function stopDragLoop() {
+function stopDragLoop(): void {
   if (dragLoopFrame.value) {
     globalThis.cancelAnimationFrame(dragLoopFrame.value);
     dragLoopFrame.value = 0;
   }
 }
 
-function scrollSelectionIntoView() {
+function scrollSelectionIntoView(): void {
   if (!scrollHost.value) {
     return;
   }
 
   const selectionTop = minuteToPixel(startMinutes.value);
-  const selectionHeight = Math.max(minDuration * pixelsPerMinute, props.durationMinutes * pixelsPerMinute);
+  const selectionHeight = Math.max(
+    minDuration * pixelsPerMinute,
+    props.durationMinutes * pixelsPerMinute
+  );
   const selectionCenter = selectionTop + selectionHeight / 2;
   const targetScrollTop = Math.max(0, selectionCenter - scrollHost.value.clientHeight / 2);
   scrollHost.value.scrollTop = targetScrollTop;
 }
 
-function onWindowMouseDown(event) {
-  if (rootEl.value && !rootEl.value.contains(event.target)) {
+function onWindowMouseDown(event: MouseEvent): void {
+  const target = event.target as Node | null;
+  if (rootEl.value && target && !rootEl.value.contains(target)) {
     showDurationMenu.value = false;
   }
 }

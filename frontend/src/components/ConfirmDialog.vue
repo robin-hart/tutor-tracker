@@ -24,39 +24,47 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { onBeforeUnmount, onMounted } from 'vue';
 
-const props = defineProps({
-  isOpen: {
-    type: Boolean,
-    default: false,
-  },
-  title: {
-    type: String,
-    default: 'Confirm Action',
-  },
-  confirmLabel: {
-    type: String,
-    default: 'Delete',
-  },
-  cancelLabel: {
-    type: String,
-    default: 'Cancel',
-  },
-});
+const props = withDefaults(
+  defineProps<{
+    isOpen?: boolean;
+    title?: string;
+    confirmLabel?: string;
+    cancelLabel?: string;
+  }>(),
+  {
+    isOpen: false,
+    title: 'Confirm Action',
+    confirmLabel: 'Delete',
+    cancelLabel: 'Cancel',
+  }
+);
 
-const emit = defineEmits(['confirm', 'cancel']);
+const emit = defineEmits<{
+  (event: 'confirm'): void;
+  (event: 'cancel'): void;
+}>();
 
-function onConfirm() {
+/**
+ * Emits a confirmation action to the parent.
+ */
+function onConfirm(): void {
   emit('confirm');
 }
 
-function onCancel() {
+/**
+ * Emits a cancel action to the parent.
+ */
+function onCancel(): void {
   emit('cancel');
 }
 
-function onEscapeKey(event) {
+/**
+ * Handles Escape key presses when the dialog is open.
+ */
+function onEscapeKey(event: KeyboardEvent): void {
   if (event.key === 'Escape' && props.isOpen) {
     onCancel();
   }

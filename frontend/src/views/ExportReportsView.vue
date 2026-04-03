@@ -120,23 +120,20 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import AppSidebar from '../components/AppSidebar.vue';
 import MainTopBar from '../components/MainTopBar.vue';
-import {
-  exportProjectReportPdf,
-  getProjectCalendar,
-  getProjects,
-} from '../services/apiClient';
+import { exportProjectReportPdf, getProjectCalendar, getProjects } from '../services/apiClient';
+import type { Project, Timeslot } from '../types/domain';
 
 /**
  * Reporting screen showing monthly billing and workload exports.
  */
-const projects = ref([]);
+const projects = ref<Project[]>([]);
 const selectedProjectId = ref('');
 const projectStartMonthKey = ref(new Date().toISOString().slice(0, 7));
-const allTimeslots = ref([]);
+const allTimeslots = ref<Timeslot[]>([]);
 const selectedProjectName = ref('');
 const calendarRequestVersion = ref(0);
 const errorMessage = ref('');
@@ -178,54 +175,55 @@ const availableMonthOptions = computed(() => {
 
 const newestMonthKey = computed(() => availableMonthOptions.value[0]?.key || '');
 
-function monthKeyToDate(monthKey) {
+function monthKeyToDate(monthKey: string): Date {
   const [year, month] = monthKey.split('-').map(Number);
   return new Date(year, month - 1, 1);
 }
 
-function dateToMonthKey(date) {
+function dateToMonthKey(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   return `${year}-${month}`;
 }
 
-function formatMonthLabel(monthKey) {
+function formatMonthLabel(monthKey: string): string {
   const [year, month] = monthKey.split('-').map(Number);
   const date = new Date(year, month - 1, 1);
   return date.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
 }
 
-function normalizeMonthKey(dateString) {
+function normalizeMonthKey(dateString: string | undefined): string | null {
   if (!dateString) {
     return null;
   }
   return dateString.slice(0, 7);
 }
 
-function compareMonthKeys(left, right) {
+function compareMonthKeys(left: string, right: string): number {
   return left.localeCompare(right);
 }
 
-function monthDistanceInclusive(startMonthKey, endMonthKey) {
+function monthDistanceInclusive(startMonthKey: string, endMonthKey: string): number {
   const start = monthKeyToDate(startMonthKey);
   const end = monthKeyToDate(endMonthKey);
-  const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+  const months =
+    (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
   return months + 1;
 }
 
-function formatDurationMinutes(totalMinutes) {
+function formatDurationMinutes(totalMinutes: number): string {
   const normalized = Math.max(0, Math.round(totalMinutes || 0));
   const hours = Math.floor(normalized / 60);
   const minutes = normalized % 60;
   return `${hours}h ${String(minutes).padStart(2, '0')}min`;
 }
 
-function formatSignedDurationMinutes(totalMinutes) {
+function formatSignedDurationMinutes(totalMinutes: number): string {
   const sign = totalMinutes < 0 ? '-' : '';
   return `${sign}${formatDurationMinutes(Math.abs(totalMinutes))}`;
 }
 
-function findFirstTimeslotMonthKey() {
+function findFirstTimeslotMonthKey(): string | null {
   const monthKeys = (allTimeslots.value || [])
     .map((slot) => normalizeMonthKey(slot.date))
     .filter(Boolean)
@@ -233,7 +231,7 @@ function findFirstTimeslotMonthKey() {
   return monthKeys[0] || null;
 }
 
-async function loadProjectCalendarData(projectId) {
+async function loadProjectCalendarData(projectId: string): Promise<void> {
   if (!projectId) {
     allTimeslots.value = [];
     selectedProjectName.value = '';
@@ -259,7 +257,7 @@ async function loadProjectCalendarData(projectId) {
   }
 }
 
-async function resolveProjectStartMonth(projectId) {
+async function resolveProjectStartMonth(projectId: string): Promise<string> {
   try {
     const calendar = await getProjectCalendar(projectId);
     const slotMonthKeys = (calendar.allSlots || [])
@@ -276,7 +274,12 @@ async function resolveProjectStartMonth(projectId) {
   }
 }
 
-function getMonthReportData(monthKey) {
+function getMonthReportData(monthKey: string): {
+  projectName: string;
+  totalMinutes: number;
+  sessions: number;
+  transferToNextMonthMinutes: number;
+} {
   const slotsInMonth = (allTimeslots.value || []).filter((slot) => {
     const slotMonth = normalizeMonthKey(slot.date);
     return slotMonth === monthKey;
@@ -316,27 +319,30 @@ function getMonthReportData(monthKey) {
   };
 }
 
-function getMonthProjectName(monthKey) {
+function getMonthProjectName(monthKey: string): string {
   const data = getMonthReportData(monthKey);
   return data?.projectName || '—';
 }
 
-function getMonthTotalHours(monthKey) {
+function getMonthTotalHours(monthKey: string): string {
   const data = getMonthReportData(monthKey);
   return formatDurationMinutes(data?.totalMinutes || 0);
 }
 
-function getMonthSessions(monthKey) {
+function getMonthSessions(monthKey: string): number | string {
   const data = getMonthReportData(monthKey);
   return data?.sessions || '0';
 }
 
-function getMonthTransferToNextLabel(monthKey) {
+function getMonthTransferToNextLabel(monthKey: string): string {
   const data = getMonthReportData(monthKey);
   return formatSignedDurationMinutes(data?.transferToNextMonthMinutes || 0);
 }
 
-async function downloadReportForMonth(monthKey) {
+/**
+ * Downloads a generated monthly report as PDF.
+ */
+async function downloadReportForMonth(monthKey: string): Promise<void> {
   errorMessage.value = '';
   try {
     const blob = await exportProjectReportPdf(selectedProjectId.value, monthKey);
@@ -356,7 +362,7 @@ async function downloadReportForMonth(monthKey) {
   }
 }
 
-async function generateNewestMonthlyReport() {
+async function generateNewestMonthlyReport(): Promise<void> {
   if (!newestMonthKey.value) {
     return;
   }

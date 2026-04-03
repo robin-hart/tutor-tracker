@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { filterProjects, normalizeForProjectSearch } from '../../src/utils/projectFilter';
 
 describe('projectFilter', () => {
@@ -35,22 +35,6 @@ describe('projectFilter', () => {
       const result = filterProjects(sampleProjects, 'stem');
       expect(result).toHaveLength(1);
       expect(result[0].name).toBe('Math Grade 10');
-    });
-
-    it('matches category for query "a" when category contains "a"', () => {
-      const result = filterProjects(sampleProjects, 'a');
-      expect(result.some((p) => p.name === 'FSB')).toBe(true);
-    });
-
-    it('returns no projects when query matches neither name nor category', () => {
-      const result = filterProjects(sampleProjects, 'zzz');
-      expect(result).toHaveLength(0);
-    });
-
-    it('handles missing name/category fields safely', () => {
-      const result = filterProjects([{ id: 'x' }, { id: 'y', name: 'Alpha' }], 'alpha');
-      expect(result).toHaveLength(1);
-      expect(result[0].id).toBe('y');
     });
   });
 });

@@ -251,7 +251,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import AppSidebar from '../components/AppSidebar.vue';
@@ -268,27 +268,28 @@ import {
   updateStudentGroup,
   updateStudentNotes,
 } from '../services/apiClient';
+import type { Student } from '../types/domain';
 
 const route = useRoute();
 const projectId = computed(() => String(route.params.projectId || 'math-grade-10'));
-const students = ref([]);
-const groups = ref(['Ungrouped']);
+const students = ref<Student[]>([]);
+const groups = ref<string[]>(['Ungrouped']);
 const isLoading = ref(false);
 const errorMessage = ref('');
 const searchText = ref('');
 const showAddStudent = ref(false);
 const showAddGroup = ref(false);
-const newGroupName = ref('');
+const newGroupName = ref<string>('');
 const showDeleteConfirm = ref(false);
-const studentToDelete = ref(null);
-const noteValidationErrors = ref({});
-const noteSaveSuccess = ref({});
-const noteBaselineByStudentId = ref({});
-const noteSuccessTimers = new Map();
-const draggedStudentId = ref('');
+const studentToDelete = ref<{ id: string; name: string } | null>(null);
+const noteValidationErrors = ref<Record<string, string>>({});
+const noteSaveSuccess = ref<Record<string, string>>({});
+const noteBaselineByStudentId = ref<Record<string, string>>({});
+const noteSuccessTimers = new Map<string, ReturnType<typeof globalThis.setTimeout>>();
+const draggedStudentId = ref<string>('');
 const isDragging = ref(false);
-const hoveredGroupName = ref('');
-const groupScrollContainer = ref(null);
+const hoveredGroupName = ref<string>('');
+const groupScrollContainer = ref<HTMLElement | null>(null);
 const newStudent = ref({
   name: '',
   notes: '',
@@ -331,14 +332,17 @@ const groupedStudents = computed(() => {
     .map(([name, groupStudents]) => ({ name, students: groupStudents }));
 });
 
-function normalizeGroupName(groupName) {
+/**
+ * Converts empty or missing group names to the canonical fallback.
+ */
+function normalizeGroupName(groupName: unknown): string {
   if (!groupName || !String(groupName).trim()) {
     return 'Ungrouped';
   }
   return String(groupName).trim();
 }
 
-async function loadStudentContext() {
+async function loadStudentContext(): Promise<void> {
   isLoading.value = true;
   errorMessage.value = '';
   try {
@@ -389,7 +393,7 @@ async function loadStudentContext() {
   }
 }
 
-async function addGroup() {
+async function addGroup(): Promise<void> {
   if (!newGroupName.value.trim()) {
     return;
   }
@@ -413,7 +417,7 @@ async function addGroup() {
   }
 }
 
-async function removeGroup(groupName) {
+async function removeGroup(groupName: string): Promise<void> {
   if (groupName === 'Ungrouped') {
     return;
   }
@@ -432,7 +436,7 @@ async function removeGroup(groupName) {
   }
 }
 
-async function addStudent() {
+async function addStudent(): Promise<void> {
   if (!newStudent.value.name) {
     return;
   }
@@ -461,7 +465,10 @@ async function addStudent() {
   }
 }
 
-function onDragStart(studentId, event) {
+/**
+ * Starts drag-and-drop reassignment for a student card.
+ */
+function onDragStart(studentId: string, event: MouseEvent): void {
   if (event.button !== 0) {
     return;
   }
@@ -475,7 +482,7 @@ function onDragStart(studentId, event) {
   globalThis.addEventListener('mouseup', onGlobalMouseUp);
 }
 
-function onDragEnd() {
+function onDragEnd(): void {
   globalThis.document.body.style.userSelect = '';
   globalThis.removeEventListener('mousemove', onPointerMove);
   globalThis.removeEventListener('mouseup', onGlobalMouseUp);
@@ -484,7 +491,7 @@ function onDragEnd() {
   isDragging.value = false;
 }
 
-function onPointerMove(event) {
+function onPointerMove(event: MouseEvent): void {
   if (!isDragging.value || !groupScrollContainer.value) {
     return;
   }
@@ -501,11 +508,13 @@ function onPointerMove(event) {
   }
 
   const element = globalThis.document.elementFromPoint(event.clientX, event.clientY);
-  const targetGroupElement = element ? element.closest('[data-group-name]') : null;
+  const targetGroupElement = element
+    ? (element.closest('[data-group-name]') as HTMLElement | null)
+    : null;
   hoveredGroupName.value = targetGroupElement?.dataset?.groupName || '';
 }
 
-function onGlobalMouseUp() {
+function onGlobalMouseUp(): void {
   if (!isDragging.value) {
     return;
   }
@@ -518,7 +527,7 @@ function onGlobalMouseUp() {
   onDragEnd();
 }
 
-async function moveStudentToGroup(groupName) {
+async function moveStudentToGroup(groupName: string): Promise<void> {
   if (!draggedStudentId.value) {
     return;
   }
@@ -543,7 +552,7 @@ async function moveStudentToGroup(groupName) {
   }
 }
 
-async function saveNotes(student) {
+async function saveNotes(student: Student): Promise<void> {
   if (!hasNoteChanges(student)) {
     return;
   }
@@ -582,7 +591,7 @@ async function saveNotes(student) {
   }
 }
 
-function setNoteValidationError(studentId, message) {
+function setNoteValidationError(studentId: string, message: string): void {
   noteValidationErrors.value = { ...noteValidationErrors.value, [studentId]: message };
   clearNoteSuccessTimer(studentId);
   if (noteSaveSuccess.value[studentId]) {
@@ -592,7 +601,7 @@ function setNoteValidationError(studentId, message) {
   }
 }
 
-function clearNoteValidation(studentId) {
+function clearNoteValidation(studentId: string): void {
   if (noteValidationErrors.value[studentId]) {
     const next = { ...noteValidationErrors.value };
     delete next[studentId];
@@ -600,7 +609,7 @@ function clearNoteValidation(studentId) {
   }
 }
 
-function onNotesInput(studentId) {
+function onNotesInput(studentId: string): void {
   clearNoteValidation(studentId);
   clearNoteSuccessTimer(studentId);
   if (noteSaveSuccess.value[studentId]) {
@@ -610,7 +619,7 @@ function onNotesInput(studentId) {
   }
 }
 
-function clearNoteSuccessTimer(studentId) {
+function clearNoteSuccessTimer(studentId: string): void {
   const timeoutId = noteSuccessTimers.get(studentId);
   if (!timeoutId) {
     return;
@@ -619,21 +628,21 @@ function clearNoteSuccessTimer(studentId) {
   noteSuccessTimers.delete(studentId);
 }
 
-function normalizeNotes(value) {
+function normalizeNotes(value: unknown): string {
   return String(value || '').trim();
 }
 
-function hasNoteChanges(student) {
+function hasNoteChanges(student: Student): boolean {
   const baseline = noteBaselineByStudentId.value[student.id] ?? '';
   return normalizeNotes(student.notes) !== baseline;
 }
 
-function openDeleteConfirm(student) {
+function openDeleteConfirm(student: Student): void {
   studentToDelete.value = { id: student.id, name: student.name };
   showDeleteConfirm.value = true;
 }
 
-function cancelDelete() {
+function cancelDelete(): void {
   showDeleteConfirm.value = false;
   studentToDelete.value = null;
 }

@@ -139,10 +139,7 @@
           >
             Cancel
           </button>
-          <button
-            class="px-4 py-2 rounded-lg bg-primary text-white font-bold"
-            @click="saveProject"
-          >
+          <button class="px-4 py-2 rounded-lg bg-primary text-white font-bold" @click="saveProject">
             {{ isEditingProject ? 'Save Changes' : 'Create' }}
           </button>
         </div>
@@ -268,7 +265,9 @@
               <p class="text-primary font-black font-headline text-xl leading-none">
                 {{ toHourMinuteLabel(project.monthHours) }}
                 <span class="text-on-surface-variant font-bold mx-1">/</span>
-                <span class="text-secondary">{{ toHourMinuteLabel(project.targetMonthHours) }}</span>
+                <span class="text-secondary">{{
+                  toHourMinuteLabel(project.targetMonthHours)
+                }}</span>
               </p>
             </div>
           </div>
@@ -324,7 +323,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import AppSidebar from '../components/AppSidebar.vue';
@@ -332,21 +331,22 @@ import ConfirmDialog from '../components/ConfirmDialog.vue';
 import MainTopBar from '../components/MainTopBar.vue';
 import SearchActiveIndicator from '../components/SearchActiveIndicator.vue';
 import { createProject, deleteProject, getProjects, updateProject } from '../services/apiClient';
+import type { Project, ProjectPayload } from '../types/domain';
 import { filterProjects } from '../utils/projectFilter';
 import { formatHoursToHM } from '../utils/timeFormatter';
 
 /**
  * Dashboard view for listing tutoring projects and high-level metrics.
  */
-const projects = ref([]);
+const projects = ref<Project[]>([]);
 const isLoading = ref(false);
 const errorMessage = ref('');
 const searchText = ref('');
 const showProjectForm = ref(false);
-const projectFormMode = ref('create');
-const editingProjectId = ref('');
+const projectFormMode = ref<'create' | 'edit'>('create');
+const editingProjectId = ref<string>('');
 const router = useRouter();
-const projectForm = ref({
+const projectForm = ref<ProjectPayload>({
   name: '',
   category: 'GENERAL',
   institution: '',
@@ -355,7 +355,7 @@ const projectForm = ref({
 });
 
 const showDeleteConfirm = ref(false);
-const projectToDelete = ref(null);
+const projectToDelete = ref<{ id: string; name: string } | null>(null);
 const apiUnavailable = ref(false);
 const showNewCategoryInput = ref(false);
 const newCategory = ref('');
@@ -386,11 +386,14 @@ const isEditingProject = computed(() => projectFormMode.value === 'edit');
  *
  * @param {string} projectId selected project id
  */
-function openCalendar(projectId) {
+function openCalendar(projectId: string): void {
   router.push({ name: 'project-calendar', params: { projectId } });
 }
 
-function resetProjectForm() {
+/**
+ * Restores the project form to its default state.
+ */
+function resetProjectForm(): void {
   projectForm.value = {
     name: '',
     category: 'GENERAL',
@@ -400,7 +403,7 @@ function resetProjectForm() {
   };
 }
 
-function openCreateProjectForm() {
+function openCreateProjectForm(): void {
   projectFormMode.value = 'create';
   editingProjectId.value = '';
   resetProjectForm();
@@ -409,7 +412,7 @@ function openCreateProjectForm() {
   showProjectForm.value = true;
 }
 
-function openEditProject(project) {
+function openEditProject(project: Project): void {
   projectFormMode.value = 'edit';
   editingProjectId.value = project.id;
   projectForm.value = {
@@ -424,7 +427,7 @@ function openEditProject(project) {
   showProjectForm.value = true;
 }
 
-function closeProjectForm() {
+function closeProjectForm(): void {
   showProjectForm.value = false;
   projectFormMode.value = 'create';
   editingProjectId.value = '';
@@ -433,7 +436,10 @@ function closeProjectForm() {
   resetProjectForm();
 }
 
-async function saveProject() {
+/**
+ * Persists a project in create or edit mode.
+ */
+async function saveProject(): Promise<void> {
   const resolvedCategory = showNewCategoryInput.value
     ? newCategory.value.trim()
     : String(projectForm.value.category || '').trim();
@@ -466,13 +472,13 @@ async function saveProject() {
   }
 }
 
-function selectCategory(category) {
+function selectCategory(category: string): void {
   projectForm.value.category = category;
   showNewCategoryInput.value = false;
   newCategory.value = '';
 }
 
-function openNewCategoryInput() {
+function openNewCategoryInput(): void {
   showNewCategoryInput.value = true;
 }
 
@@ -482,7 +488,7 @@ function openNewCategoryInput() {
  * @param {string} projectId project id to delete
  * @param {string} projectName project name for display
  */
-function openDeleteConfirm(projectId, projectName) {
+function openDeleteConfirm(projectId: string, projectName: string): void {
   projectToDelete.value = { id: projectId, name: projectName };
   showDeleteConfirm.value = true;
 }
@@ -509,7 +515,7 @@ async function confirmDelete() {
 /**
  * Cancels the delete confirmation dialog.
  */
-function cancelDelete() {
+function cancelDelete(): void {
   showDeleteConfirm.value = false;
   projectToDelete.value = null;
 }
@@ -519,21 +525,24 @@ function cancelDelete() {
  * @param {number} hours decimal hours
  * @returns {string} formatted time
  */
-function formatProjectHours(hours) {
+function formatProjectHours(hours: number): { hours: number; minutes: number } {
   return formatHoursToHM(hours);
 }
 
-function toHourMinuteLabel(hours) {
+function toHourMinuteLabel(hours: number): string {
   const value = formatProjectHours(hours);
   return `${value.hours}h ${value.minutes}m`;
 }
 
-function progressWidth(project) {
+function progressWidth(project: Project): number {
   const completion = Number(project?.completionPercent) || 0;
   return Math.max(0, Math.min(100, completion));
 }
 
-async function loadProjects() {
+/**
+ * Loads projects from the backend and toggles API fallback state.
+ */
+async function loadProjects(): Promise<void> {
   isLoading.value = true;
   errorMessage.value = '';
   try {

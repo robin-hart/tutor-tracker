@@ -1,7 +1,7 @@
 # TutorTimeTracker
 
 TutorTimeTracker is a full-stack implementation of the provided mockups using:
-- `frontend/`: Vue 3 + Vite + Vue Router + Tailwind CSS
+- `frontend/`: Vue 3 + TypeScript + Vite + Vue Router + Tailwind CSS
 - `api/`: Java 21 + Spring Boot REST API + MariaDB
 
 ## Goals Implemented
@@ -37,6 +37,19 @@ MariaDB is exposed on host port `3307` by default.
 cd frontend
 npm install
 npm run dev
+```
+
+Vue single-file components can be formatted with Prettier using:
+
+```bash
+npm run format:vue
+```
+
+Run strict frontend formatting and typing checks with:
+
+```bash
+npm run format:check:strict
+npm run typecheck
 ```
 
 The frontend runs at `http://localhost:5173` and calls `http://localhost:8080/api`.

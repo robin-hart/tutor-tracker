@@ -46,7 +46,7 @@
   </aside>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 
@@ -71,7 +71,7 @@ const isProjectSectionActive = computed(() =>
  * @param {string} name route name
  * @returns {boolean}
  */
-function isActive(name) {
+function isActive(name: string): boolean {
   return route.name === name;
 }
 </script>
