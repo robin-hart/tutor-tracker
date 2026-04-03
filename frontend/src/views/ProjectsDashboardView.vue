@@ -53,10 +53,13 @@
         </div>
 
         <div class="md:col-span-2">
-          <label class="text-xs text-on-surface-variant uppercase tracking-wider block mb-2"
+          <label
+            for="project-name"
+            class="text-xs text-on-surface-variant uppercase tracking-wider block mb-2"
             >Project Name</label
           >
           <input
+            id="project-name"
             v-model.trim="projectForm.name"
             class="w-full bg-surface-container-low rounded-lg px-3 py-2"
             placeholder="Project name"
@@ -65,10 +68,13 @@
         </div>
 
         <div class="md:col-span-3">
-          <label class="text-xs text-on-surface-variant uppercase tracking-wider block mb-2"
-            >Category</label
+          <p
+            id="project-category-label"
+            class="text-xs text-on-surface-variant uppercase tracking-wider block mb-2"
           >
-          <div class="flex flex-wrap gap-2">
+            Category
+          </p>
+          <div class="flex flex-wrap gap-2" role="group" aria-labelledby="project-category-label">
             <button
               v-for="category in categoryOptions"
               :key="category"
@@ -98,6 +104,7 @@
           </div>
           <input
             v-if="showNewCategoryInput"
+            id="project-category-custom"
             v-model.trim="newCategory"
             class="mt-3 w-full bg-surface-container-low rounded-lg px-3 py-2"
             placeholder="Enter new category"
@@ -106,10 +113,13 @@
         </div>
 
         <div class="md:col-span-3">
-          <label class="text-xs text-on-surface-variant uppercase tracking-wider block mb-2"
+          <label
+            for="project-institution"
+            class="text-xs text-on-surface-variant uppercase tracking-wider block mb-2"
             >Einrichtung</label
           >
           <input
+            id="project-institution"
             v-model.trim="projectForm.institution"
             class="w-full bg-surface-container-low rounded-lg px-3 py-2"
             placeholder="Institute or workplace"
@@ -118,10 +128,13 @@
         </div>
 
         <div class="md:col-span-3">
-          <label class="text-xs text-on-surface-variant uppercase tracking-wider block mb-2"
+          <label
+            for="project-target-hours"
+            class="text-xs text-on-surface-variant uppercase tracking-wider block mb-2"
             >Monthly Target Working Time</label
           >
           <input
+            id="project-target-hours"
             v-model.number="projectForm.targetMonthHours"
             class="w-full bg-surface-container-low rounded-lg px-3 py-2"
             min="0"
@@ -403,6 +416,9 @@ function resetProjectForm(): void {
   };
 }
 
+/**
+ * Opens the form in create mode and clears stale state.
+ */
 function openCreateProjectForm(): void {
   projectFormMode.value = 'create';
   editingProjectId.value = '';
@@ -412,12 +428,15 @@ function openCreateProjectForm(): void {
   showProjectForm.value = true;
 }
 
+/**
+ * Opens the form in edit mode and pre-fills values from the selected project.
+ */
 function openEditProject(project: Project): void {
   projectFormMode.value = 'edit';
   editingProjectId.value = project.id;
   projectForm.value = {
     name: project.name,
-    category: project.category,
+    category: project.category || 'GENERAL',
     institution: project.institution || '',
     targetMonthHours: Number(project.targetMonthHours) || 0,
     completionPercent: Number(project.completionPercent) || 0,
@@ -427,6 +446,9 @@ function openEditProject(project: Project): void {
   showProjectForm.value = true;
 }
 
+/**
+ * Closes the create/edit form and resets form state.
+ */
 function closeProjectForm(): void {
   showProjectForm.value = false;
   projectFormMode.value = 'create';
@@ -468,16 +490,24 @@ async function saveProject(): Promise<void> {
 
     closeProjectForm();
   } catch (error) {
-    errorMessage.value = error.message;
+    errorMessage.value = error instanceof Error ? error.message : String(error);
   }
 }
 
+/**
+ * Selects one of the existing category options.
+ *
+ * @param {string} category selected category label
+ */
 function selectCategory(category: string): void {
   projectForm.value.category = category;
   showNewCategoryInput.value = false;
   newCategory.value = '';
 }
 
+/**
+ * Enables custom category input mode.
+ */
 function openNewCategoryInput(): void {
   showNewCategoryInput.value = true;
 }
@@ -496,17 +526,19 @@ function openDeleteConfirm(projectId: string, projectName: string): void {
 /**
  * Confirms and executes project deletion.
  */
-async function confirmDelete() {
+async function confirmDelete(): Promise<void> {
   if (!projectToDelete.value) {
     return;
   }
+  const deletingProjectId = projectToDelete.value.id;
+
   try {
-    await deleteProject(projectToDelete.value.id);
-    projects.value = projects.value.filter((p) => p.id !== projectToDelete.value.id);
+    await deleteProject(deletingProjectId);
+    projects.value = projects.value.filter((p) => p.id !== deletingProjectId);
     showDeleteConfirm.value = false;
     projectToDelete.value = null;
   } catch (error) {
-    errorMessage.value = error.message;
+    errorMessage.value = error instanceof Error ? error.message : String(error);
     showDeleteConfirm.value = false;
     projectToDelete.value = null;
   }
@@ -521,15 +553,16 @@ function cancelDelete(): void {
 }
 
 /**
- * Formats hours as "Xh45" format
- * @param {number} hours decimal hours
- * @returns {string} formatted time
+ * Converts decimal hours into display-ready hour/minute values.
+ *
+ * @param {number | undefined} hours decimal hours from API payload
+ * @returns {{ hours: number; minutes: number }} hour/minute tuple
  */
-function formatProjectHours(hours: number): { hours: number; minutes: number } {
+function formatProjectHours(hours: number | undefined): { hours: number; minutes: number } {
   return formatHoursToHM(hours);
 }
 
-function toHourMinuteLabel(hours: number): string {
+function toHourMinuteLabel(hours: number | undefined): string {
   const value = formatProjectHours(hours);
   return `${value.hours}h ${value.minutes}m`;
 }
