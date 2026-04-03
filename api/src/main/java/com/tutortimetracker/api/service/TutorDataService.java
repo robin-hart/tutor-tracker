@@ -26,8 +26,6 @@ import com.tutortimetracker.api.repository.ReportRepository;
 import com.tutortimetracker.api.repository.StudentRepository;
 import com.tutortimetracker.api.repository.TimeslotRepository;
 import com.tutortimetracker.api.repository.TodaySlotRepository;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
@@ -38,7 +36,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -119,8 +116,6 @@ public class TutorDataService {
   private final TimeslotRepository timeslotRepository;
   private final TodaySlotRepository todaySlotRepository;
 
-  @PersistenceContext private EntityManager entityManager;
-
   /**
    * @param projectRepository project persistence dependency
    * @param projectGroupRepository project-group persistence dependency
@@ -168,34 +163,21 @@ public class TutorDataService {
     String normalizedName = request.name().trim();
     String normalizedCategory = request.category().trim();
     String normalizedInstitution = request.institution().trim();
-    String baseSlug = slugify(normalizedName);
+    String projectSlug = ensureUniqueProjectSlug(slugify(normalizedName));
 
-    for (int attempt = 0; attempt < 5; attempt++) {
-      String candidateSlug = generateProjectSlugCandidate(baseSlug, attempt);
+    ProjectEntity entity = new ProjectEntity();
+    entity.setSlug(projectSlug);
+    entity.setName(normalizedName);
+    entity.setCategory(normalizedCategory);
+    entity.setInstitution(normalizedInstitution);
+    entity.setTargetMonthHours(request.targetMonthHours());
+    entity.setTotalHours(0.0);
+    entity.setMonthHours(0.0);
+    entity.setCompletionPercent(request.completionPercent());
 
-      ProjectEntity entity = new ProjectEntity();
-      entity.setSlug(candidateSlug);
-      entity.setName(normalizedName);
-      entity.setCategory(normalizedCategory);
-      entity.setInstitution(normalizedInstitution);
-      entity.setTargetMonthHours(request.targetMonthHours());
-      entity.setTotalHours(0.0);
-      entity.setMonthHours(0.0);
-      entity.setCompletionPercent(request.completionPercent());
-
-      try {
-        ProjectEntity created = projectRepository.save(entity);
-        ensureDefaultGroup(created);
-        return toProjectSummary(created);
-      } catch (DataIntegrityViolationException ex) {
-        if (!isDuplicateSlugInsert(ex, candidateSlug)) {
-          throw ex;
-        }
-        clearPersistenceContext();
-      }
-    }
-
-    throw new IllegalStateException("Could not create project due to repeated slug collisions.");
+    ProjectEntity created = projectRepository.save(entity);
+    ensureDefaultGroup(created);
+    return toProjectSummary(created);
   }
 
   /**
@@ -829,44 +811,7 @@ public class TutorDataService {
     ProjectGroupEntity group = new ProjectGroupEntity();
     group.setName(groupName);
     group.setProject(project);
-
-    try {
-      projectGroupRepository.save(group);
-    } catch (DataIntegrityViolationException ex) {
-      if (!isDuplicateProjectGroupInsert(ex, groupName)) {
-        throw ex;
-      }
-      clearPersistenceContext();
-    }
-  }
-
-  /** Clears the current persistence context after handled write exceptions. */
-  private void clearPersistenceContext() {
-    if (entityManager != null) {
-      entityManager.clear();
-    }
-  }
-
-  /**
-   * Detects duplicate-key inserts for project group writes.
-   *
-   * @param exception persistence exception
-   * @param groupName attempted group name
-   * @return true when duplicate key points to project group uniqueness
-   */
-  private boolean isDuplicateProjectGroupInsert(
-      DataIntegrityViolationException exception, String groupName) {
-    Throwable current = exception;
-    while (current != null) {
-      String message = current.getMessage();
-      if (message != null
-          && message.contains("Duplicate entry")
-          && (message.contains("uk_project_group_name") || message.contains(groupName))) {
-        return true;
-      }
-      current = current.getCause();
-    }
-    return false;
+    projectGroupRepository.save(group);
   }
 
   /**
@@ -903,42 +848,4 @@ public class TutorDataService {
     return candidate;
   }
 
-  /**
-   * Generates a slug candidate for project creation retries.
-   *
-   * @param baseSlug raw slug stem
-   * @param attempt current retry index
-   * @return slug candidate
-   */
-  private String generateProjectSlugCandidate(String baseSlug, int attempt) {
-    if (attempt == 0) {
-      return ensureUniqueProjectSlug(baseSlug);
-    }
-
-    String normalizedBase = baseSlug.isBlank() ? "project" : baseSlug;
-    String randomSuffix = UUID.randomUUID().toString().substring(0, 8);
-    return normalizedBase + "-" + randomSuffix;
-  }
-
-  /**
-   * Detects duplicate-key inserts for project slug writes.
-   *
-   * @param exception persistence exception
-   * @param slugCandidate attempted slug
-   * @return true when duplicate key points to the attempted slug
-   */
-  private boolean isDuplicateSlugInsert(
-      DataIntegrityViolationException exception, String slugCandidate) {
-    Throwable current = exception;
-    while (current != null) {
-      String message = current.getMessage();
-      if (message != null
-          && message.contains("Duplicate entry")
-          && message.contains("'" + slugCandidate + "'")) {
-        return true;
-      }
-      current = current.getCause();
-    }
-    return false;
-  }
 }
