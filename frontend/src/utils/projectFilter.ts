@@ -1,23 +1,21 @@
+interface SearchableProject {
+  name?: string;
+  category?: string;
+}
+
 /**
- * Normalizes values for case-insensitive project filtering.
- *
- * @param {unknown} value
- * @returns {string}
+ * Normalizes unknown input for case-insensitive project searching.
  */
-export function normalizeForProjectSearch(value) {
+export function normalizeForProjectSearch(value: unknown): string {
   return String(value ?? '')
     .toLowerCase()
     .trim();
 }
 
 /**
- * Filters projects by a free-text query against project name or category.
- *
- * @param {Array<{name?: string, category?: string}>} projects
- * @param {string} query
- * @returns {Array<{name?: string, category?: string}>}
+ * Filters projects by name or category using a free-text query.
  */
-export function filterProjects(projects, query) {
+export function filterProjects<T extends SearchableProject>(projects: T[], query: string): T[] {
   const normalizedQuery = normalizeForProjectSearch(query);
   if (!normalizedQuery) {
     return projects;

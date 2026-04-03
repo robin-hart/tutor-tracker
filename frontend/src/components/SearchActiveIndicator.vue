@@ -17,25 +17,23 @@
   </section>
 </template>
 
-<script setup>
-defineProps({
-  query: {
-    type: String,
-    default: '',
-  },
-  shownCount: {
-    type: Number,
-    default: 0,
-  },
-  totalCount: {
-    type: Number,
-    default: 0,
-  },
-  entityLabel: {
-    type: String,
-    default: 'items',
-  },
-});
+<script setup lang="ts">
+withDefaults(
+  defineProps<{
+    query?: string;
+    shownCount?: number;
+    totalCount?: number;
+    entityLabel?: string;
+  }>(),
+  {
+    query: '',
+    shownCount: 0,
+    totalCount: 0,
+    entityLabel: 'items',
+  }
+);
 
-const emit = defineEmits(['clear']);
+const emit = defineEmits<{
+  (event: 'clear'): void;
+}>();
 </script>

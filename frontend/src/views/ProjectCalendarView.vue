@@ -345,7 +345,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AppSidebar from '../components/AppSidebar.vue';
@@ -353,6 +353,7 @@ import ConfirmDialog from '../components/ConfirmDialog.vue';
 import MainTopBar from '../components/MainTopBar.vue';
 import SearchActiveIndicator from '../components/SearchActiveIndicator.vue';
 import { deleteProjectTimeslot, getProjectCalendar, getProjects } from '../services/apiClient';
+import type { Project, Timeslot } from '../types/domain';
 import { formatHoursToHM } from '../utils/timeFormatter';
 
 /**
@@ -366,15 +367,15 @@ const projectInstitution = ref('—');
 const projectTargetHours = ref(0);
 const totalHours = ref(0);
 const monthHours = ref(0);
-const monthSlots = ref([]);
-const allSlots = ref([]);
+const monthSlots = ref<Timeslot[]>([]);
+const allSlots = ref<Timeslot[]>([]);
 const isLoading = ref(false);
 const errorMessage = ref('');
 const searchText = ref('');
 const activeMonth = ref(parseMonthFromQuery(route.query.month));
 const selectedDate = ref('');
 const showDeleteConfirm = ref(false);
-const slotToDelete = ref(null);
+const slotToDelete = ref<Timeslot | null>(null);
 
 const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const monthKey = computed(() => {
@@ -473,7 +474,10 @@ const selectedDayTitle = computed(() => {
   }).format(new Date(`${selectedDate.value}T00:00:00`));
 });
 
-async function loadCalendar() {
+/**
+ * Loads project metadata and calendar slots for the active month.
+ */
+async function loadCalendar(): Promise<void> {
   isLoading.value = true;
   errorMessage.value = '';
   try {
@@ -482,7 +486,9 @@ async function loadCalendar() {
       getProjects(),
     ]);
 
-    const projectSummary = projects.find((project) => project.id === projectId.value);
+    const projectSummary = (projects as Project[]).find(
+      (project) => project.id === projectId.value
+    );
     projectName.value = payload.projectName;
     totalHours.value = payload.totalHours;
     monthHours.value = payload.monthHours;
@@ -510,30 +516,30 @@ async function loadCalendar() {
   }
 }
 
-function getTodayIso() {
+function getTodayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-function selectDay(dateIso, inMonth) {
+function selectDay(dateIso: string, inMonth: boolean): void {
   if (!inMonth) {
     return;
   }
   selectedDate.value = dateIso;
 }
 
-function goToPreviousMonth() {
+function goToPreviousMonth(): void {
   const next = new Date(activeMonth.value);
   next.setMonth(next.getMonth() - 1);
   activeMonth.value = next;
 }
 
-function goToNextMonth() {
+function goToNextMonth(): void {
   const next = new Date(activeMonth.value);
   next.setMonth(next.getMonth() + 1);
   activeMonth.value = next;
 }
 
-function formatTime(timeValue) {
+function formatTime(timeValue: string): string {
   const raw = String(timeValue || '00:00').slice(0, 5);
   const [hours, minutes] = raw.split(':').map(Number);
   const safeHours = Number.isNaN(hours) ? 0 : hours;
@@ -542,7 +548,7 @@ function formatTime(timeValue) {
   return new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit' }).format(d);
 }
 
-function toMinutes(timeValue) {
+function toMinutes(timeValue: string): number {
   const raw = String(timeValue || '00:00').slice(0, 5);
   const [hours, minutes] = raw.split(':').map(Number);
   const safeHours = Number.isNaN(hours) ? 0 : hours;
@@ -550,11 +556,11 @@ function toMinutes(timeValue) {
   return safeHours * 60 + safeMinutes;
 }
 
-function sortByStartTimeAsc(left, right) {
+function sortByStartTimeAsc(left: string, right: string): number {
   return toMinutes(left) - toMinutes(right);
 }
 
-function formatPeriod(startTime, durationMinutes) {
+function formatPeriod(startTime: string, durationMinutes: number): string {
   const raw = String(startTime || '00:00').slice(0, 5);
   const [hours, minutes] = raw.split(':').map(Number);
   const safeHours = Number.isNaN(hours) ? 0 : hours;
@@ -565,12 +571,15 @@ function formatPeriod(startTime, durationMinutes) {
   return `${formatter.format(start)} - ${formatter.format(end)} (${Number(durationMinutes) || 0} min)`;
 }
 
-function openDeleteConfirm(slot) {
+/**
+ * Opens a confirmation modal for deleting a timeslot.
+ */
+function openDeleteConfirm(slot: Timeslot): void {
   slotToDelete.value = slot;
   showDeleteConfirm.value = true;
 }
 
-function cancelDelete() {
+function cancelDelete(): void {
   showDeleteConfirm.value = false;
   slotToDelete.value = null;
 }
@@ -589,14 +598,14 @@ async function confirmDelete() {
   }
 }
 
-function parseMonthFromQuery(monthQuery) {
+function parseMonthFromQuery(monthQuery: unknown): Date {
   if (typeof monthQuery === 'string' && /^\d{4}-\d{2}$/.test(monthQuery)) {
     return new Date(`${monthQuery}-01T00:00:00`);
   }
   return new Date();
 }
 
-function getMonthKeyFromDate(dateValue) {
+function getMonthKeyFromDate(dateValue: unknown): string {
   const raw = String(dateValue || '').slice(0, 7);
   if (/^\d{4}-\d{2}$/.test(raw)) {
     return raw;
@@ -604,7 +613,7 @@ function getMonthKeyFromDate(dateValue) {
   return monthKey.value;
 }
 
-function formatMonthLabel(value) {
+function formatMonthLabel(value: string): string {
   if (!/^\d{4}-\d{2}$/.test(value)) {
     return value;
   }
@@ -613,7 +622,14 @@ function formatMonthLabel(value) {
   );
 }
 
-function buildCalendarCells(monthDate) {
+interface CalendarCell {
+  key: string;
+  day: number;
+  dateIso: string;
+  inMonth: boolean;
+}
+
+function buildCalendarCells(monthDate: Date): CalendarCell[] {
   const year = monthDate.getFullYear();
   const month = monthDate.getMonth();
   const firstOfMonth = new Date(year, month, 1);

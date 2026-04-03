@@ -9,7 +9,8 @@
 ## Code style
 
 - Java: Follow Google Java Style Guide. Use Checkstyle enforcement.
-- JavaScript/TypeScript: Use ESLint enforcement and Prettier for formatting. Continuously change the prettier file to match the style of the existing codebase (carefully).
+- JavaScript/TypeScript: Use ESLint enforcement and Prettier for formatting. Continuously change the prettier file to match the style of the existing codebase (carefully). 
+Also use Prettier to check code style of vue files.
 
 SonarQube is running in the background and should be used to identify and fix code smells, bugs, and security vulnerabilities. Aim for a clean SonarQube report with no critical issues.
 

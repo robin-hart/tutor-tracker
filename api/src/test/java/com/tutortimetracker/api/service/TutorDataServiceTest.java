@@ -93,24 +93,22 @@ class TutorDataServiceTest {
   }
 
   @Test
-  void createProject_shouldRetryWhenInsertCollidesOnSlug() {
+  void createProject_shouldFailFastWhenInsertCollidesOnSlug() {
     when(projectRepository.findBySlug("timeslot-test-project")).thenReturn(Optional.empty());
     when(projectRepository.save(any(ProjectEntity.class)))
         .thenThrow(
             new DataIntegrityViolationException(
-                "Duplicate entry 'timeslot-test-project' for key 'project_slug'"))
-        .thenAnswer(invocation -> invocation.getArgument(0));
-    when(projectGroupRepository.findByProjectAndName(any(ProjectEntity.class), eq("Ungrouped")))
-        .thenReturn(Optional.empty());
+                "Duplicate entry 'timeslot-test-project' for key 'project_slug'"));
 
-    ProjectSummary summary =
-        service.createProject(
-            new ProjectCreateRequest(
-                "Timeslot Test Project", "GENERAL", "Physics Institute", 8.0, 0));
+    assertThrows(
+        DataIntegrityViolationException.class,
+        () ->
+            service.createProject(
+                new ProjectCreateRequest(
+                    "Timeslot Test Project", "GENERAL", "Physics Institute", 8.0, 0)));
 
-    assertTrue(summary.id().startsWith("timeslot-test-project"));
-    verify(projectRepository, times(2)).save(any(ProjectEntity.class));
-    verify(projectGroupRepository).save(any(ProjectGroupEntity.class));
+    verify(projectRepository).save(any(ProjectEntity.class));
+    verify(projectGroupRepository, never()).save(any(ProjectGroupEntity.class));
   }
 
   @Test
@@ -392,7 +390,7 @@ class TutorDataServiceTest {
   }
 
   @Test
-  void createProjectGroup_shouldIgnoreDuplicateInsertRace() {
+  void createProjectGroup_shouldFailFastOnDuplicateInsertRace() {
     ProjectEntity project = new ProjectEntity();
     project.setSlug("proj-1");
 
@@ -402,13 +400,11 @@ class TutorDataServiceTest {
     when(projectGroupRepository.save(any(ProjectGroupEntity.class)))
         .thenThrow(
             new DataIntegrityViolationException("Duplicate entry for uk_project_group_name"));
-    when(studentRepository.findByProjectAndGroupName(project, "Honors")).thenReturn(List.of());
 
-    ProjectGroupSummary result =
-        service.createProjectGroup("proj-1", new ProjectGroupCreateRequest("Honors"));
+    assertThrows(
+        DataIntegrityViolationException.class,
+        () -> service.createProjectGroup("proj-1", new ProjectGroupCreateRequest("Honors")));
 
-    assertEquals("Honors", result.name());
-    assertEquals(0, result.studentCount());
     verify(projectGroupRepository).save(any(ProjectGroupEntity.class));
   }
 

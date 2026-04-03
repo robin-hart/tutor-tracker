@@ -53,10 +53,13 @@
         </div>
 
         <div class="md:col-span-2">
-          <label class="text-xs text-on-surface-variant uppercase tracking-wider block mb-2"
+          <label
+            for="project-name"
+            class="text-xs text-on-surface-variant uppercase tracking-wider block mb-2"
             >Project Name</label
           >
           <input
+            id="project-name"
             v-model.trim="projectForm.name"
             class="w-full bg-surface-container-low rounded-lg px-3 py-2"
             placeholder="Project name"
@@ -65,10 +68,13 @@
         </div>
 
         <div class="md:col-span-3">
-          <label class="text-xs text-on-surface-variant uppercase tracking-wider block mb-2"
-            >Category</label
+          <p
+            id="project-category-label"
+            class="text-xs text-on-surface-variant uppercase tracking-wider block mb-2"
           >
-          <div class="flex flex-wrap gap-2">
+            Category
+          </p>
+          <div class="flex flex-wrap gap-2" role="group" aria-labelledby="project-category-label">
             <button
               v-for="category in categoryOptions"
               :key="category"
@@ -98,6 +104,7 @@
           </div>
           <input
             v-if="showNewCategoryInput"
+            id="project-category-custom"
             v-model.trim="newCategory"
             class="mt-3 w-full bg-surface-container-low rounded-lg px-3 py-2"
             placeholder="Enter new category"
@@ -106,10 +113,13 @@
         </div>
 
         <div class="md:col-span-3">
-          <label class="text-xs text-on-surface-variant uppercase tracking-wider block mb-2"
+          <label
+            for="project-institution"
+            class="text-xs text-on-surface-variant uppercase tracking-wider block mb-2"
             >Einrichtung</label
           >
           <input
+            id="project-institution"
             v-model.trim="projectForm.institution"
             class="w-full bg-surface-container-low rounded-lg px-3 py-2"
             placeholder="Institute or workplace"
@@ -118,10 +128,13 @@
         </div>
 
         <div class="md:col-span-3">
-          <label class="text-xs text-on-surface-variant uppercase tracking-wider block mb-2"
+          <label
+            for="project-target-hours"
+            class="text-xs text-on-surface-variant uppercase tracking-wider block mb-2"
             >Monthly Target Working Time</label
           >
           <input
+            id="project-target-hours"
             v-model.number="projectForm.targetMonthHours"
             class="w-full bg-surface-container-low rounded-lg px-3 py-2"
             min="0"
@@ -139,10 +152,7 @@
           >
             Cancel
           </button>
-          <button
-            class="px-4 py-2 rounded-lg bg-primary text-white font-bold"
-            @click="saveProject"
-          >
+          <button class="px-4 py-2 rounded-lg bg-primary text-white font-bold" @click="saveProject">
             {{ isEditingProject ? 'Save Changes' : 'Create' }}
           </button>
         </div>
@@ -268,7 +278,9 @@
               <p class="text-primary font-black font-headline text-xl leading-none">
                 {{ toHourMinuteLabel(project.monthHours) }}
                 <span class="text-on-surface-variant font-bold mx-1">/</span>
-                <span class="text-secondary">{{ toHourMinuteLabel(project.targetMonthHours) }}</span>
+                <span class="text-secondary">{{
+                  toHourMinuteLabel(project.targetMonthHours)
+                }}</span>
               </p>
             </div>
           </div>
@@ -324,7 +336,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import AppSidebar from '../components/AppSidebar.vue';
@@ -332,21 +344,22 @@ import ConfirmDialog from '../components/ConfirmDialog.vue';
 import MainTopBar from '../components/MainTopBar.vue';
 import SearchActiveIndicator from '../components/SearchActiveIndicator.vue';
 import { createProject, deleteProject, getProjects, updateProject } from '../services/apiClient';
+import type { Project, ProjectPayload } from '../types/domain';
 import { filterProjects } from '../utils/projectFilter';
 import { formatHoursToHM } from '../utils/timeFormatter';
 
 /**
  * Dashboard view for listing tutoring projects and high-level metrics.
  */
-const projects = ref([]);
+const projects = ref<Project[]>([]);
 const isLoading = ref(false);
 const errorMessage = ref('');
 const searchText = ref('');
 const showProjectForm = ref(false);
-const projectFormMode = ref('create');
-const editingProjectId = ref('');
+const projectFormMode = ref<'create' | 'edit'>('create');
+const editingProjectId = ref<string>('');
 const router = useRouter();
-const projectForm = ref({
+const projectForm = ref<ProjectPayload>({
   name: '',
   category: 'GENERAL',
   institution: '',
@@ -355,7 +368,7 @@ const projectForm = ref({
 });
 
 const showDeleteConfirm = ref(false);
-const projectToDelete = ref(null);
+const projectToDelete = ref<{ id: string; name: string } | null>(null);
 const apiUnavailable = ref(false);
 const showNewCategoryInput = ref(false);
 const newCategory = ref('');
@@ -386,11 +399,14 @@ const isEditingProject = computed(() => projectFormMode.value === 'edit');
  *
  * @param {string} projectId selected project id
  */
-function openCalendar(projectId) {
+function openCalendar(projectId: string): void {
   router.push({ name: 'project-calendar', params: { projectId } });
 }
 
-function resetProjectForm() {
+/**
+ * Restores the project form to its default state.
+ */
+function resetProjectForm(): void {
   projectForm.value = {
     name: '',
     category: 'GENERAL',
@@ -400,7 +416,10 @@ function resetProjectForm() {
   };
 }
 
-function openCreateProjectForm() {
+/**
+ * Opens the form in create mode and clears stale state.
+ */
+function openCreateProjectForm(): void {
   projectFormMode.value = 'create';
   editingProjectId.value = '';
   resetProjectForm();
@@ -409,12 +428,15 @@ function openCreateProjectForm() {
   showProjectForm.value = true;
 }
 
-function openEditProject(project) {
+/**
+ * Opens the form in edit mode and pre-fills values from the selected project.
+ */
+function openEditProject(project: Project): void {
   projectFormMode.value = 'edit';
   editingProjectId.value = project.id;
   projectForm.value = {
     name: project.name,
-    category: project.category,
+    category: project.category || 'GENERAL',
     institution: project.institution || '',
     targetMonthHours: Number(project.targetMonthHours) || 0,
     completionPercent: Number(project.completionPercent) || 0,
@@ -424,7 +446,10 @@ function openEditProject(project) {
   showProjectForm.value = true;
 }
 
-function closeProjectForm() {
+/**
+ * Closes the create/edit form and resets form state.
+ */
+function closeProjectForm(): void {
   showProjectForm.value = false;
   projectFormMode.value = 'create';
   editingProjectId.value = '';
@@ -433,7 +458,10 @@ function closeProjectForm() {
   resetProjectForm();
 }
 
-async function saveProject() {
+/**
+ * Persists a project in create or edit mode.
+ */
+async function saveProject(): Promise<void> {
   const resolvedCategory = showNewCategoryInput.value
     ? newCategory.value.trim()
     : String(projectForm.value.category || '').trim();
@@ -462,17 +490,25 @@ async function saveProject() {
 
     closeProjectForm();
   } catch (error) {
-    errorMessage.value = error.message;
+    errorMessage.value = error instanceof Error ? error.message : String(error);
   }
 }
 
-function selectCategory(category) {
+/**
+ * Selects one of the existing category options.
+ *
+ * @param {string} category selected category label
+ */
+function selectCategory(category: string): void {
   projectForm.value.category = category;
   showNewCategoryInput.value = false;
   newCategory.value = '';
 }
 
-function openNewCategoryInput() {
+/**
+ * Enables custom category input mode.
+ */
+function openNewCategoryInput(): void {
   showNewCategoryInput.value = true;
 }
 
@@ -482,7 +518,7 @@ function openNewCategoryInput() {
  * @param {string} projectId project id to delete
  * @param {string} projectName project name for display
  */
-function openDeleteConfirm(projectId, projectName) {
+function openDeleteConfirm(projectId: string, projectName: string): void {
   projectToDelete.value = { id: projectId, name: projectName };
   showDeleteConfirm.value = true;
 }
@@ -490,17 +526,19 @@ function openDeleteConfirm(projectId, projectName) {
 /**
  * Confirms and executes project deletion.
  */
-async function confirmDelete() {
+async function confirmDelete(): Promise<void> {
   if (!projectToDelete.value) {
     return;
   }
+  const deletingProjectId = projectToDelete.value.id;
+
   try {
-    await deleteProject(projectToDelete.value.id);
-    projects.value = projects.value.filter((p) => p.id !== projectToDelete.value.id);
+    await deleteProject(deletingProjectId);
+    projects.value = projects.value.filter((p) => p.id !== deletingProjectId);
     showDeleteConfirm.value = false;
     projectToDelete.value = null;
   } catch (error) {
-    errorMessage.value = error.message;
+    errorMessage.value = error instanceof Error ? error.message : String(error);
     showDeleteConfirm.value = false;
     projectToDelete.value = null;
   }
@@ -509,31 +547,35 @@ async function confirmDelete() {
 /**
  * Cancels the delete confirmation dialog.
  */
-function cancelDelete() {
+function cancelDelete(): void {
   showDeleteConfirm.value = false;
   projectToDelete.value = null;
 }
 
 /**
- * Formats hours as "Xh45" format
- * @param {number} hours decimal hours
- * @returns {string} formatted time
+ * Converts decimal hours into display-ready hour/minute values.
+ *
+ * @param {number | undefined} hours decimal hours from API payload
+ * @returns {{ hours: number; minutes: number }} hour/minute tuple
  */
-function formatProjectHours(hours) {
+function formatProjectHours(hours: number | undefined): { hours: number; minutes: number } {
   return formatHoursToHM(hours);
 }
 
-function toHourMinuteLabel(hours) {
+function toHourMinuteLabel(hours: number | undefined): string {
   const value = formatProjectHours(hours);
   return `${value.hours}h ${value.minutes}m`;
 }
 
-function progressWidth(project) {
+function progressWidth(project: Project): number {
   const completion = Number(project?.completionPercent) || 0;
   return Math.max(0, Math.min(100, completion));
 }
 
-async function loadProjects() {
+/**
+ * Loads projects from the backend and toggles API fallback state.
+ */
+async function loadProjects(): Promise<void> {
   isLoading.value = true;
   errorMessage.value = '';
   try {

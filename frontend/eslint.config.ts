@@ -1,9 +1,10 @@
 import js from '@eslint/js';
+import tsPlugin from '@typescript-eslint/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import pluginVue from 'eslint-plugin-vue';
-import tsPlugin from '@typescript-eslint/eslint-plugin';
 import globals from 'globals';
+import vueParser from 'vue-eslint-parser';
 
 export default [
   {
@@ -16,29 +17,7 @@ export default [
     ],
   },
   {
-    files: ['**/*.{js,mjs,cjs}'],
-    ...js.configs.recommended,
-    languageOptions: {
-      ecmaVersion: 'latest',
-      sourceType: 'module',
-      globals: {
-        ...globals.browser,
-        ...globals.node,
-      },
-    },
-  },
-  ...pluginVue.configs['flat/recommended'],
-  {
-    files: ['**/*.vue'],
-    languageOptions: {
-      globals: {
-        ...globals.browser,
-        ...globals.node,
-      },
-    },
-  },
-  {
-    files: ['**/*.ts'],
+    files: ['**/*.{ts,mts,cts}'],
     plugins: {
       '@typescript-eslint': tsPlugin,
     },
@@ -54,7 +33,25 @@ export default [
       },
     },
     rules: {
+      ...js.configs.recommended.rules,
+      'no-undef': 'off',
       '@typescript-eslint/no-explicit-any': 'warn',
+    },
+  },
+  ...pluginVue.configs['flat/recommended'],
+  {
+    files: ['**/*.vue'],
+    languageOptions: {
+      parser: vueParser,
+      parserOptions: {
+        parser: tsParser,
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+      },
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
     },
   },
   {

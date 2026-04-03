@@ -141,5 +141,3 @@ test.describe('UI smoke journeys', () => {
     expect(exportResponse.ok()).toBeTruthy();
   });
 });
-
-

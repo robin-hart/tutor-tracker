@@ -90,7 +90,9 @@
           <p v-if="errorMessage" class="text-sm text-error mt-5">{{ errorMessage }}</p>
           <p v-if="successMessage" class="text-sm text-primary mt-5">{{ successMessage }}</p>
 
-          <div class="px-0 pt-5 mt-5 border-t border-outline-variant flex items-center justify-end gap-3">
+          <div
+            class="px-0 pt-5 mt-5 border-t border-outline-variant flex items-center justify-end gap-3"
+          >
             <RouterLink :to="closeLink" class="px-6 py-3 text-sm font-bold text-on-surface-variant"
               >Cancel</RouterLink
             >
@@ -108,12 +110,13 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AppSidebar from '../components/AppSidebar.vue';
 import DayTimelineSelector from '../components/DayTimelineSelector.vue';
 import { getProjectTimeslot, saveTimeslot, updateProjectTimeslot } from '../services/apiClient';
+import type { TimeslotPayload } from '../types/domain';
 
 /**
  * Modal-like page for editing and saving a single tutoring timeslot.
@@ -134,7 +137,10 @@ const closeLink = computed(() => ({
   query: targetMonth.value ? { month: targetMonth.value } : undefined,
 }));
 
-function getRoundedCurrentTime() {
+/**
+ * Returns current time rounded to a 15-minute interval.
+ */
+function getRoundedCurrentTime(): string {
   const now = new Date();
   const totalMinutes = now.getHours() * 60 + now.getMinutes();
   const rounded = Math.round(totalMinutes / 15) * 15;
@@ -144,7 +150,7 @@ function getRoundedCurrentTime() {
   return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
 }
 
-const form = reactive({
+const form = reactive<TimeslotPayload>({
   title: '',
   description: '',
   durationMinutes: 90,
@@ -152,7 +158,7 @@ const form = reactive({
   startTime: getRoundedCurrentTime(),
 });
 
-async function loadExistingTimeslot() {
+async function loadExistingTimeslot(): Promise<void> {
   if (!isEditMode.value) {
     return;
   }
@@ -173,7 +179,10 @@ async function loadExistingTimeslot() {
   }
 }
 
-async function onSave() {
+/**
+ * Persists the current timeslot in create or edit mode.
+ */
+async function onSave(): Promise<void> {
   isSaving.value = true;
   errorMessage.value = '';
   successMessage.value = '';
