@@ -145,15 +145,15 @@ Validation and not-found errors return a consistent JSON structure:
 
 ## Run
 ```bash
-cd ..
-docker compose up -d mariadb
 cd api
 mvn spring-boot:run
 ```
 
+Local mode expects a local MariaDB installation on port `3306`.
+
 If needed, override connection values:
 ```bash
-set DB_URL=jdbc:mariadb://localhost:3307/tutortimetracker
+set DB_URL=jdbc:mariadb://localhost:3306/tutortimetracker
 set DB_USERNAME=tutortime
 set DB_PASSWORD=tutortime
 ```
@@ -176,7 +176,8 @@ repository root:
 docker compose up --build
 ```
 
-Note: Docker maps MariaDB to host port `3307` by default to avoid collisions with local MariaDB services on `3306`.
+In Docker mode, MariaDB is reachable only inside the Docker network at
+`jdbc:mariadb://mariadb:3306/tutortimetracker` and is not published to the host.
 
 ## Quality & Testing
 

@@ -24,11 +24,7 @@ TutorTimeTracker is a full-stack implementation of the provided mockups using:
 
 ### 1) Local Installation Mode
 
-Start MariaDB with Docker (backend and frontend run locally):
-
-```bash
-docker compose up -d mariadb
-```
+Start your local MariaDB installation on the default port `3306`.
 
 Start backend:
 
@@ -60,7 +56,8 @@ docker compose up --build
 Docker mode endpoints:
 - Frontend (nginx): `http://localhost:5173`
 - Backend API: `http://localhost:8080/api`
-- MariaDB host port: `3307`
+
+In Docker mode, MariaDB is internal to the Docker network and is not exposed on a host port.
 
 In Docker mode, LaTeX is installed inside the backend container and is used there as a local
 compiler by the backend process.
