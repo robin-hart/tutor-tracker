@@ -1,0 +1,53 @@
+services:
+  mariadb:
+    image: mariadb:11.4
+    container_name: tutortimetracker-mariadb
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: tutortimetracker
+      MARIADB_USER: tutortime
+      MARIADB_PASSWORD: tutortime
+      MARIADB_ROOT_PASSWORD: root
+    ports:
+      - "3307:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: tutortimetracker-backend
+    restart: unless-stopped
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:mariadb://mariadb:3306/tutortimetracker
+      DB_USERNAME: tutortime
+      DB_PASSWORD: tutortime
+      LATEX_COMMAND: pdflatex
+      LATEX_TIMEOUT_SECONDS: 30
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: /api
+    container_name: tutortimetracker-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+
+volumes:
+  mariadb_data:

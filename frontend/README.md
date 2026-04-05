@@ -71,6 +71,20 @@ npm run format:check:strict
 npm run format:vue:check
 ```
 
+## Docker Runtime
+
+The full Docker setup is managed at repository root (`../docker-compose.yml`).
+
+Run from the repository root:
+
+```bash
+docker compose up --build
+```
+
+In this mode:
+- Frontend is served by nginx on `http://localhost:5173`.
+- `/api` requests are reverse-proxied by nginx to the backend container.
+
 Format Vue files (single-file components) with Prettier:
 
 ```bash

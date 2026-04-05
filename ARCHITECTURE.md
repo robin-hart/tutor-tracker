@@ -16,6 +16,17 @@ The project transforms static UI mockups into a navigable SPA and a backing REST
 - Monthly reports are generated per project from timeslots in a selected month.
 - Calendar interactions are date-driven: selecting a day filters visible timeslots and anchors timeslot creation to that date.
 
+## 2.2 Runtime Modes
+- Local installation mode:
+  - Frontend runs with Vite.
+  - Backend runs with Spring Boot.
+  - MariaDB is typically started via Docker.
+  - PDF export uses a locally installed LaTeX command (`pdflatex` by default).
+- Full Docker mode:
+  - A root-level Docker Compose stack runs MariaDB, backend, and frontend.
+  - Frontend is served by nginx and proxies `/api` to the backend service.
+  - LaTeX is installed in the backend container, so the backend still uses a local LaTeX command within that container.
+
 ## 3. Frontend Design Decisions
 - Preserved visual language using Tailwind token palette from provided designs.
 - Implemented shared shell components (`AppSidebar`, `MainTopBar`) for consistency.

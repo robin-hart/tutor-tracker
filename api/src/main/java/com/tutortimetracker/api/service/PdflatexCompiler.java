@@ -19,40 +19,14 @@ public class PdflatexCompiler implements LatexCompiler {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(PdflatexCompiler.class);
 
-  private final String runner;
   private final String localLatexCommand;
-  private final String dockerCommand;
-  private final String dockerImage;
-  private final String dockerExecutable;
-  private final String composeService;
-  private final String composeHostWorkRoot;
-  private final String composeContainerWorkRoot;
-  private final String composeProjectDirectory;
   private final long timeoutSeconds;
 
   public PdflatexCompiler(
-      @Value("${report.export.latex.runner:compose}") String runner,
       @Value("${report.export.latex.local.command:${LATEX_COMMAND:pdflatex}}")
           String localLatexCommand,
-      @Value("${report.export.latex.docker.command:pdflatex}") String dockerCommand,
-      @Value("${report.export.latex.docker.image:tutor-tracker-latex:latest}") String dockerImage,
-      @Value("${report.export.latex.docker.executable:docker}") String dockerExecutable,
-      @Value("${report.export.latex.compose.service:latex}") String composeService,
-      @Value("${report.export.latex.compose.host-work-root:.latex-work}")
-          String composeHostWorkRoot,
-      @Value("${report.export.latex.compose.container-work-root:/latex-work}")
-          String composeContainerWorkRoot,
-      @Value("${report.export.latex.compose.project-directory:.}") String composeProjectDirectory,
       @Value("${report.export.latex.timeout-seconds:30}") long timeoutSeconds) {
-    this.runner = runner;
     this.localLatexCommand = localLatexCommand;
-    this.dockerCommand = dockerCommand;
-    this.dockerImage = dockerImage;
-    this.dockerExecutable = dockerExecutable;
-    this.composeService = composeService;
-    this.composeHostWorkRoot = composeHostWorkRoot;
-    this.composeContainerWorkRoot = composeContainerWorkRoot;
-    this.composeProjectDirectory = composeProjectDirectory;
     this.timeoutSeconds = timeoutSeconds;
   }
 
@@ -60,7 +34,7 @@ public class PdflatexCompiler implements LatexCompiler {
   public byte[] compileToPdf(String latexSource) {
     Path workDir = null;
     try {
-      workDir = createWorkDirectory();
+      workDir = Files.createTempDirectory("monthly-report-");
       Path texFile = workDir.resolve("report.tex");
       Files.writeString(texFile, latexSource, StandardCharsets.UTF_8);
 
@@ -75,8 +49,8 @@ public class PdflatexCompiler implements LatexCompiler {
       return Files.readAllBytes(pdfFile);
     } catch (IOException ex) {
       throw new PdfReportGenerationException(
-          "Failed to generate report PDF. Ensure Docker is installed and running, or configure"
-              + " runner=local with a local LaTeX compiler.",
+          "Failed to generate report PDF. Ensure a local LaTeX compiler is installed and"
+              + " accessible via LATEX_COMMAND.",
           ex);
     } finally {
       deleteDirectoryQuietly(workDir);
@@ -84,67 +58,16 @@ public class PdflatexCompiler implements LatexCompiler {
   }
 
   private void runLatex(Path workDir, Path texFile) throws IOException {
-    List<String> command;
-    Path processDirectory = workDir;
+    List<String> command =
+        List.of(
+            localLatexCommand,
+            "-interaction=nonstopmode",
+            "-halt-on-error",
+            "-output-directory",
+            workDir.toString(),
+            texFile.getFileName().toString());
 
-    if ("compose".equalsIgnoreCase(runner)) {
-      String jobFolder = workDir.getFileName().toString();
-      String containerOutputDirectory = composeContainerWorkRoot + "/" + jobFolder;
-      command =
-          List.of(
-              dockerExecutable,
-              "compose",
-              "exec",
-              "-T",
-              "-w",
-              containerOutputDirectory,
-              composeService,
-              dockerCommand,
-              "-interaction=nonstopmode",
-              "-halt-on-error",
-              "-output-directory",
-              containerOutputDirectory,
-              texFile.getFileName().toString());
-      processDirectory = Path.of(composeProjectDirectory);
-    } else if ("docker".equalsIgnoreCase(runner)) {
-      command =
-          List.of(
-              dockerExecutable,
-              "run",
-              "--rm",
-              "-v",
-              workDir.toAbsolutePath() + ":/work",
-              "-w",
-              "/work",
-              dockerImage,
-              dockerCommand,
-              "-interaction=nonstopmode",
-              "-halt-on-error",
-              "-output-directory",
-              "/work",
-              texFile.getFileName().toString());
-    } else {
-      command =
-          List.of(
-              localLatexCommand,
-              "-interaction=nonstopmode",
-              "-halt-on-error",
-              "-output-directory",
-              workDir.toString(),
-              texFile.getFileName().toString());
-    }
-
-    runProcess(command, processDirectory);
-  }
-
-  private Path createWorkDirectory() throws IOException {
-    if (!"compose".equalsIgnoreCase(runner)) {
-      return Files.createTempDirectory("monthly-report-");
-    }
-
-    Path hostRoot = Path.of(composeHostWorkRoot).toAbsolutePath();
-    Files.createDirectories(hostRoot);
-    return Files.createTempDirectory(hostRoot, "monthly-report-");
+    runProcess(command, workDir);
   }
 
   private void runProcess(List<String> command, Path workDir) throws IOException {
@@ -171,9 +94,7 @@ public class PdflatexCompiler implements LatexCompiler {
     String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
     if (process.exitValue() != 0) {
       LOGGER.error(
-          "LaTeX compilation failed (runner='{}'). Error snippet:\n{}\n--- Full output tail"
-              + " ---\n{}",
-          runner,
+          "LaTeX compilation failed. Error snippet:\n{}\n--- Full output tail ---\n{}",
           extractErrorSnippet(output),
           abbreviate(output));
       throw new PdfReportGenerationException(

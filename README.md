@@ -22,22 +22,48 @@ TutorTimeTracker is a full-stack implementation of the provided mockups using:
 
 ## Run Instructions
 
-### 1) Backend
+### 1) Local Installation Mode
+
+Start MariaDB with Docker (backend and frontend run locally):
+
+```bash
+docker compose up -d mariadb
+```
+
+Start backend:
+
 ```bash
 cd api
-docker compose up -d
 mvn spring-boot:run
 ```
 
-The API runs at `http://localhost:8080`.
-MariaDB is exposed on host port `3307` by default.
+Start frontend:
 
-### 2) Frontend
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
+
+Local mode requirements:
+- Install LaTeX locally and ensure `pdflatex` is available in your PATH.
+- The backend always uses a local LaTeX command (`LATEX_COMMAND`, default `pdflatex`).
+
+### 2) Full Docker Mode (Alternative Runtime)
+
+Run the whole stack (MariaDB + backend + frontend via nginx):
+
+```bash
+docker compose up --build
+```
+
+Docker mode endpoints:
+- Frontend (nginx): `http://localhost:5173`
+- Backend API: `http://localhost:8080/api`
+- MariaDB host port: `3307`
+
+In Docker mode, LaTeX is installed inside the backend container and is used there as a local
+compiler by the backend process.
 
 Vue single-file components can be formatted with Prettier using:
 
@@ -52,7 +78,8 @@ npm run format:check:strict
 npm run typecheck
 ```
 
-The frontend runs at `http://localhost:5173` and calls `http://localhost:8080/api`.
+In local installation mode, the frontend runs at `http://localhost:5173` and calls
+`http://localhost:8080/api`.
 
 ## API Surface (Summary)
 - `GET /api/health`
