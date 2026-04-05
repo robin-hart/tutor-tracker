@@ -203,6 +203,13 @@ function compareMonthKeys(left: string, right: string): number {
   return left.localeCompare(right);
 }
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
+}
+
 function monthDistanceInclusive(startMonthKey: string, endMonthKey: string): number {
   const start = monthKeyToDate(startMonthKey);
   const end = monthKeyToDate(endMonthKey);
@@ -226,7 +233,7 @@ function formatSignedDurationMinutes(totalMinutes: number): string {
 function findFirstTimeslotMonthKey(): string | null {
   const monthKeys = (allTimeslots.value || [])
     .map((slot) => normalizeMonthKey(slot.date))
-    .filter(Boolean)
+    .filter((monthKey): monthKey is string => monthKey !== null)
     .sort(compareMonthKeys);
   return monthKeys[0] || null;
 }
@@ -251,7 +258,7 @@ async function loadProjectCalendarData(projectId: string): Promise<void> {
     if (requestVersion !== calendarRequestVersion.value || projectId !== selectedProjectId.value) {
       return;
     }
-    errorMessage.value = error.message;
+    errorMessage.value = getErrorMessage(error);
     allTimeslots.value = [];
     selectedProjectName.value = '';
   }
@@ -262,13 +269,13 @@ async function resolveProjectStartMonth(projectId: string): Promise<string> {
     const calendar = await getProjectCalendar(projectId);
     const slotMonthKeys = (calendar.allSlots || [])
       .map((slot) => normalizeMonthKey(slot.date))
-      .filter(Boolean);
+      .filter((monthKey): monthKey is string => monthKey !== null);
 
     if (slotMonthKeys.length === 0) {
       return new Date().toISOString().slice(0, 7);
     }
 
-    return slotMonthKeys.sort()[0];
+    return slotMonthKeys.sort(compareMonthKeys)[0] ?? new Date().toISOString().slice(0, 7);
   } catch {
     return new Date().toISOString().slice(0, 7);
   }
@@ -358,7 +365,7 @@ async function downloadReportForMonth(monthKey: string): Promise<void> {
 
     URL.revokeObjectURL(objectUrl);
   } catch (error) {
-    errorMessage.value = error.message;
+    errorMessage.value = getErrorMessage(error);
   }
 }
 
@@ -377,7 +384,7 @@ onMounted(async () => {
     await loadProjectCalendarData(selectedProjectId.value);
   } catch (error) {
     console.warn('Using fallback report/project data because API is unavailable.', error);
-    errorMessage.value = error.message;
+    errorMessage.value = getErrorMessage(error);
     projects.value = [
       {
         id: 'math-grade-10',

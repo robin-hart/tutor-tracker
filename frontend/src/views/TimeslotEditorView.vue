@@ -137,6 +137,13 @@ const closeLink = computed(() => ({
   query: targetMonth.value ? { month: targetMonth.value } : undefined,
 }));
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
+}
+
 /**
  * Returns current time rounded to a 15-minute interval.
  */
@@ -173,7 +180,7 @@ async function loadExistingTimeslot(): Promise<void> {
     form.date = slot.date || form.date;
     form.startTime = String(slot.startTime || form.startTime).slice(0, 5);
   } catch (error) {
-    errorMessage.value = error.message;
+    errorMessage.value = getErrorMessage(error);
   } finally {
     isLoading.value = false;
   }
@@ -198,7 +205,7 @@ async function onSave(): Promise<void> {
       router.push(closeLink.value);
     }, 300);
   } catch (error) {
-    errorMessage.value = error.message;
+    errorMessage.value = getErrorMessage(error);
     console.warn('Could not persist timeslot to API.', error);
   } finally {
     isSaving.value = false;
