@@ -24,9 +24,9 @@ test.describe('Reports', () => {
     const projectResponse = await setupPage.request.post(`${apiBaseUrl}/api/projects`, {
       data: {
         name: `Report Test Project ${Date.now()}`,
+        institution: 'Report Institute',
         category: 'GENERAL',
-        totalHours: 0,
-        monthHours: 0,
+        targetMonthHours: 10,
         completionPercent: 0,
       },
     });
@@ -143,9 +143,9 @@ test.describe('Reports', () => {
     const projectResponse = await tempPage.request.post(`${apiBaseUrl}/api/projects`, {
       data: {
         name: `Zero Hours Test Project ${Date.now()}`,
+        institution: 'Test Institute',
         category: 'TEST',
-        totalHours: 0,
-        monthHours: 0,
+        targetMonthHours: 8,
         completionPercent: 0,
       },
     });
@@ -186,7 +186,9 @@ test.describe('Reports', () => {
 
     // Wait for the month list and refreshed project data
     await page.locator('table tbody tr').first().waitFor({ state: 'visible' });
-    await expect(page.locator('table tbody tr').first().locator('td').nth(1)).toContainText(projName);
+    await expect(page.locator('table tbody tr').first().locator('td').nth(1)).toContainText(
+      projName
+    );
 
     // Get all rows in the table
     const rows = await page.locator('table tbody tr').all();
@@ -206,6 +208,83 @@ test.describe('Reports', () => {
       }
     }
   });
+
+  test('should show institution, target hours, formatted totals and transfer state in month list', async () => {
+    const browser = page.context().browser();
+    expect(browser).not.toBeNull();
+    if (!browser) {
+      throw new Error('Browser instance is not available in Playwright context.');
+    }
+
+    const tempContext = await browser.newContext();
+    const tempPage = await tempContext.newPage();
+
+    const projectResponse = await tempPage.request.post(`${apiBaseUrl}/api/projects`, {
+      data: {
+        name: `Carryover Smoke Project ${Date.now()}`,
+        institution: 'Carryover Institute',
+        category: 'GENERAL',
+        targetMonthHours: 10,
+        completionPercent: 0,
+      },
+    });
+
+    expect(projectResponse.ok()).toBeTruthy();
+    const project = (await projectResponse.json()) as { id: string; name: string };
+
+    const slotPayloads = [
+      { title: 'Jan 1', date: '2026-01-06', durationMinutes: 120 },
+      { title: 'Jan 2', date: '2026-01-20', durationMinutes: 120 },
+      { title: 'Mar 1', date: '2026-03-12', durationMinutes: 180 },
+      { title: 'Apr 1', date: '2026-04-03', durationMinutes: 432 },
+      { title: 'Apr 2', date: '2026-04-09', durationMinutes: 432 },
+      { title: 'Apr 3', date: '2026-04-15', durationMinutes: 432 },
+      { title: 'Apr 4', date: '2026-04-21', durationMinutes: 432 },
+      { title: 'Apr 5', date: '2026-04-27', durationMinutes: 432 },
+    ];
+
+    for (const slot of slotPayloads) {
+      const slotResponse = await tempPage.request.post(
+        `${apiBaseUrl}/api/projects/${project.id}/timeslots`,
+        {
+          data: {
+            title: slot.title,
+            description: `Smoke slot ${slot.title}`,
+            durationMinutes: slot.durationMinutes,
+            date: slot.date,
+            startTime: '09:00',
+          },
+        }
+      );
+      expect(slotResponse.ok()).toBeTruthy();
+    }
+
+    await tempContext.close();
+
+    await page.goto('/reports');
+    await expect(page.getByRole('heading', { name: 'Reports & Exports' })).toBeVisible();
+
+    await page.getByTestId('report-project-select').selectOption({ value: project.id });
+    await page.locator('table tbody tr').first().waitFor({ state: 'visible' });
+
+    await expect(page.getByTestId('report-project-institution')).toContainText(
+      'Carryover Institute'
+    );
+    await expect(page.getByTestId('report-project-target')).toContainText('10h 00min');
+
+    const firstTotalHours = page.getByTestId('month-total-hours').first();
+    await expect(firstTotalHours).toContainText('h');
+    await expect(firstTotalHours).toContainText('min');
+    await expect(firstTotalHours).not.toContainText('hrs');
+
+    const firstTransfer = page.getByTestId('month-transfer-next').first();
+    await expect(firstTransfer).toContainText('3h 00min');
+
+    const januaryRow = page.locator('table tbody tr').filter({ hasText: 'Januar 2026' }).first();
+    await expect(januaryRow).toBeVisible();
+    await expect(januaryRow.getByTestId('month-transfer-next')).toContainText('-6h 00min');
+    await expect(
+      page.locator('table tbody tr').filter({ hasText: project.name }).first()
+    ).toBeVisible();
+  });
 });
-
-

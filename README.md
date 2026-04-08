@@ -1,7 +1,7 @@
 # TutorTimeTracker
 
 TutorTimeTracker is a full-stack implementation of the provided mockups using:
-- `frontend/`: Vue 3 + Vite + Vue Router + Tailwind CSS
+- `frontend/`: Vue 3 + TypeScript + Vite + Vue Router + Tailwind CSS
 - `api/`: Java 21 + Spring Boot REST API + MariaDB
 
 ## Goals Implemented
@@ -22,24 +22,78 @@ TutorTimeTracker is a full-stack implementation of the provided mockups using:
 
 ## Run Instructions
 
-### 1) Backend
+### 1) Local Installation Mode
+
+Start your local MariaDB installation on the default port `3306`.
+
+Before starting the backend, copy [.env.example](.env.example) to [.env](.env) in the repository
+root and keep the database credentials there. The backend development profile reads that file on
+startup.
+
+Start backend:
+
 ```bash
 cd api
-docker compose up -d
 mvn spring-boot:run
 ```
 
-The API runs at `http://localhost:8080`.
-MariaDB is exposed on host port `3307` by default.
+The backend defaults to the `development` profile in local mode.
+In this profile, JPA runs with `create-drop`, so the schema is recreated on every start.
 
-### 2) Frontend
+Start frontend:
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-The frontend runs at `http://localhost:5173` and calls `http://localhost:8080/api`.
+Local mode requirements:
+- Install LaTeX locally and ensure `pdflatex` is available in your PATH.
+- The backend always uses a local LaTeX command (`LATEX_COMMAND`, default `pdflatex`).
+
+### 2) Full Docker Mode (Alternative Runtime)
+
+Run the whole stack (MariaDB + backend + frontend via nginx):
+
+```bash
+docker compose up --build
+```
+
+Docker mode endpoints:
+- Frontend (nginx): `http://localhost:5173` by default
+- Backend API: `http://localhost:8080/api`
+
+To change the published frontend port, edit `FRONTEND_HOST_PORT` in the repository root
+[.env](.env) file.
+
+In Docker mode, MariaDB is internal to the Docker network and is not exposed on a host port.
+
+In Docker mode, LaTeX is installed inside the backend container and is used there as a local
+compiler by the backend process.
+
+Vue single-file components can be formatted with Prettier using:
+
+```bash
+npm run format:vue
+```
+
+Run strict frontend formatting and typing checks with:
+
+```bash
+npm run format:check:strict
+npm run typecheck
+```
+
+In local installation mode, the frontend runs at `http://localhost:5173` and calls
+`http://localhost:8080/api`.
+
+### Stage Behavior
+
+- Local backend runs with `development` by default (`SPRING_PROFILES_ACTIVE` not set).
+- Docker backend always runs with `production` (`SPRING_PROFILES_ACTIVE=production`).
+- In `production`, schema changes are managed by Flyway migrations and Hibernate runs in
+  `validate` mode, so existing database rows are not dropped on startup.
 
 ## API Surface (Summary)
 - `GET /api/health`

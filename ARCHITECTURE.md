@@ -16,6 +16,17 @@ The project transforms static UI mockups into a navigable SPA and a backing REST
 - Monthly reports are generated per project from timeslots in a selected month.
 - Calendar interactions are date-driven: selecting a day filters visible timeslots and anchors timeslot creation to that date.
 
+## 2.2 Runtime Modes
+- Local installation mode:
+  - Frontend runs with Vite.
+  - Backend runs with Spring Boot.
+  - MariaDB is typically started via Docker.
+  - PDF export uses a locally installed LaTeX command (`pdflatex` by default).
+- Full Docker mode:
+  - A root-level Docker Compose stack runs MariaDB, backend, and frontend.
+  - Frontend is served by nginx and proxies `/api` to the backend service.
+  - LaTeX is installed in the backend container, so the backend still uses a local LaTeX command within that container.
+
 ## 3. Frontend Design Decisions
 - Preserved visual language using Tailwind token palette from provided designs.
 - Implemented shared shell components (`AppSidebar`, `MainTopBar`) for consistency.
@@ -26,6 +37,40 @@ The project transforms static UI mockups into a navigable SPA and a backing REST
 - Added JavaDoc at class and method level for maintainability.
 - Centralized persistence mapping in `TutorDataService` to keep controllers thin.
 - Seeded startup data in `DemoDataSeeder` for immediate mockup parity.
+
+## 4.1 Database Evolution Model
+The backend uses two runtime stages for database behavior:
+
+- `development`
+  - Local-first workflow for active implementation.
+  - Hibernate uses `create-drop` so the schema is recreated on each startup.
+  - Demo data seeding and legacy cleanup helpers are allowed.
+- `production`
+  - Safe runtime for Docker and later real deployments.
+  - Hibernate uses `validate` so no tables are dropped or recreated on startup.
+  - Flyway applies versioned migrations from `src/main/resources/db/migration`.
+
+Database evolution rules:
+
+- Never edit a migration file after it has been applied in any shared environment.
+- Add a new migration for every schema change.
+- Prefer expand-contract changes for breaking schema work.
+  - Expand: add new columns, tables, or constraints in a backward-compatible way.
+  - Backfill: migrate data into the new structure.
+  - Contract: remove legacy columns or code only after the new path is deployed and stable.
+- Treat destructive schema changes as a later release step, not as part of the first code change.
+
+Migration naming convention:
+
+- `V2__add_student_email.sql`
+- `V3__backfill_student_email.sql`
+- `V4__drop_legacy_student_notes.sql`
+
+Validation expectations:
+
+- Fresh database startup must succeed from migration version 1 to the latest version.
+- Upgrade startup must succeed from the previous release schema to the current release schema.
+- Production Docker startup must run with `production` only.
 
 ## 5. Integration Contract
 Frontend service module `src/services/apiClient.js` maps one function per endpoint.
@@ -51,3 +96,4 @@ Frontend service module `src/services/apiClient.js` maps one function per endpoi
 - Add authentication and project ownership checks.
 - Introduce OpenAPI generation and contract tests.
 - Add component-level visual regression tests.
+- Add dedicated migration upgrade tests for production schema evolution.

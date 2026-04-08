@@ -13,9 +13,9 @@ async function createSmokeProject(
   const response = await request.post(`${apiBaseUrl}/api/projects`, {
     data: {
       name: projectName,
+      institution: `Institute ${suffix}`,
       category: 'GENERAL',
-      totalHours: 0,
-      monthHours: 0,
+      targetMonthHours: 10,
       completionPercent: 0,
     },
   });
@@ -36,6 +36,8 @@ test.describe('UI smoke journeys', () => {
     const projectName = `PW UI Smoke ${Date.now()}`;
     await page.getByRole('button', { name: /new project/i }).click();
     await page.getByPlaceholder('Project name').fill(projectName);
+    await page.getByPlaceholder('Institute or workplace').fill('Smoke Institute');
+    await page.getByPlaceholder('12.5').fill('10');
     await page
       .getByRole('button', { name: /create/i })
       .last()
@@ -50,6 +52,10 @@ test.describe('UI smoke journeys', () => {
     await page.goto(`/projects/${project.id}/calendar`);
 
     await expect(page.getByRole('heading', { name: project.name })).toBeVisible();
+    await expect(page.getByTestId('calendar-project-institution')).toContainText(
+      `Institute Calendar`
+    );
+    await expect(page.getByTestId('calendar-project-target')).toContainText('10 hrs 00 min');
     await expect(page.getByRole('button', { name: 'Prev' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Next' })).toBeVisible();
   });
@@ -79,8 +85,12 @@ test.describe('UI smoke journeys', () => {
     await expect(page.getByRole('heading', { name: 'Session Log' })).toBeVisible();
     await page.getByLabel('Title').fill(title);
     await page.getByLabel('Description').fill('Smoke test timeslot creation');
-    await page.locator('input[type="number"]').fill('60');
-    await page.locator('input[type="time"]').fill('14:00');
+
+    const timeline = page.getByTestId('timeline-scroll');
+    await timeline.click({ position: { x: 90, y: 180 } });
+
+    await page.getByTestId('timeline-duration-edit').click();
+    await page.getByTestId('timeline-duration-option-60').click();
 
     await page.getByRole('button', { name: 'Save Session' }).click();
     await page.waitForURL(`**/projects/${project.id}/calendar**`);
@@ -131,5 +141,3 @@ test.describe('UI smoke journeys', () => {
     expect(exportResponse.ok()).toBeTruthy();
   });
 });
-
-

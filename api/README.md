@@ -145,16 +145,44 @@ Validation and not-found errors return a consistent JSON structure:
 
 ## Run
 ```bash
-docker compose up -d
+cd api
 mvn spring-boot:run
+```
+
+Local mode expects a local MariaDB installation on port `3306`.
+
+By default, local startup uses the `development` profile:
+
+- `spring.jpa.hibernate.ddl-auto=create-drop`
+- Demo seed data is inserted on first boot
+- Legacy local schema cleanup runs automatically
+- Database credentials are loaded from the repository root [.env](../.env) file.
+
+Copy [.env.example](../.env.example) to [.env](../.env) before starting the backend.
+
+Set another profile explicitly if needed:
+
+```bash
+set SPRING_PROFILES_ACTIVE=production
 ```
 
 If needed, override connection values:
 ```bash
-set DB_URL=jdbc:mariadb://localhost:3307/tutortimetracker
+set DB_URL=jdbc:mariadb://localhost:3306/tutortimetracker
 set DB_USERNAME=tutortime
 set DB_PASSWORD=tutortime
 ```
+
+If the local MariaDB user does not exist yet, create it as a database administrator first:
+
+```sql
+CREATE USER 'tutortime'@'localhost' IDENTIFIED BY 'tutortime';
+GRANT ALL PRIVILEGES ON tutortimetracker.* TO 'tutortime'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+If the backend runs from Docker against a local MariaDB server, use `'%'` instead of
+`'localhost'` for the host part.
 
 Optional LaTeX export settings:
 ```bash
@@ -162,10 +190,66 @@ set LATEX_COMMAND=pdflatex
 set LATEX_TIMEOUT_SECONDS=30
 ```
 
-Install a LaTeX distribution (for example TeX Live or MiKTeX) so `pdflatex` is available on your
-PATH when using PDF export.
+LaTeX export always uses a local command from the backend runtime environment.
+- Local installation mode: install LaTeX on your machine and ensure `LATEX_COMMAND` is on PATH.
+- Full Docker mode: LaTeX is installed inside the backend container, so the backend can execute
+  `pdflatex` locally inside that container.
 
-Note: Docker maps MariaDB to host port `3307` by default to avoid collisions with local MariaDB services on `3306`.
+To run the full Docker stack (frontend via nginx + backend + MariaDB), run this from the
+repository root:
+
+```bash
+docker compose up --build
+```
+
+In Docker mode, MariaDB is reachable only inside the Docker network at
+`jdbc:mariadb://mariadb:3306/tutortimetracker` and is not published to the host.
+
+Docker mode always starts the backend with the `production` profile.
+
+The frontend host port is controlled by `FRONTEND_HOST_PORT` in the repository root `.env` file.
+The default is `5173`.
+
+Production profile behavior:
+
+- `spring.jpa.hibernate.ddl-auto=validate`
+- Flyway migrations are enabled from `src/main/resources/db/migration`
+- Existing data is preserved on restart (no `create-drop`)
+
+## Database Evolution Policy
+
+This project follows a forward-only database evolution model.
+
+### Rules
+
+- Never edit a migration after it has been applied in any shared environment.
+- Put every schema change into a new `Vx__description.sql` file.
+- Use expand-contract changes for breaking schema updates.
+  - Expand: add new structures without breaking existing code.
+  - Backfill: move or derive data into the new structure.
+  - Contract: remove the legacy path only after the new path is deployed.
+- Do not rely on production Hibernate DDL generation.
+- Treat destructive changes as deliberate later-stage migrations, not as startup behavior.
+
+### Recommended migration workflow
+
+1. Implement the application change in a feature branch.
+2. Add the corresponding Flyway migration.
+3. Run `mvn test` locally.
+4. Start the Docker stack and confirm the backend comes up with `production`.
+5. Verify a fresh database migration path and, when relevant, a schema upgrade path.
+
+### Practical naming examples
+
+- `V2__add_student_email.sql`
+- `V3__backfill_student_email.sql`
+- `V4__drop_legacy_student_notes.sql`
+
+### Environment contract
+
+- Local development uses `development` by default.
+- Docker always uses `production`.
+- Test runs use the `test` profile with H2 and no Flyway migration execution.
 
 ## Quality & Testing
 

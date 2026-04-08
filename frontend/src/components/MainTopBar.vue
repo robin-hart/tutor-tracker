@@ -38,32 +38,41 @@
   </header>
 </template>
 
-<script setup>
+<script setup lang="ts">
 /**
  * Shared top bar component with search and pluggable tab content.
  */
-defineProps({
-  modelValue: {
-    type: String,
-    default: '',
-  },
-  searchPlaceholder: {
-    type: String,
-    default: 'Search...',
-  },
-  searchDisabled: {
-    type: Boolean,
-    default: false,
-  },
-});
+const props = withDefaults(
+  defineProps<{
+    modelValue?: string;
+    searchPlaceholder?: string;
+    searchDisabled?: boolean;
+  }>(),
+  {
+    modelValue: '',
+    searchPlaceholder: 'Search...',
+    searchDisabled: false,
+  }
+);
 
-const emit = defineEmits(['update:modelValue']);
+const emit = defineEmits<{
+  (event: 'update:modelValue', value: string): void;
+}>();
 
-function onSearchInput(event) {
-  emit('update:modelValue', event.target.value);
+/**
+ * Emits model updates from the search input field.
+ */
+function onSearchInput(event: Event): void {
+  const target = event.target as HTMLInputElement | null;
+  emit('update:modelValue', target?.value ?? '');
 }
 
-function clearSearch() {
+/**
+ * Clears the active search text.
+ */
+function clearSearch(): void {
   emit('update:modelValue', '');
 }
+
+void props;
 </script>

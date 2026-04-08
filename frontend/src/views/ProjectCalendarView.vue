@@ -17,16 +17,36 @@
     </MainTopBar>
 
     <main class="ml-72 pt-32 px-12 pb-20">
-      <section
-        class="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-8 mb-10"
-      >
-        <div class="space-y-2">
-          <span class="text-primary font-bold tracking-[0.2em] uppercase text-xs"
-            >Active Tutoring Project</span
-          >
-          <h2 class="text-6xl font-extrabold tracking-tighter leading-none">{{ projectName }}</h2>
+      <div class="mb-10">
+        <span class="text-primary font-bold tracking-[0.2em] uppercase text-xs block mb-4"
+          >Active Tutoring Project</span
+        >
+        <div class="flex gap-8 items-end">
+          <h2 class="text-6xl font-extrabold tracking-tighter leading-none flex-shrink-0">
+            {{ projectName }}
+          </h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div
+              class="bg-surface-container-lowest rounded-xl px-4 py-3 border border-outline-variant/10"
+              data-testid="calendar-project-institution"
+            >
+              <p class="text-[11px] text-on-surface-variant uppercase tracking-widest">
+                Institution
+              </p>
+              <p class="mt-2 text-sm font-semibold">{{ projectInstitution }}</p>
+            </div>
+            <div
+              class="bg-surface-container-lowest rounded-xl px-4 py-3 border border-outline-variant/10"
+              data-testid="calendar-project-target"
+            >
+              <p class="text-[11px] text-on-surface-variant uppercase tracking-widest">
+                Monthly Target Working Time
+              </p>
+              <p class="mt-2 text-sm font-semibold">{{ projectTargetLabel }}</p>
+            </div>
+          </div>
         </div>
-      </section>
+      </div>
 
       <div class="grid grid-cols-12 gap-8 mb-10">
         <div class="col-span-12 md:col-span-6 bg-surface-container-lowest p-8 rounded-xl shadow-sm">
@@ -325,14 +345,15 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AppSidebar from '../components/AppSidebar.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import MainTopBar from '../components/MainTopBar.vue';
 import SearchActiveIndicator from '../components/SearchActiveIndicator.vue';
-import { deleteProjectTimeslot, getProjectCalendar } from '../services/apiClient';
+import { deleteProjectTimeslot, getProjectCalendar, getProjects } from '../services/apiClient';
+import type { Project, Timeslot } from '../types/domain';
 import { formatHoursToHM } from '../utils/timeFormatter';
 
 /**
@@ -342,17 +363,19 @@ const route = useRoute();
 const router = useRouter();
 const projectId = computed(() => String(route.params.projectId || 'math-grade-10'));
 const projectName = ref('Math Grade 10');
+const projectInstitution = ref('—');
+const projectTargetHours = ref(0);
 const totalHours = ref(0);
 const monthHours = ref(0);
-const monthSlots = ref([]);
-const allSlots = ref([]);
+const monthSlots = ref<Timeslot[]>([]);
+const allSlots = ref<Timeslot[]>([]);
 const isLoading = ref(false);
 const errorMessage = ref('');
 const searchText = ref('');
 const activeMonth = ref(parseMonthFromQuery(route.query.month));
 const selectedDate = ref('');
 const showDeleteConfirm = ref(false);
-const slotToDelete = ref(null);
+const slotToDelete = ref<Timeslot | null>(null);
 
 const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const monthKey = computed(() => {
@@ -373,8 +396,20 @@ const formattedMonthHours = computed(() => {
   return formatHoursToHM(monthHours.value);
 });
 
+const projectTargetLabel = computed(() => {
+  const formatted = formatHoursToHM(projectTargetHours.value);
+  return `${formatted.hours} hrs ${String(formatted.minutes).padStart(2, '0')} min`;
+});
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
+}
+
 const slotCountByDate = computed(() => {
-  return monthSlots.value.reduce((acc, slot) => {
+  return monthSlots.value.reduce<Record<string, number>>((acc, slot) => {
     acc[slot.date] = (acc[slot.date] || 0) + 1;
     return acc;
   }, {});
@@ -412,14 +447,17 @@ const filteredSlotResults = computed(() => {
 });
 
 const groupedFilteredSlots = computed(() => {
-  const grouped = new Map();
+  const grouped = new Map<string, Timeslot[]>();
 
   for (const slot of filteredSlotResults.value) {
     const monthKey = getMonthKeyFromDate(slot.date);
     if (!grouped.has(monthKey)) {
       grouped.set(monthKey, []);
     }
-    grouped.get(monthKey).push(slot);
+    const groupedSlots = grouped.get(monthKey);
+    if (groupedSlots) {
+      groupedSlots.push(slot);
+    }
   }
 
   return Array.from(grouped.entries())
@@ -427,7 +465,7 @@ const groupedFilteredSlots = computed(() => {
     .map(([monthKey, slots]) => ({
       monthKey,
       label: formatMonthLabel(monthKey),
-      slots: slots.sort((left, right) => {
+      slots: slots.sort((left: Timeslot, right: Timeslot) => {
         const leftKey = `${left.date} ${left.startTime}`;
         const rightKey = `${right.date} ${right.startTime}`;
         return rightKey.localeCompare(leftKey);
@@ -446,16 +484,28 @@ const selectedDayTitle = computed(() => {
   }).format(new Date(`${selectedDate.value}T00:00:00`));
 });
 
-async function loadCalendar() {
+/**
+ * Loads project metadata and calendar slots for the active month.
+ */
+async function loadCalendar(): Promise<void> {
   isLoading.value = true;
   errorMessage.value = '';
   try {
-    const payload = await getProjectCalendar(projectId.value, monthKey.value);
+    const [payload, projects] = await Promise.all([
+      getProjectCalendar(projectId.value, monthKey.value),
+      getProjects(),
+    ]);
+
+    const projectSummary = (projects as Project[]).find(
+      (project) => project.id === projectId.value
+    );
     projectName.value = payload.projectName;
     totalHours.value = payload.totalHours;
     monthHours.value = payload.monthHours;
     monthSlots.value = payload.monthSlots || [];
     allSlots.value = payload.allSlots || payload.monthSlots || [];
+    projectInstitution.value = projectSummary?.institution || '—';
+    projectTargetHours.value = Number(projectSummary?.targetMonthHours) || 0;
 
     if (!selectedDate.value || !selectedDate.value.startsWith(monthKey.value)) {
       const todayIso = getTodayIso();
@@ -463,8 +513,10 @@ async function loadCalendar() {
     }
   } catch (error) {
     console.warn('Using fallback calendar data because API is unavailable.', error);
-    errorMessage.value = error.message;
+    errorMessage.value = getErrorMessage(error);
     projectName.value = 'Project Calendar';
+    projectInstitution.value = '—';
+    projectTargetHours.value = 0;
     totalHours.value = 0;
     monthHours.value = 0;
     monthSlots.value = [];
@@ -474,30 +526,30 @@ async function loadCalendar() {
   }
 }
 
-function getTodayIso() {
+function getTodayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-function selectDay(dateIso, inMonth) {
+function selectDay(dateIso: string, inMonth: boolean): void {
   if (!inMonth) {
     return;
   }
   selectedDate.value = dateIso;
 }
 
-function goToPreviousMonth() {
+function goToPreviousMonth(): void {
   const next = new Date(activeMonth.value);
   next.setMonth(next.getMonth() - 1);
   activeMonth.value = next;
 }
 
-function goToNextMonth() {
+function goToNextMonth(): void {
   const next = new Date(activeMonth.value);
   next.setMonth(next.getMonth() + 1);
   activeMonth.value = next;
 }
 
-function formatTime(timeValue) {
+function formatTime(timeValue: string): string {
   const raw = String(timeValue || '00:00').slice(0, 5);
   const [hours, minutes] = raw.split(':').map(Number);
   const safeHours = Number.isNaN(hours) ? 0 : hours;
@@ -506,7 +558,7 @@ function formatTime(timeValue) {
   return new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit' }).format(d);
 }
 
-function toMinutes(timeValue) {
+function toMinutes(timeValue: string): number {
   const raw = String(timeValue || '00:00').slice(0, 5);
   const [hours, minutes] = raw.split(':').map(Number);
   const safeHours = Number.isNaN(hours) ? 0 : hours;
@@ -514,11 +566,11 @@ function toMinutes(timeValue) {
   return safeHours * 60 + safeMinutes;
 }
 
-function sortByStartTimeAsc(left, right) {
+function sortByStartTimeAsc(left: string, right: string): number {
   return toMinutes(left) - toMinutes(right);
 }
 
-function formatPeriod(startTime, durationMinutes) {
+function formatPeriod(startTime: string, durationMinutes: number): string {
   const raw = String(startTime || '00:00').slice(0, 5);
   const [hours, minutes] = raw.split(':').map(Number);
   const safeHours = Number.isNaN(hours) ? 0 : hours;
@@ -529,12 +581,15 @@ function formatPeriod(startTime, durationMinutes) {
   return `${formatter.format(start)} - ${formatter.format(end)} (${Number(durationMinutes) || 0} min)`;
 }
 
-function openDeleteConfirm(slot) {
+/**
+ * Opens a confirmation modal for deleting a timeslot.
+ */
+function openDeleteConfirm(slot: Timeslot): void {
   slotToDelete.value = slot;
   showDeleteConfirm.value = true;
 }
 
-function cancelDelete() {
+function cancelDelete(): void {
   showDeleteConfirm.value = false;
   slotToDelete.value = null;
 }
@@ -549,18 +604,18 @@ async function confirmDelete() {
     await loadCalendar();
     cancelDelete();
   } catch (error) {
-    errorMessage.value = error.message;
+    errorMessage.value = getErrorMessage(error);
   }
 }
 
-function parseMonthFromQuery(monthQuery) {
+function parseMonthFromQuery(monthQuery: unknown): Date {
   if (typeof monthQuery === 'string' && /^\d{4}-\d{2}$/.test(monthQuery)) {
     return new Date(`${monthQuery}-01T00:00:00`);
   }
   return new Date();
 }
 
-function getMonthKeyFromDate(dateValue) {
+function getMonthKeyFromDate(dateValue: unknown): string {
   const raw = String(dateValue || '').slice(0, 7);
   if (/^\d{4}-\d{2}$/.test(raw)) {
     return raw;
@@ -568,7 +623,7 @@ function getMonthKeyFromDate(dateValue) {
   return monthKey.value;
 }
 
-function formatMonthLabel(value) {
+function formatMonthLabel(value: string): string {
   if (!/^\d{4}-\d{2}$/.test(value)) {
     return value;
   }
@@ -577,7 +632,14 @@ function formatMonthLabel(value) {
   );
 }
 
-function buildCalendarCells(monthDate) {
+interface CalendarCell {
+  key: string;
+  day: number;
+  dateIso: string;
+  inMonth: boolean;
+}
+
+function buildCalendarCells(monthDate: Date): CalendarCell[] {
   const year = monthDate.getFullYear();
   const month = monthDate.getMonth();
   const firstOfMonth = new Date(year, month, 1);

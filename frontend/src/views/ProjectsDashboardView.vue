@@ -27,7 +27,7 @@
         </div>
         <button
           class="premium-gradient flex items-center gap-2 px-8 py-4 rounded-xl text-on-primary font-headline font-bold shadow-xl"
-          @click="showCreateProject = !showCreateProject"
+          @click="openCreateProjectForm"
         >
           <span class="material-symbols-outlined">add</span>
           New Project
@@ -35,27 +35,32 @@
       </section>
 
       <section
-        v-if="showCreateProject"
+        v-if="showProjectForm"
         class="mb-8 bg-surface-container-lowest rounded-xl p-6 grid grid-cols-1 md:grid-cols-6 gap-4"
       >
         <div class="md:col-span-6 flex items-center justify-between">
-          <h2 class="text-lg font-bold font-headline">Create New Project</h2>
+          <h2 class="text-lg font-bold font-headline">
+            {{ isEditingProject ? 'Edit Project' : 'Create New Project' }}
+          </h2>
           <button
             type="button"
             class="h-9 w-9 rounded-lg bg-surface-container-low text-on-surface hover:bg-surface-container-high flex items-center justify-center"
             aria-label="Close create project form"
-            @click="closeCreateProject"
+            @click="closeProjectForm"
           >
             <span class="material-symbols-outlined text-base">close</span>
           </button>
         </div>
 
         <div class="md:col-span-2">
-          <label class="text-xs text-on-surface-variant uppercase tracking-wider block mb-2"
+          <label
+            for="project-name"
+            class="text-xs text-on-surface-variant uppercase tracking-wider block mb-2"
             >Project Name</label
           >
           <input
-            v-model.trim="newProject.name"
+            id="project-name"
+            v-model.trim="projectForm.name"
             class="w-full bg-surface-container-low rounded-lg px-3 py-2"
             placeholder="Project name"
             type="text"
@@ -63,17 +68,20 @@
         </div>
 
         <div class="md:col-span-3">
-          <label class="text-xs text-on-surface-variant uppercase tracking-wider block mb-2"
-            >Category</label
+          <p
+            id="project-category-label"
+            class="text-xs text-on-surface-variant uppercase tracking-wider block mb-2"
           >
-          <div class="flex flex-wrap gap-2">
+            Category
+          </p>
+          <div class="flex flex-wrap gap-2" role="group" aria-labelledby="project-category-label">
             <button
               v-for="category in categoryOptions"
               :key="category"
               type="button"
               class="px-3 py-1.5 rounded-full text-xs font-bold border transition"
               :class="
-                newProject.category === category && !showNewCategoryInput
+                projectForm.category === category && !showNewCategoryInput
                   ? 'bg-primary text-white border-primary'
                   : 'bg-surface-container-low text-on-surface border-outline-variant hover:border-primary/50'
               "
@@ -96,6 +104,7 @@
           </div>
           <input
             v-if="showNewCategoryInput"
+            id="project-category-custom"
             v-model.trim="newCategory"
             class="mt-3 w-full bg-surface-container-low rounded-lg px-3 py-2"
             placeholder="Enter new category"
@@ -103,19 +112,48 @@
           />
         </div>
 
+        <div class="md:col-span-3">
+          <label
+            for="project-institution"
+            class="text-xs text-on-surface-variant uppercase tracking-wider block mb-2"
+            >Einrichtung</label
+          >
+          <input
+            id="project-institution"
+            v-model.trim="projectForm.institution"
+            class="w-full bg-surface-container-low rounded-lg px-3 py-2"
+            placeholder="Institute or workplace"
+            type="text"
+          />
+        </div>
+
+        <div class="md:col-span-3">
+          <label
+            for="project-target-hours"
+            class="text-xs text-on-surface-variant uppercase tracking-wider block mb-2"
+            >Monthly Target Working Time</label
+          >
+          <input
+            id="project-target-hours"
+            v-model.number="projectForm.targetMonthHours"
+            class="w-full bg-surface-container-low rounded-lg px-3 py-2"
+            min="0"
+            placeholder="12.5"
+            step="0.25"
+            type="number"
+          />
+        </div>
+
         <div class="md:col-span-6 flex justify-end gap-3">
           <button
             type="button"
             class="px-4 py-2 rounded-lg bg-surface-container-low text-on-surface font-bold"
-            @click="closeCreateProject"
+            @click="closeProjectForm"
           >
             Cancel
           </button>
-          <button
-            class="px-4 py-2 rounded-lg bg-primary text-white font-bold"
-            @click="createNewProject"
-          >
-            Create
+          <button class="px-4 py-2 rounded-lg bg-primary text-white font-bold" @click="saveProject">
+            {{ isEditingProject ? 'Save Changes' : 'Create' }}
           </button>
         </div>
       </section>
@@ -216,6 +254,7 @@
             >
           </div>
           <h3 class="text-2xl font-bold font-headline mb-8">{{ project.name }}</h3>
+          <p class="text-sm text-on-surface-variant mb-6">{{ project.institution }}</p>
           <div class="flex justify-between items-end">
             <div>
               <span class="text-xs text-on-surface-variant uppercase tracking-wider block mb-1"
@@ -232,26 +271,23 @@
                 <span class="text-xs text-on-surface-variant font-medium">min</span>
               </div>
             </div>
-            <div class="text-right">
+            <div class="text-right max-w-[14rem]">
               <span class="text-xs text-on-surface-variant uppercase tracking-wider block mb-1"
-                >This Month</span
+                >Monthly Progress</span
               >
-              <div class="flex items-baseline gap-1.5 justify-end">
-                <span class="text-xl font-bold font-headline text-primary">{{
-                  formatProjectHours(project.monthHours).hours
+              <p class="text-primary font-black font-headline text-xl leading-none">
+                {{ toHourMinuteLabel(project.monthHours) }}
+                <span class="text-on-surface-variant font-bold mx-1">/</span>
+                <span class="text-secondary">{{
+                  toHourMinuteLabel(project.targetMonthHours)
                 }}</span>
-                <span class="text-xs text-on-surface-variant font-medium">hrs</span>
-                <span class="text-sm font-black font-headline text-primary">{{
-                  formatProjectHours(project.monthHours).minutes
-                }}</span>
-                <span class="text-xs text-on-surface-variant font-medium">min</span>
-              </div>
+              </p>
             </div>
           </div>
           <div class="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden mt-6">
             <div
               class="h-full bg-primary rounded-full"
-              :style="{ width: `${project.completionPercent}%` }"
+              :style="{ width: `${progressWidth(project)}%` }"
             ></div>
           </div>
           <div class="mt-6 flex gap-3">
@@ -266,6 +302,9 @@
               @click.stop="openDeleteConfirm(project.id, project.name)"
             >
               Delete
+            </button>
+            <button class="text-sm font-bold text-primary" @click.stop="openEditProject(project)">
+              Edit
             </button>
           </div>
         </article>
@@ -297,36 +336,39 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import AppSidebar from '../components/AppSidebar.vue';
 import ConfirmDialog from '../components/ConfirmDialog.vue';
 import MainTopBar from '../components/MainTopBar.vue';
 import SearchActiveIndicator from '../components/SearchActiveIndicator.vue';
-import { createProject, getProjects, deleteProject } from '../services/apiClient';
+import { createProject, deleteProject, getProjects, updateProject } from '../services/apiClient';
+import type { Project, ProjectPayload } from '../types/domain';
 import { filterProjects } from '../utils/projectFilter';
 import { formatHoursToHM } from '../utils/timeFormatter';
 
 /**
  * Dashboard view for listing tutoring projects and high-level metrics.
  */
-const projects = ref([]);
+const projects = ref<Project[]>([]);
 const isLoading = ref(false);
 const errorMessage = ref('');
 const searchText = ref('');
-const showCreateProject = ref(false);
+const showProjectForm = ref(false);
+const projectFormMode = ref<'create' | 'edit'>('create');
+const editingProjectId = ref<string>('');
 const router = useRouter();
-const newProject = ref({
+const projectForm = ref<ProjectPayload>({
   name: '',
   category: 'GENERAL',
-  totalHours: 0,
-  monthHours: 0,
+  institution: '',
+  targetMonthHours: 0,
   completionPercent: 0,
 });
 
 const showDeleteConfirm = ref(false);
-const projectToDelete = ref(null);
+const projectToDelete = ref<{ id: string; name: string } | null>(null);
 const apiUnavailable = ref(false);
 const showNewCategoryInput = ref(false);
 const newCategory = ref('');
@@ -350,61 +392,123 @@ const filteredProjects = computed(() => {
   return filterProjects(projects.value, searchText.value);
 });
 const hasActiveFilter = computed(() => searchText.value.trim().length > 0);
+const isEditingProject = computed(() => projectFormMode.value === 'edit');
 
 /**
  * Opens the calendar route for a selected project.
  *
  * @param {string} projectId selected project id
  */
-function openCalendar(projectId) {
+function openCalendar(projectId: string): void {
   router.push({ name: 'project-calendar', params: { projectId } });
 }
 
-function closeCreateProject() {
-  showCreateProject.value = false;
-  showNewCategoryInput.value = false;
-  newCategory.value = '';
-  newProject.value = {
+/**
+ * Restores the project form to its default state.
+ */
+function resetProjectForm(): void {
+  projectForm.value = {
     name: '',
     category: 'GENERAL',
-    totalHours: 0,
-    monthHours: 0,
+    institution: '',
+    targetMonthHours: 0,
     completionPercent: 0,
   };
 }
 
-async function createNewProject() {
+/**
+ * Opens the form in create mode and clears stale state.
+ */
+function openCreateProjectForm(): void {
+  projectFormMode.value = 'create';
+  editingProjectId.value = '';
+  resetProjectForm();
+  showNewCategoryInput.value = false;
+  newCategory.value = '';
+  showProjectForm.value = true;
+}
+
+/**
+ * Opens the form in edit mode and pre-fills values from the selected project.
+ */
+function openEditProject(project: Project): void {
+  projectFormMode.value = 'edit';
+  editingProjectId.value = project.id;
+  projectForm.value = {
+    name: project.name,
+    category: project.category || 'GENERAL',
+    institution: project.institution || '',
+    targetMonthHours: Number(project.targetMonthHours) || 0,
+    completionPercent: Number(project.completionPercent) || 0,
+  };
+  showNewCategoryInput.value = false;
+  newCategory.value = '';
+  showProjectForm.value = true;
+}
+
+/**
+ * Closes the create/edit form and resets form state.
+ */
+function closeProjectForm(): void {
+  showProjectForm.value = false;
+  projectFormMode.value = 'create';
+  editingProjectId.value = '';
+  showNewCategoryInput.value = false;
+  newCategory.value = '';
+  resetProjectForm();
+}
+
+/**
+ * Persists a project in create or edit mode.
+ */
+async function saveProject(): Promise<void> {
   const resolvedCategory = showNewCategoryInput.value
     ? newCategory.value.trim()
-    : String(newProject.value.category || '').trim();
+    : String(projectForm.value.category || '').trim();
 
-  if (!newProject.value.name || !resolvedCategory) {
+  if (!projectForm.value.name || !resolvedCategory || !projectForm.value.institution) {
     return;
   }
 
   try {
     const payload = {
-      ...newProject.value,
+      ...projectForm.value,
       category: resolvedCategory,
-      totalHours: 0,
-      monthHours: 0,
-      completionPercent: 0,
     };
-    const created = await createProject(payload);
-    projects.value = [created, ...projects.value];
-    closeCreateProject();
+    const saved =
+      projectFormMode.value === 'edit'
+        ? await updateProject(editingProjectId.value, payload)
+        : await createProject(payload);
+
+    if (projectFormMode.value === 'edit') {
+      projects.value = projects.value.map((project) =>
+        project.id === editingProjectId.value ? saved : project
+      );
+    } else {
+      projects.value = [saved, ...projects.value];
+    }
+
+    closeProjectForm();
   } catch (error) {
-    errorMessage.value = error.message;
+    errorMessage.value = error instanceof Error ? error.message : String(error);
   }
 }
 
-function selectCategory(category) {
-  newProject.value.category = category;
+/**
+ * Selects one of the existing category options.
+ *
+ * @param {string} category selected category label
+ */
+function selectCategory(category: string): void {
+  projectForm.value.category = category;
   showNewCategoryInput.value = false;
   newCategory.value = '';
 }
 
-function openNewCategoryInput() {
+/**
+ * Enables custom category input mode.
+ */
+function openNewCategoryInput(): void {
   showNewCategoryInput.value = true;
 }
 
@@ -414,7 +518,7 @@ function openNewCategoryInput() {
  * @param {string} projectId project id to delete
  * @param {string} projectName project name for display
  */
-function openDeleteConfirm(projectId, projectName) {
+function openDeleteConfirm(projectId: string, projectName: string): void {
   projectToDelete.value = { id: projectId, name: projectName };
   showDeleteConfirm.value = true;
 }
@@ -422,17 +526,19 @@ function openDeleteConfirm(projectId, projectName) {
 /**
  * Confirms and executes project deletion.
  */
-async function confirmDelete() {
+async function confirmDelete(): Promise<void> {
   if (!projectToDelete.value) {
     return;
   }
+  const deletingProjectId = projectToDelete.value.id;
+
   try {
-    await deleteProject(projectToDelete.value.id);
-    projects.value = projects.value.filter((p) => p.id !== projectToDelete.value.id);
+    await deleteProject(deletingProjectId);
+    projects.value = projects.value.filter((p) => p.id !== deletingProjectId);
     showDeleteConfirm.value = false;
     projectToDelete.value = null;
   } catch (error) {
-    errorMessage.value = error.message;
+    errorMessage.value = error instanceof Error ? error.message : String(error);
     showDeleteConfirm.value = false;
     projectToDelete.value = null;
   }
@@ -441,21 +547,35 @@ async function confirmDelete() {
 /**
  * Cancels the delete confirmation dialog.
  */
-function cancelDelete() {
+function cancelDelete(): void {
   showDeleteConfirm.value = false;
   projectToDelete.value = null;
 }
 
 /**
- * Formats hours as "Xh45" format
- * @param {number} hours decimal hours
- * @returns {string} formatted time
+ * Converts decimal hours into display-ready hour/minute values.
+ *
+ * @param {number | undefined} hours decimal hours from API payload
+ * @returns {{ hours: number; minutes: number }} hour/minute tuple
  */
-function formatProjectHours(hours) {
+function formatProjectHours(hours: number | undefined): { hours: number; minutes: number } {
   return formatHoursToHM(hours);
 }
 
-async function loadProjects() {
+function toHourMinuteLabel(hours: number | undefined): string {
+  const value = formatProjectHours(hours);
+  return `${value.hours}h ${value.minutes}m`;
+}
+
+function progressWidth(project: Project): number {
+  const completion = Number(project?.completionPercent) || 0;
+  return Math.max(0, Math.min(100, completion));
+}
+
+/**
+ * Loads projects from the backend and toggles API fallback state.
+ */
+async function loadProjects(): Promise<void> {
   isLoading.value = true;
   errorMessage.value = '';
   try {

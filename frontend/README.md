@@ -3,6 +3,7 @@
 ## Tech Stack
 
 - Vue 3 (Composition API)
+- TypeScript (including Vue SFC script blocks)
 - Vite
 - Vue Router
 - Tailwind CSS with design tokens taken from the mockups
@@ -25,12 +26,12 @@ Timeslot editor query parameters:
 - `src/components/AppSidebar.vue`: Shared left navigation and main app links.
 - `src/components/MainTopBar.vue`: Shared top navigation search/tabs shell.
 - `src/views/*`: One view per provided mockup.
-- `src/services/apiClient.js`: Typed-by-contract API call functions.
-- `src/router/index.js`: Central route and navigation definitions.
+- `src/services/apiClient.ts`: Typed API call functions and payload contracts.
+- `src/router/index.ts`: Central route and navigation definitions.
 
 ## Data Flow
 
-1. Views load and call service functions from `apiClient.js`.
+1. Views load and call service functions from `apiClient.ts`.
 2. Calendar day selection drives date-scoped timeslot listing and creation links.
 3. Timeslot editor loads existing data when `timeslotId` is present and switches to update mode.
 4. Delete actions call the API and remove the deleted slot from local view state.
@@ -64,8 +65,37 @@ npm run dev
 npm run build
 npm run preview
 npm run lint
+npm run typecheck
 npm run format:check
+npm run format:check:strict
+npm run format:vue
+npm run format:vue:check
 ```
+
+Format Vue files (single-file components) with Prettier:
+
+```bash
+npm run format:vue
+npm run format:vue:check
+```
+
+## Docker Runtime
+
+The full Docker setup is managed at repository root (`../docker-compose.yml`).
+
+Run from the repository root:
+
+```bash
+docker compose up --build
+```
+
+In this mode:
+
+- Frontend is served by nginx on `http://localhost:80` by default.
+- `/api` requests are reverse-proxied by nginx to the backend container.
+
+The published host port can be changed through `FRONTEND_HOST_PORT` in the repository root
+`.env` file. The container still listens on port `80` internally.
 
 ## Testing
 

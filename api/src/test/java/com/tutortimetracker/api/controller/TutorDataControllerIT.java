@@ -71,11 +71,13 @@ class TutorDataControllerIT {
         Map.of(
             "name",
             "Physics Advanced",
+            "institution",
+            "University Lab",
             "category",
             "SCIENCE",
             "totalHours",
             0.0,
-            "monthHours",
+            "targetMonthHours",
             0.0,
             "completionPercent",
             0);
@@ -230,6 +232,22 @@ class TutorDataControllerIT {
   }
 
   @Test
+  void getProjectGroups_shouldNotPersistUngroupedOnRead() throws Exception {
+    ProjectEntity project =
+        projectRepository.save(newProject("proj-groups-readonly", "Groups Readonly Project"));
+
+    mockMvc
+        .perform(get("/api/projects/{projectId}/groups", project.getSlug()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(1))
+        .andExpect(jsonPath("$[0].name").value("Ungrouped"))
+        .andExpect(jsonPath("$[0].studentCount").value(0));
+
+    org.junit.jupiter.api.Assertions.assertEquals(
+        0, projectGroupRepository.findByProject(project).size());
+  }
+
+  @Test
   void createProjectGroup_shouldCreateNewGroup() throws Exception {
     ProjectEntity project = projectRepository.save(newProject("proj-new-group", "Project"));
 
@@ -320,9 +338,6 @@ class TutorDataControllerIT {
   @Test
   void getProjectCalendar_shouldReturnCalendarData() throws Exception {
     ProjectEntity project = projectRepository.save(newProject("proj-calendar", "Calendar Project"));
-    project.setTotalHours(100.0);
-    project.setMonthHours(50.0);
-    projectRepository.save(project);
 
     LocalDate today = LocalDate.now();
     createTimeslot(project, "Today Session", today, 60);
@@ -332,8 +347,8 @@ class TutorDataControllerIT {
         .perform(get("/api/projects/{projectId}/calendar", project.getSlug()))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.projectName").value("Calendar Project"))
-        .andExpect(jsonPath("$.totalHours").value(100.0))
-        .andExpect(jsonPath("$.monthHours").value(50.0));
+        .andExpect(jsonPath("$.totalHours").value(2.5))
+        .andExpect(jsonPath("$.monthHours").value(2.5));
   }
 
   @Test
@@ -538,6 +553,37 @@ class TutorDataControllerIT {
   }
 
   @Test
+  void getProjectReports_shouldReturnNotFoundForMissingProject() throws Exception {
+    mockMvc
+        .perform(get("/api/projects/{projectId}/reports", "missing-project"))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.message").value("Project not found: missing-project"));
+  }
+
+  @Test
+  void exportProjectReportPdf_shouldReturnBadRequestForInvalidMonth() throws Exception {
+    ProjectEntity project = projectRepository.save(newProject("proj-export-invalid", "Project"));
+
+    mockMvc
+        .perform(
+            get("/api/projects/{projectId}/reports/export/pdf", project.getSlug())
+                .param("month", "2026-99"))
+        .andExpect(status().isBadRequest())
+        .andExpect(
+            jsonPath("$.path").value("/api/projects/proj-export-invalid/reports/export/pdf"));
+  }
+
+  @Test
+  void exportProjectReportPdf_shouldReturnNotFoundForMissingProject() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/projects/{projectId}/reports/export/pdf", "missing-project")
+                .param("month", "2026-01"))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.message").value("Project not found: missing-project"));
+  }
+
+  @Test
   void createTimeslot_shouldCreateGlobalTimeslot() throws Exception {
     // Ensure the default project exists
     projectRepository
@@ -567,9 +613,10 @@ class TutorDataControllerIT {
     ProjectEntity project = new ProjectEntity();
     project.setSlug(slug);
     project.setName(name);
+    project.setInstitution("University Lab");
     project.setCategory("GENERAL");
     project.setTotalHours(0.0);
-    project.setMonthHours(0.0);
+    project.setTargetMonthHours(0.0);
     project.setCompletionPercent(0);
     return project;
   }

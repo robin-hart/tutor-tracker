@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 
 /** Performs lightweight schema cleanup for legacy local databases. */
 @Component
-@Profile("!test")
+@Profile("development")
 public class LegacySchemaCleanup implements ApplicationRunner {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(LegacySchemaCleanup.class);

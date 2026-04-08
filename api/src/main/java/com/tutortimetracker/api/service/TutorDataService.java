@@ -29,13 +29,15 @@ import com.tutortimetracker.api.repository.TodaySlotRepository;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
-import java.util.stream.Collectors;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Core business logic service for TutorTimeTracker data operations.
@@ -98,6 +100,7 @@ import org.springframework.stereotype.Service;
  * @version 1.0
  */
 @Service
+@Transactional(readOnly = true)
 public class TutorDataService {
 
   private static final double DEFAULT_HOURLY_RATE = 60.0;
@@ -141,8 +144,11 @@ public class TutorDataService {
    */
   public List<ProjectSummary> getProjects() {
     return projectRepository.findAll().stream()
-        .peek(this::refreshProjectMetrics)
-        .map(this::toProjectSummary)
+        .map(
+            project -> {
+              refreshProjectMetrics(project);
+              return toProjectSummary(project);
+            })
         .toList();
   }
 
@@ -152,34 +158,47 @@ public class TutorDataService {
    * @param request incoming create request
    * @return created project summary
    */
+  @Transactional
   public ProjectSummary createProject(ProjectCreateRequest request) {
     String normalizedName = request.name().trim();
     String normalizedCategory = request.category().trim();
-    String baseSlug = slugify(normalizedName);
+    String normalizedInstitution = request.institution().trim();
+    String projectSlug = ensureUniqueProjectSlug(slugify(normalizedName));
 
-    for (int attempt = 0; attempt < 5; attempt++) {
-      String candidateSlug = generateProjectSlugCandidate(baseSlug, attempt);
+    ProjectEntity entity = new ProjectEntity();
+    entity.setSlug(projectSlug);
+    entity.setName(normalizedName);
+    entity.setCategory(normalizedCategory);
+    entity.setInstitution(normalizedInstitution);
+    entity.setTargetMonthHours(request.targetMonthHours());
+    entity.setTotalHours(0.0);
+    entity.setMonthHours(0.0);
+    entity.setCompletionPercent(request.completionPercent());
 
-      ProjectEntity entity = new ProjectEntity();
-      entity.setSlug(candidateSlug);
-      entity.setName(normalizedName);
-      entity.setCategory(normalizedCategory);
-      entity.setTotalHours(request.totalHours());
-      entity.setMonthHours(request.monthHours());
-      entity.setCompletionPercent(request.completionPercent());
+    ProjectEntity created = projectRepository.save(entity);
+    ensureDefaultGroup(created);
+    return toProjectSummary(created);
+  }
 
-      try {
-        ProjectEntity created = projectRepository.save(entity);
-        ensureDefaultGroup(created);
-        return toProjectSummary(created);
-      } catch (DataIntegrityViolationException ex) {
-        if (!isDuplicateSlugInsert(ex, candidateSlug)) {
-          throw ex;
-        }
-      }
-    }
+  /**
+   * Updates a project.
+   *
+   * @param projectId project slug
+   * @param request incoming update request
+   * @return updated project summary
+   */
+  @Transactional
+  public ProjectSummary updateProject(String projectId, ProjectCreateRequest request) {
+    ProjectEntity project = findProjectBySlug(projectId);
+    refreshProjectMetrics(project);
 
-    throw new IllegalStateException("Could not create project due to repeated slug collisions.");
+    project.setName(request.name().trim());
+    project.setCategory(request.category().trim());
+    project.setInstitution(request.institution().trim());
+    project.setTargetMonthHours(request.targetMonthHours());
+    project.setCompletionPercent(request.completionPercent());
+
+    return toProjectSummary(projectRepository.save(project));
   }
 
   /**
@@ -187,6 +206,7 @@ public class TutorDataService {
    *
    * @param projectId project slug
    */
+  @Transactional
   public void deleteProject(String projectId) {
     ProjectEntity project = findProjectBySlug(projectId);
 
@@ -272,7 +292,6 @@ public class TutorDataService {
    */
   public List<StudentProfile> getProjectStudents(String projectId) {
     ProjectEntity project = findProjectBySlug(projectId);
-    ensureDefaultGroup(project);
     return studentRepository.findByProject(project).stream()
         .map(
             student ->
@@ -292,33 +311,23 @@ public class TutorDataService {
    */
   public List<ProjectGroupSummary> getProjectGroups(String projectId) {
     ProjectEntity project = findProjectBySlug(projectId);
-    ensureDefaultGroup(project);
-
     List<StudentEntity> projectStudents = studentRepository.findByProject(project);
+    List<ProjectGroupEntity> groups = projectGroupRepository.findByProject(project);
+    Map<String, Integer> counts = new HashMap<>();
     for (StudentEntity student : projectStudents) {
-      String existingGroupName = normalizeGroupName(student.getGroupName());
-      if (projectGroupRepository.findByProjectAndName(project, existingGroupName).isEmpty()) {
-        ProjectGroupEntity group = new ProjectGroupEntity();
-        group.setName(existingGroupName);
-        group.setProject(project);
-        projectGroupRepository.save(group);
-      }
+      String normalizedGroupName = normalizeGroupName(student.getGroupName());
+      counts.merge(normalizedGroupName, 1, Integer::sum);
     }
 
-    List<ProjectGroupEntity> groups = projectGroupRepository.findByProject(project);
-    Map<String, Integer> counts =
-        projectStudents.stream()
-            .collect(
-                Collectors.toMap(
-                    student -> normalizeGroupName(student.getGroupName()),
-                    student -> 1,
-                    Integer::sum));
+    Set<String> groupNames = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+    groupNames.add(UNGROUPED_GROUP);
+    for (ProjectGroupEntity group : groups) {
+      groupNames.add(group.getName());
+    }
+    groupNames.addAll(counts.keySet());
 
-    return groups.stream()
-        .map(
-            group ->
-                new ProjectGroupSummary(group.getName(), counts.getOrDefault(group.getName(), 0)))
-        .sorted((left, right) -> left.name().compareToIgnoreCase(right.name()))
+    return groupNames.stream()
+        .map(groupName -> new ProjectGroupSummary(groupName, counts.getOrDefault(groupName, 0)))
         .toList();
   }
 
@@ -329,17 +338,13 @@ public class TutorDataService {
    * @param request create group payload
    * @return created or existing group summary
    */
+  @Transactional
   public ProjectGroupSummary createProjectGroup(
       String projectId, ProjectGroupCreateRequest request) {
     ProjectEntity project = findProjectBySlug(projectId);
     String groupName = normalizeGroupName(request.name());
 
-    if (projectGroupRepository.findByProjectAndName(project, groupName).isEmpty()) {
-      ProjectGroupEntity group = new ProjectGroupEntity();
-      group.setName(groupName);
-      group.setProject(project);
-      projectGroupRepository.save(group);
-    }
+    ensureProjectGroupExists(project, groupName);
 
     int count = studentRepository.findByProjectAndGroupName(project, groupName).size();
     return new ProjectGroupSummary(groupName, count);
@@ -351,6 +356,7 @@ public class TutorDataService {
    * @param projectId project slug
    * @param rawGroupName group route value
    */
+  @Transactional
   public void deleteProjectGroup(String projectId, String rawGroupName) {
     ProjectEntity project = findProjectBySlug(projectId);
     String groupName = normalizeGroupName(rawGroupName);
@@ -401,6 +407,7 @@ public class TutorDataService {
    * @param request create student request
    * @return created student profile
    */
+  @Transactional
   public StudentProfile createProjectStudent(String projectId, StudentCreateRequest request) {
     ProjectEntity project = findProjectBySlug(projectId);
     String groupName = normalizeGroupName(request.groupName());
@@ -428,6 +435,7 @@ public class TutorDataService {
    * @param request notes update request
    * @return updated student profile
    */
+  @Transactional
   public StudentProfile updateStudentNotes(String studentId, StudentNotesUpdateRequest request) {
     StudentEntity student =
         studentRepository
@@ -451,6 +459,7 @@ public class TutorDataService {
    * @param request group update request
    * @return updated student profile
    */
+  @Transactional
   public StudentProfile updateStudentGroup(String studentId, StudentGroupUpdateRequest request) {
     StudentEntity student =
         studentRepository
@@ -475,6 +484,7 @@ public class TutorDataService {
    *
    * @param studentId student key
    */
+  @Transactional
   public void deleteStudent(String studentId) {
     StudentEntity student =
         studentRepository
@@ -508,6 +518,7 @@ public class TutorDataService {
    * @param monthKey month key in yyyy-MM format
    * @return generated report row
    */
+  @Transactional
   public ReportRow generateProjectMonthlyReport(String projectId, String monthKey) {
     ProjectEntity project = findProjectBySlug(projectId);
     YearMonth month = parseMonthKeyOrNow(monthKey);
@@ -543,6 +554,7 @@ public class TutorDataService {
    * @param request incoming create request
    * @return created timeslot representation
    */
+  @Transactional
   public TimeslotResponse createProjectTimeslot(String projectId, TimeslotCreateRequest request) {
     ProjectEntity project = findProjectBySlug(projectId);
     TimeslotEntity entity = new TimeslotEntity();
@@ -581,6 +593,7 @@ public class TutorDataService {
    * @param request update payload
    * @return updated timeslot
    */
+  @Transactional
   public TimeslotResponse updateProjectTimeslot(
       String projectId, String timeslotId, TimeslotCreateRequest request) {
     ProjectEntity project = findProjectBySlug(projectId);
@@ -603,6 +616,7 @@ public class TutorDataService {
    * @param projectId project slug
    * @param timeslotId timeslot id
    */
+  @Transactional
   public void deleteProjectTimeslot(String projectId, String timeslotId) {
     ProjectEntity project = findProjectBySlug(projectId);
     TimeslotEntity slot = findTimeslot(project, timeslotId);
@@ -616,6 +630,7 @@ public class TutorDataService {
    * @param request incoming create request
    * @return created timeslot
    */
+  @Transactional
   public TimeslotResponse createTimeslot(TimeslotCreateRequest request) {
     return createProjectTimeslot("math-grade-10", request);
   }
@@ -689,10 +704,12 @@ public class TutorDataService {
         project.getSlug(),
         project.getName(),
         project.getCategory(),
+        project.getInstitution(),
+        project.getTargetMonthHours(),
         project.getTotalHours(),
         project.getMonthHours(),
-      project.getCompletionPercent(),
-      project.getCreatedAt());
+        project.getCompletionPercent(),
+        project.getCreatedAt());
   }
 
   /**
@@ -777,12 +794,24 @@ public class TutorDataService {
    * @param project project context
    */
   private void ensureDefaultGroup(ProjectEntity project) {
-    if (projectGroupRepository.findByProjectAndName(project, UNGROUPED_GROUP).isEmpty()) {
-      ProjectGroupEntity group = new ProjectGroupEntity();
-      group.setName(UNGROUPED_GROUP);
-      group.setProject(project);
-      projectGroupRepository.save(group);
+    ensureProjectGroupExists(project, UNGROUPED_GROUP);
+  }
+
+  /**
+   * Ensures a project-scoped group exists and tolerates concurrent inserts.
+   *
+   * @param project project context
+   * @param groupName non-empty group label
+   */
+  private void ensureProjectGroupExists(ProjectEntity project, String groupName) {
+    if (projectGroupRepository.findByProjectAndName(project, groupName).isPresent()) {
+      return;
     }
+
+    ProjectGroupEntity group = new ProjectGroupEntity();
+    group.setName(groupName);
+    group.setProject(project);
+    projectGroupRepository.save(group);
   }
 
   /**
@@ -817,44 +846,5 @@ public class TutorDataService {
       candidate = normalizedBase + "-" + suffix;
     }
     return candidate;
-  }
-
-  /**
-   * Generates a slug candidate for project creation retries.
-   *
-   * @param baseSlug raw slug stem
-   * @param attempt current retry index
-   * @return slug candidate
-   */
-  private String generateProjectSlugCandidate(String baseSlug, int attempt) {
-    if (attempt == 0) {
-      return ensureUniqueProjectSlug(baseSlug);
-    }
-
-    String normalizedBase = baseSlug.isBlank() ? "project" : baseSlug;
-    String randomSuffix = UUID.randomUUID().toString().substring(0, 8);
-    return normalizedBase + "-" + randomSuffix;
-  }
-
-  /**
-   * Detects duplicate-key inserts for project slug writes.
-   *
-   * @param exception persistence exception
-   * @param slugCandidate attempted slug
-   * @return true when duplicate key points to the attempted slug
-   */
-  private boolean isDuplicateSlugInsert(
-      DataIntegrityViolationException exception, String slugCandidate) {
-    Throwable current = exception;
-    while (current != null) {
-      String message = current.getMessage();
-      if (message != null
-          && message.contains("Duplicate entry")
-          && message.contains("'" + slugCandidate + "'")) {
-        return true;
-      }
-      current = current.getCause();
-    }
-    return false;
   }
 }

@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
 
 /** Seeds baseline mockup data into MariaDB on first boot. */
 @Component
-@Profile("!test")
+@Profile("development")
 public class DemoDataSeeder {
 
   private static final String GROUP_UNGROUPED = "Ungrouped";
@@ -59,16 +59,50 @@ public class DemoDataSeeder {
       return;
     }
 
-    ProjectEntity math = buildProject("math-grade-10", "Math Grade 10", "STEM", 48.0, 12.5, 75);
+    ProjectEntity math =
+        buildProject(
+            "math-grade-10",
+            "Math Grade 10",
+            "STEM",
+            "University Teaching Lab",
+            12.5,
+            48.0,
+            12.5,
+            75);
     ProjectEntity physics =
-        buildProject("physics-university", "Physics University", "SCIENCE", 32.2, 8.0, 50);
+        buildProject(
+            "physics-university",
+            "Physics University",
+            "SCIENCE",
+            "Physics Institute",
+            8.0,
+            32.2,
+            8.0,
+            50);
     ProjectEntity sat =
-        buildProject("sat-verbal-prep", "SAT Verbal Prep", "EXAM PREP", 15.5, 15.5, 25);
+        buildProject(
+            "sat-verbal-prep", "SAT Verbal Prep", "EXAM PREP", "Exam Center", 15.5, 15.5, 15.5, 25);
+    ProjectEntity carryoverDemo =
+        buildProject(
+            "report-carryover-demo",
+            "Report Carryover Demo",
+            "DEMO",
+            "Carryover Institute",
+            10.0,
+            43.0,
+            36.0,
+            40);
 
-    List<ProjectEntity> projects = projectRepository.saveAll(List.of(math, physics, sat));
+    List<ProjectEntity> projects =
+        projectRepository.saveAll(List.of(math, physics, sat, carryoverDemo));
     ProjectEntity persistedMath =
         projects.stream()
             .filter(project -> "math-grade-10".equals(project.getSlug()))
+            .findFirst()
+            .orElseThrow();
+    ProjectEntity persistedCarryoverDemo =
+        projects.stream()
+            .filter(project -> "report-carryover-demo".equals(project.getSlug()))
             .findFirst()
             .orElseThrow();
 
@@ -134,7 +168,71 @@ public class DemoDataSeeder {
                 90,
                 LocalDate.of(2026, 1, 24),
                 LocalTime.of(15, 0),
-                persistedMath)));
+                persistedMath),
+            buildTimeslot(
+                "carryover-jan-1",
+                "Carryover January Session 1",
+                "First month of project activity.",
+                120,
+                LocalDate.of(2026, 1, 6),
+                LocalTime.of(9, 0),
+                persistedCarryoverDemo),
+            buildTimeslot(
+                "carryover-jan-2",
+                "Carryover January Session 2",
+                "Second session to keep January below target.",
+                120,
+                LocalDate.of(2026, 1, 20),
+                LocalTime.of(9, 0),
+                persistedCarryoverDemo),
+            buildTimeslot(
+                "carryover-mar-1",
+                "Carryover March Session",
+                "Only one March session, still below target.",
+                180,
+                LocalDate.of(2026, 3, 12),
+                LocalTime.of(9, 0),
+                persistedCarryoverDemo),
+            buildTimeslot(
+                "carryover-apr-1",
+                "Carryover April Session 1",
+                "Evenly distributed month session one.",
+                432,
+                LocalDate.of(2026, 4, 3),
+                LocalTime.of(9, 0),
+                persistedCarryoverDemo),
+            buildTimeslot(
+                "carryover-apr-2",
+                "Carryover April Session 2",
+                "Evenly distributed month session two.",
+                432,
+                LocalDate.of(2026, 4, 9),
+                LocalTime.of(9, 0),
+                persistedCarryoverDemo),
+            buildTimeslot(
+                "carryover-apr-3",
+                "Carryover April Session 3",
+                "Evenly distributed month session three.",
+                432,
+                LocalDate.of(2026, 4, 15),
+                LocalTime.of(9, 0),
+                persistedCarryoverDemo),
+            buildTimeslot(
+                "carryover-apr-4",
+                "Carryover April Session 4",
+                "Evenly distributed month session four.",
+                432,
+                LocalDate.of(2026, 4, 21),
+                LocalTime.of(9, 0),
+                persistedCarryoverDemo),
+            buildTimeslot(
+                "carryover-apr-5",
+                "Carryover April Session 5",
+                "Evenly distributed month session five.",
+                432,
+                LocalDate.of(2026, 4, 27),
+                LocalTime.of(9, 0),
+                persistedCarryoverDemo)));
 
     reportRepository.saveAll(
         List.of(
@@ -168,6 +266,8 @@ public class DemoDataSeeder {
       String slug,
       String name,
       String category,
+      String institution,
+      double targetMonthHours,
       double totalHours,
       double monthHours,
       int completionPercent) {
@@ -175,6 +275,8 @@ public class DemoDataSeeder {
     entity.setSlug(slug);
     entity.setName(name);
     entity.setCategory(category);
+    entity.setInstitution(institution);
+    entity.setTargetMonthHours(targetMonthHours);
     entity.setTotalHours(totalHours);
     entity.setMonthHours(monthHours);
     entity.setCompletionPercent(completionPercent);

@@ -1,14 +1,14 @@
-import { createRouter, createWebHistory } from 'vue-router';
-import ProjectsDashboardView from '../views/ProjectsDashboardView.vue';
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
+import ExportReportsView from '../views/ExportReportsView.vue';
 import ProjectCalendarView from '../views/ProjectCalendarView.vue';
+import ProjectsDashboardView from '../views/ProjectsDashboardView.vue';
 import StudentManagementView from '../views/StudentManagementView.vue';
 import TimeslotEditorView from '../views/TimeslotEditorView.vue';
-import ExportReportsView from '../views/ExportReportsView.vue';
 
 /**
  * Main route map for the TutorTimeTracker SPA.
  */
-const routes = [
+const routes: RouteRecordRaw[] = [
   { path: '/', redirect: '/projects' },
   { path: '/projects', name: 'projects-dashboard', component: ProjectsDashboardView },
   {

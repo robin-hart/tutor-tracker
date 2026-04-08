@@ -24,9 +24,9 @@ test.describe('Calendar & Timeslots', () => {
     const projectResponse = await setupPage.request.post(`${apiBaseUrl}/api/projects`, {
       data: {
         name: `Timeslot Test Project ${Date.now()}`,
+        institution: 'Timeslot Institute',
         category: 'GENERAL',
-        totalHours: 0,
-        monthHours: 0,
+        targetMonthHours: 10,
         completionPercent: 0,
       },
     });

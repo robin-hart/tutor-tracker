@@ -19,13 +19,14 @@ public class PdflatexCompiler implements LatexCompiler {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(PdflatexCompiler.class);
 
-  private final String latexCommand;
+  private final String localLatexCommand;
   private final long timeoutSeconds;
 
   public PdflatexCompiler(
-      @Value("${report.export.latex.command:pdflatex}") String latexCommand,
+      @Value("${report.export.latex.local.command:${LATEX_COMMAND:pdflatex}}")
+          String localLatexCommand,
       @Value("${report.export.latex.timeout-seconds:30}") long timeoutSeconds) {
-    this.latexCommand = latexCommand;
+    this.localLatexCommand = localLatexCommand;
     this.timeoutSeconds = timeoutSeconds;
   }
 
@@ -48,8 +49,8 @@ public class PdflatexCompiler implements LatexCompiler {
       return Files.readAllBytes(pdfFile);
     } catch (IOException ex) {
       throw new PdfReportGenerationException(
-          "Failed to generate report PDF. Ensure a LaTeX compiler is installed and available in"
-              + " PATH.",
+          "Failed to generate report PDF. Ensure a local LaTeX compiler is installed and"
+              + " accessible via LATEX_COMMAND.",
           ex);
     } finally {
       deleteDirectoryQuietly(workDir);
@@ -59,12 +60,17 @@ public class PdflatexCompiler implements LatexCompiler {
   private void runLatex(Path workDir, Path texFile) throws IOException {
     List<String> command =
         List.of(
-            latexCommand,
+            localLatexCommand,
             "-interaction=nonstopmode",
             "-halt-on-error",
             "-output-directory",
             workDir.toString(),
             texFile.getFileName().toString());
+
+    runProcess(command, workDir);
+  }
+
+  private void runProcess(List<String> command, Path workDir) throws IOException {
 
     ProcessBuilder processBuilder = new ProcessBuilder(command);
     processBuilder.directory(workDir.toFile());

@@ -7,10 +7,14 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
+    "lint": "npm exec eslint -- \"src/**/*.{ts,vue}\" \"tests/**/*.ts\" \"*.ts\"",
+    "lint:fix": "npm exec eslint -- --fix \"src/**/*.{ts,vue}\" \"tests/**/*.ts\" \"*.ts\"",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
+    "format:check:strict": "prettier \"src/**/*.{vue,ts}\" \"tests/**/*.ts\" \"*.{json,md,css,html}\" --check",
+    "format:vue": "prettier \"src/**/*.vue\" --write",
+    "format:vue:check": "prettier \"src/**/*.vue\" --check",
+    "typecheck": "npm exec vue-tsc -- --noEmit -p tsconfig.json",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
@@ -27,6 +31,8 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.58.2",
+    "@types/eslint__js": "^8.42.3",
+    "@types/node": "^24.6.1",
     "@typescript-eslint/eslint-plugin": "^8.57.2",
     "@typescript-eslint/parser": "^8.57.2",
     "@vitejs/plugin-vue": "^5.2.1",
@@ -36,11 +42,15 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-vue": "^10.8.0",
     "globals": "^17.4.0",
+    "jiti": "^2.4.2",
     "jsdom": "^29.0.1",
     "postcss": "^8.5.3",
     "prettier": "^3.8.1",
     "tailwindcss": "^3.4.17",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3",
     "vite": "^6.1.0",
-    "vitest": "^1.0.0"
+    "vitest": "^1.0.0",
+    "vue-tsc": "^3.1.1"
   }
 }

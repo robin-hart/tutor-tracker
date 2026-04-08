@@ -9,7 +9,8 @@
 ## Code style
 
 - Java: Follow Google Java Style Guide. Use Checkstyle enforcement.
-- JavaScript/TypeScript: Use ESLint enforcement and Prettier for formatting. Continuously change the prettier file to match the style of the existing codebase (carefully).
+- JavaScript/TypeScript: Use ESLint enforcement and Prettier for formatting. Continuously change the prettier file to match the style of the existing codebase (carefully). 
+Also use Prettier to check code style of vue files.
 
 SonarQube is running in the background and should be used to identify and fix code smells, bugs, and security vulnerabilities. Aim for a clean SonarQube report with no critical issues.
 
@@ -35,3 +36,11 @@ Provide good names and clear assertions in tests to ensure they are human-readab
 ## Development platform
 
 - All development happens on a windows machine. Do not use linux only commands at all.
+
+## Project structure
+
+- the folder for the backend is called `api` and the folder for the frontend is called `frontend`.
+- Various mockup files are stored in the `mockups` folder. These files are not part of the actual 
+project and should not be included in the final product. They are only for reference and design purposes.
+- Check the README files in the root, `api`, and `frontend` folders for setup instructions and project information.
+- Please keep in mind how the flyway migrations work and how the database evolution model works when making changes to the database schema. Do not make destructive schema changes in the first code change. Always add a new migration for every schema change, and follow the expand-contract pattern for breaking changes.
