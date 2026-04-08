@@ -400,7 +400,12 @@ const isEditingProject = computed(() => projectFormMode.value === 'edit');
  * @param {string} projectId selected project id
  */
 function openCalendar(projectId: string): void {
-  router.push({ name: 'project-calendar', params: { projectId } });
+  const normalizedProjectId = String(projectId || '').trim();
+  if (!normalizedProjectId) {
+    errorMessage.value = 'Cannot open calendar because the selected project has no valid id.';
+    return;
+  }
+  router.push({ name: 'project-calendar', params: { projectId: normalizedProjectId } });
 }
 
 /**
@@ -579,7 +584,8 @@ async function loadProjects(): Promise<void> {
   isLoading.value = true;
   errorMessage.value = '';
   try {
-    projects.value = await getProjects();
+    const loadedProjects = await getProjects();
+    projects.value = loadedProjects.filter((project) => String(project?.id || '').trim().length > 0);
     apiUnavailable.value = false;
   } catch (error) {
     console.warn('Projects API is unavailable.', error);
