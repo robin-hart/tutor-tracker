@@ -173,6 +173,17 @@ set DB_USERNAME=tutortime
 set DB_PASSWORD=tutortime
 ```
 
+If the local MariaDB user does not exist yet, create it as a database administrator first:
+
+```sql
+CREATE USER 'tutortime'@'localhost' IDENTIFIED BY 'tutortime';
+GRANT ALL PRIVILEGES ON tutortimetracker.* TO 'tutortime'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+If the backend runs from Docker against a local MariaDB server, use `'%'` instead of
+`'localhost'` for the host part.
+
 Optional LaTeX export settings:
 ```bash
 set LATEX_COMMAND=pdflatex
