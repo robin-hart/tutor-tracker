@@ -26,6 +26,10 @@ TutorTimeTracker is a full-stack implementation of the provided mockups using:
 
 Start your local MariaDB installation on the default port `3306`.
 
+Before starting the backend, copy [.env.example](.env.example) to [.env](.env) in the repository
+root and keep the database credentials there. The backend development profile reads that file on
+startup.
+
 Start backend:
 
 ```bash
@@ -57,8 +61,11 @@ docker compose up --build
 ```
 
 Docker mode endpoints:
-- Frontend (nginx): `http://localhost:5173`
+- Frontend (nginx): `http://localhost:5173` by default
 - Backend API: `http://localhost:8080/api`
+
+To change the published frontend port, edit `FRONTEND_HOST_PORT` in the repository root
+[.env](.env) file.
 
 In Docker mode, MariaDB is internal to the Docker network and is not exposed on a host port.
 

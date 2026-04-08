@@ -156,6 +156,9 @@ By default, local startup uses the `development` profile:
 - `spring.jpa.hibernate.ddl-auto=create-drop`
 - Demo seed data is inserted on first boot
 - Legacy local schema cleanup runs automatically
+- Database credentials are loaded from the repository root [.env](../.env) file.
+
+Copy [.env.example](../.env.example) to [.env](../.env) before starting the backend.
 
 Set another profile explicitly if needed:
 
@@ -192,6 +195,9 @@ In Docker mode, MariaDB is reachable only inside the Docker network at
 `jdbc:mariadb://mariadb:3306/tutortimetracker` and is not published to the host.
 
 Docker mode always starts the backend with the `production` profile.
+
+The frontend host port is controlled by `FRONTEND_HOST_PORT` in the repository root `.env` file.
+The default is `5173`.
 
 Production profile behavior:
 
