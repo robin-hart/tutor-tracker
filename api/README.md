@@ -199,6 +199,41 @@ Production profile behavior:
 - Flyway migrations are enabled from `src/main/resources/db/migration`
 - Existing data is preserved on restart (no `create-drop`)
 
+## Database Evolution Policy
+
+This project follows a forward-only database evolution model.
+
+### Rules
+
+- Never edit a migration after it has been applied in any shared environment.
+- Put every schema change into a new `Vx__description.sql` file.
+- Use expand-contract changes for breaking schema updates.
+  - Expand: add new structures without breaking existing code.
+  - Backfill: move or derive data into the new structure.
+  - Contract: remove the legacy path only after the new path is deployed.
+- Do not rely on production Hibernate DDL generation.
+- Treat destructive changes as deliberate later-stage migrations, not as startup behavior.
+
+### Recommended migration workflow
+
+1. Implement the application change in a feature branch.
+2. Add the corresponding Flyway migration.
+3. Run `mvn test` locally.
+4. Start the Docker stack and confirm the backend comes up with `production`.
+5. Verify a fresh database migration path and, when relevant, a schema upgrade path.
+
+### Practical naming examples
+
+- `V2__add_student_email.sql`
+- `V3__backfill_student_email.sql`
+- `V4__drop_legacy_student_notes.sql`
+
+### Environment contract
+
+- Local development uses `development` by default.
+- Docker always uses `production`.
+- Test runs use the `test` profile with H2 and no Flyway migration execution.
+
 ## Quality & Testing
 
 ### Code Quality & Formatting
