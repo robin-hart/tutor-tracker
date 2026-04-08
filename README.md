@@ -115,8 +115,3 @@ In local installation mode, the frontend runs at `http://localhost:5173` and cal
 
 Legacy compatibility endpoint still available:
 - `POST /api/timeslots`
-
-## Notes
-- Data is persisted in MariaDB through Spring Data JPA.
-- On first boot, `DemoDataSeeder` inserts baseline records to match the mockups.
-- The relation model is project-centric: students, calendar timeslots, and monthly reports are all scoped to one project.
