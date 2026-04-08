@@ -308,15 +308,27 @@ const hasActiveSearch = computed(() => searchText.value.trim().length > 0);
 
 const selectableGroups = computed(() => groups.value.filter((group) => group !== 'Ungrouped'));
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
+}
+
 const groupedStudents = computed(() => {
-  const byGroup = new Map(groups.value.map((groupName) => [groupName, []]));
+  const byGroup = new Map<string, Student[]>(
+    groups.value.map((groupName) => [groupName, [] as Student[]])
+  );
 
   for (const student of filteredStudents.value) {
     const groupName = normalizeGroupName(student.groupName);
     if (!byGroup.has(groupName)) {
       byGroup.set(groupName, []);
     }
-    byGroup.get(groupName).push(student);
+    const groupStudents = byGroup.get(groupName);
+    if (groupStudents) {
+      groupStudents.push(student);
+    }
   }
 
   return Array.from(byGroup.entries())
@@ -368,7 +380,7 @@ async function loadStudentContext(): Promise<void> {
     }
     groups.value = Array.from(groupNames);
   } catch (error) {
-    errorMessage.value = error.message;
+    errorMessage.value = getErrorMessage(error);
     students.value = [
       {
         id: 'alex-thompson',
@@ -413,7 +425,7 @@ async function addGroup(): Promise<void> {
     newGroupName.value = '';
     showAddGroup.value = false;
   } catch (error) {
-    errorMessage.value = error.message;
+    errorMessage.value = getErrorMessage(error);
   }
 }
 
@@ -432,7 +444,7 @@ async function removeGroup(groupName: string): Promise<void> {
       return student;
     });
   } catch (error) {
-    errorMessage.value = error.message;
+    errorMessage.value = getErrorMessage(error);
   }
 }
 
@@ -461,7 +473,7 @@ async function addStudent(): Promise<void> {
     newStudent.value = { name: '', notes: '', groupName: '' };
     showAddStudent.value = false;
   } catch (error) {
-    errorMessage.value = error.message;
+    errorMessage.value = getErrorMessage(error);
   }
 }
 
@@ -548,7 +560,7 @@ async function moveStudentToGroup(groupName: string): Promise<void> {
     await updateStudentGroup(student.id, targetGroup);
   } catch (error) {
     student.groupName = previousGroup;
-    errorMessage.value = error.message;
+    errorMessage.value = getErrorMessage(error);
   }
 }
 
@@ -586,7 +598,7 @@ async function saveNotes(student: Student): Promise<void> {
     }, 2200);
     noteSuccessTimers.set(student.id, timeoutId);
   } catch (error) {
-    errorMessage.value = error.message;
+    errorMessage.value = getErrorMessage(error);
     setNoteValidationError(student.id, 'Could not save notes. Please try again.');
   }
 }
@@ -652,15 +664,17 @@ async function confirmDelete() {
     return;
   }
 
+  const studentId = studentToDelete.value.id;
+
   try {
-    await deleteStudent(studentToDelete.value.id);
-    students.value = students.value.filter((student) => student.id !== studentToDelete.value.id);
+    await deleteStudent(studentId);
+    students.value = students.value.filter((student) => student.id !== studentId);
     const nextBaselines = { ...noteBaselineByStudentId.value };
-    delete nextBaselines[studentToDelete.value.id];
+    delete nextBaselines[studentId];
     noteBaselineByStudentId.value = nextBaselines;
     cancelDelete();
   } catch (error) {
-    errorMessage.value = error.message;
+    errorMessage.value = getErrorMessage(error);
     cancelDelete();
   }
 }

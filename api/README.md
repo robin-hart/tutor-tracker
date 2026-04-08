@@ -145,38 +145,39 @@ Validation and not-found errors return a consistent JSON structure:
 
 ## Run
 ```bash
-docker compose up -d
+cd api
 mvn spring-boot:run
 ```
 
+Local mode expects a local MariaDB installation on port `3306`.
+
 If needed, override connection values:
 ```bash
-set DB_URL=jdbc:mariadb://localhost:3307/tutortimetracker
+set DB_URL=jdbc:mariadb://localhost:3306/tutortimetracker
 set DB_USERNAME=tutortime
 set DB_PASSWORD=tutortime
 ```
 
 Optional LaTeX export settings:
 ```bash
-set LATEX_RUNNER=compose
-set LATEX_COMPOSE_SERVICE=latex
-set LATEX_COMPOSE_HOST_WORK_ROOT=.latex-work
-set LATEX_COMPOSE_CONTAINER_WORK_ROOT=/latex-work
-set LATEX_COMPOSE_PROJECT_DIRECTORY=.
-set LATEX_DOCKER_IMAGE=tutor-tracker-latex:latest
-set LATEX_DOCKER_COMMAND=pdflatex
-set LATEX_DOCKER_EXECUTABLE=docker
 set LATEX_COMMAND=pdflatex
 set LATEX_TIMEOUT_SECONDS=30
 ```
 
-The default runner is `compose`. A single `docker compose up -d` starts both MariaDB and the
-LaTeX container used by PDF export.
+LaTeX export always uses a local command from the backend runtime environment.
+- Local installation mode: install LaTeX on your machine and ensure `LATEX_COMMAND` is on PATH.
+- Full Docker mode: LaTeX is installed inside the backend container, so the backend can execute
+  `pdflatex` locally inside that container.
 
-If you prefer a local installation, set `LATEX_RUNNER=local` and ensure `LATEX_COMMAND` (for
-example `pdflatex`) is available on your PATH.
+To run the full Docker stack (frontend via nginx + backend + MariaDB), run this from the
+repository root:
 
-Note: Docker maps MariaDB to host port `3307` by default to avoid collisions with local MariaDB services on `3306`.
+```bash
+docker compose up --build
+```
+
+In Docker mode, MariaDB is reachable only inside the Docker network at
+`jdbc:mariadb://mariadb:3306/tutortimetracker` and is not published to the host.
 
 ## Quality & Testing
 

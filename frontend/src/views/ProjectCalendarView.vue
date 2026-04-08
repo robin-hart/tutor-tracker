@@ -401,8 +401,15 @@ const projectTargetLabel = computed(() => {
   return `${formatted.hours} hrs ${String(formatted.minutes).padStart(2, '0')} min`;
 });
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
+}
+
 const slotCountByDate = computed(() => {
-  return monthSlots.value.reduce((acc, slot) => {
+  return monthSlots.value.reduce<Record<string, number>>((acc, slot) => {
     acc[slot.date] = (acc[slot.date] || 0) + 1;
     return acc;
   }, {});
@@ -440,14 +447,17 @@ const filteredSlotResults = computed(() => {
 });
 
 const groupedFilteredSlots = computed(() => {
-  const grouped = new Map();
+  const grouped = new Map<string, Timeslot[]>();
 
   for (const slot of filteredSlotResults.value) {
     const monthKey = getMonthKeyFromDate(slot.date);
     if (!grouped.has(monthKey)) {
       grouped.set(monthKey, []);
     }
-    grouped.get(monthKey).push(slot);
+    const groupedSlots = grouped.get(monthKey);
+    if (groupedSlots) {
+      groupedSlots.push(slot);
+    }
   }
 
   return Array.from(grouped.entries())
@@ -455,7 +465,7 @@ const groupedFilteredSlots = computed(() => {
     .map(([monthKey, slots]) => ({
       monthKey,
       label: formatMonthLabel(monthKey),
-      slots: slots.sort((left, right) => {
+      slots: slots.sort((left: Timeslot, right: Timeslot) => {
         const leftKey = `${left.date} ${left.startTime}`;
         const rightKey = `${right.date} ${right.startTime}`;
         return rightKey.localeCompare(leftKey);
@@ -503,7 +513,7 @@ async function loadCalendar(): Promise<void> {
     }
   } catch (error) {
     console.warn('Using fallback calendar data because API is unavailable.', error);
-    errorMessage.value = error.message;
+    errorMessage.value = getErrorMessage(error);
     projectName.value = 'Project Calendar';
     projectInstitution.value = '—';
     projectTargetHours.value = 0;
@@ -594,7 +604,7 @@ async function confirmDelete() {
     await loadCalendar();
     cancelDelete();
   } catch (error) {
-    errorMessage.value = error.message;
+    errorMessage.value = getErrorMessage(error);
   }
 }
 

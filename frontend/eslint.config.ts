@@ -35,12 +35,15 @@ export default [
     rules: {
       ...js.configs.recommended.rules,
       'no-undef': 'off',
-      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-explicit-any': 'error',
     },
   },
   ...pluginVue.configs['flat/recommended'],
   {
     files: ['**/*.vue'],
+    plugins: {
+      '@typescript-eslint': tsPlugin,
+    },
     languageOptions: {
       parser: vueParser,
       parserOptions: {
@@ -52,6 +55,9 @@ export default [
         ...globals.browser,
         ...globals.node,
       },
+    },
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'error',
     },
   },
   {
@@ -76,7 +82,7 @@ export default [
       },
     },
     rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-explicit-any': 'error',
     },
   },
   eslintConfigPrettier,
