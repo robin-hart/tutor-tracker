@@ -90,8 +90,12 @@ docker compose up --build
 ```
 
 In this mode:
-- Frontend is served by nginx on `http://localhost:5173`.
+
+- Frontend is served by nginx on `http://localhost:80` by default.
 - `/api` requests are reverse-proxied by nginx to the backend container.
+
+The published host port can be changed through `FRONTEND_HOST_PORT` in the repository root
+`.env` file. The container still listens on port `80` internally.
 
 ## Testing
 
