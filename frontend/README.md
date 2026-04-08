@@ -90,6 +90,7 @@ docker compose up --build
 ```
 
 In this mode:
+
 - Frontend is served by nginx on `http://localhost:80` by default.
 - `/api` requests are reverse-proxied by nginx to the backend container.
 
