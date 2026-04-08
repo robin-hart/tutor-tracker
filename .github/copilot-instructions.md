@@ -43,3 +43,4 @@ Provide good names and clear assertions in tests to ensure they are human-readab
 - Various mockup files are stored in the `mockups` folder. These files are not part of the actual 
 project and should not be included in the final product. They are only for reference and design purposes.
 - Check the README files in the root, `api`, and `frontend` folders for setup instructions and project information.
+- Please keep in mind how the flyway migrations work and how the database evolution model works when making changes to the database schema. Do not make destructive schema changes in the first code change. Always add a new migration for every schema change, and follow the expand-contract pattern for breaking changes.
