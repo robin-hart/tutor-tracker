@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
 
 /** Seeds baseline mockup data into MariaDB on first boot. */
 @Component
-@Profile("!test")
+@Profile("development")
 public class DemoDataSeeder {
 
   private static final String GROUP_UNGROUPED = "Ungrouped";

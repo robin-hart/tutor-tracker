@@ -151,6 +151,18 @@ mvn spring-boot:run
 
 Local mode expects a local MariaDB installation on port `3306`.
 
+By default, local startup uses the `development` profile:
+
+- `spring.jpa.hibernate.ddl-auto=create-drop`
+- Demo seed data is inserted on first boot
+- Legacy local schema cleanup runs automatically
+
+Set another profile explicitly if needed:
+
+```bash
+set SPRING_PROFILES_ACTIVE=production
+```
+
 If needed, override connection values:
 ```bash
 set DB_URL=jdbc:mariadb://localhost:3306/tutortimetracker
@@ -178,6 +190,14 @@ docker compose up --build
 
 In Docker mode, MariaDB is reachable only inside the Docker network at
 `jdbc:mariadb://mariadb:3306/tutortimetracker` and is not published to the host.
+
+Docker mode always starts the backend with the `production` profile.
+
+Production profile behavior:
+
+- `spring.jpa.hibernate.ddl-auto=validate`
+- Flyway migrations are enabled from `src/main/resources/db/migration`
+- Existing data is preserved on restart (no `create-drop`)
 
 ## Quality & Testing
 

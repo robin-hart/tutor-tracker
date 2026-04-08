@@ -33,6 +33,9 @@ cd api
 mvn spring-boot:run
 ```
 
+The backend defaults to the `development` profile in local mode.
+In this profile, JPA runs with `create-drop`, so the schema is recreated on every start.
+
 Start frontend:
 
 ```bash
@@ -77,6 +80,13 @@ npm run typecheck
 
 In local installation mode, the frontend runs at `http://localhost:5173` and calls
 `http://localhost:8080/api`.
+
+### Stage Behavior
+
+- Local backend runs with `development` by default (`SPRING_PROFILES_ACTIVE` not set).
+- Docker backend always runs with `production` (`SPRING_PROFILES_ACTIVE=production`).
+- In `production`, schema changes are managed by Flyway migrations and Hibernate runs in
+  `validate` mode, so existing database rows are not dropped on startup.
 
 ## API Surface (Summary)
 - `GET /api/health`
