@@ -4,6 +4,8 @@ package com.tutortimetracker.api.service;
 public interface LatexCompiler {
 
   /**
+   * Compiles a full LaTeX document into PDF bytes.
+   *
    * @param latexSource full LaTeX document source
    * @return generated PDF bytes
    */

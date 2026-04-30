@@ -143,9 +143,14 @@ export function generateProjectReport(projectId: string, month: string): Promise
   );
 }
 
-export async function exportProjectReportPdf(projectId: string, month: string): Promise<Blob> {
+export async function exportProjectReportPdf(projectId: string, month: string, userName?: string): Promise<Blob> {
+  const params = new URLSearchParams();
+  params.append('month', month);
+  if (userName) {
+    params.append('userName', userName);
+  }
   const response = await fetch(
-    `${API_BASE_URL}/projects/${projectId}/reports/export/pdf?month=${encodeURIComponent(month)}`
+    `${API_BASE_URL}/projects/${projectId}/reports/export/pdf?${params.toString()}`
   );
 
   if (!response.ok) {

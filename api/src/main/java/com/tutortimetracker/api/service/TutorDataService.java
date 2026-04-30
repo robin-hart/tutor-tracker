@@ -140,6 +140,8 @@ public class TutorDataService {
   }
 
   /**
+   * Returns the dashboard project list after refreshing each project's metrics.
+   *
    * @return project summaries for the dashboard
    */
   public List<ProjectSummary> getProjects() {
@@ -235,7 +237,10 @@ public class TutorDataService {
   }
 
   /**
+   * Returns the calendar payload for one project, including the active month and today's slots.
+   *
    * @param projectId selected project id
+   * @param monthKey optional month key in yyyy-MM format
    * @return calendar information and today's slots
    */
   public ProjectCalendarResponse getProjectCalendar(String projectId, String monthKey) {
@@ -287,6 +292,8 @@ public class TutorDataService {
   }
 
   /**
+   * Returns the students that belong to one project.
+   *
    * @param projectId selected project id
    * @return students linked to the project
    */
@@ -494,6 +501,8 @@ public class TutorDataService {
   }
 
   /**
+   * Returns every stored report row for the export table.
+   *
    * @return report rows for the export table
    */
   public List<ReportRow> getReports() {

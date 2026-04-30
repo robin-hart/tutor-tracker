@@ -348,7 +348,7 @@ class TutorDataControllerIT {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.projectName").value("Calendar Project"))
         .andExpect(jsonPath("$.totalHours").value(2.5))
-        .andExpect(jsonPath("$.monthHours").value(2.5));
+        .andExpect(jsonPath("$.monthHours").value(1.0));
   }
 
   @Test

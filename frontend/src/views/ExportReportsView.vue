@@ -125,11 +125,13 @@ import { computed, onMounted, ref, watch } from 'vue';
 import AppSidebar from '../components/AppSidebar.vue';
 import MainTopBar from '../components/MainTopBar.vue';
 import { exportProjectReportPdf, getProjectCalendar, getProjects } from '../services/apiClient';
+import { useUserSettings } from '../composables/useUserSettings';
 import type { Project, Timeslot } from '../types/domain';
 
 /**
  * Reporting screen showing monthly billing and workload exports.
  */
+const { userName } = useUserSettings();
 const projects = ref<Project[]>([]);
 const selectedProjectId = ref('');
 const projectStartMonthKey = ref(new Date().toISOString().slice(0, 7));
@@ -352,7 +354,7 @@ function getMonthTransferToNextLabel(monthKey: string): string {
 async function downloadReportForMonth(monthKey: string): Promise<void> {
   errorMessage.value = '';
   try {
-    const blob = await exportProjectReportPdf(selectedProjectId.value, monthKey);
+  const blob = await exportProjectReportPdf(selectedProjectId.value, monthKey, userName.value);
     const filename = `${selectedProjectId.value}-${monthKey}-report.pdf`;
     const objectUrl = URL.createObjectURL(blob);
 

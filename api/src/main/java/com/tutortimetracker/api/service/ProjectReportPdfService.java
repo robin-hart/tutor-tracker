@@ -101,11 +101,25 @@ public class ProjectReportPdfService {
   }
 
   /**
+   * Exports the selected month as a PDF, using an empty name when no user name is configured.
+   *
    * @param projectId project slug
    * @param monthKey month key in yyyy-MM format
    * @return generated PDF bytes
    */
   public byte[] exportProjectMonthPdf(String projectId, String monthKey) {
+    return exportProjectMonthPdf(projectId, monthKey, null);
+  }
+
+  /**
+   * Exports the selected month as a PDF and injects the configured user name into the name field.
+   *
+   * @param projectId project slug
+   * @param monthKey month key in yyyy-MM format
+   * @param userName optional user name for the report
+   * @return generated PDF bytes
+   */
+  public byte[] exportProjectMonthPdf(String projectId, String monthKey, String userName) {
     ProjectEntity project =
         projectRepository
             .findBySlug(projectId)
@@ -136,7 +150,7 @@ public class ProjectReportPdfService {
     String template = readTemplate();
     String latex =
         template
-            .replace("{{PROJECT_NAME}}", escapeLatex(project.getName()))
+            .replace("{{PROJECT_NAME}}", escapeLatex(resolveReportName(userName)))
             .replace("{{PROJECT_INSTITUTION}}", escapeLatex(project.getInstitution()))
             .replace(
                 "{{REPORT_MONTH}}",
@@ -157,6 +171,15 @@ public class ProjectReportPdfService {
 
   private String readTemplate() {
     return LATEX_TEMPLATE;
+  }
+
+  private String resolveReportName(String userName) {
+    if (userName == null) {
+      return "";
+    }
+
+    String normalized = userName.trim();
+    return normalized.isEmpty() ? "" : normalized;
   }
 
   private String buildTimeslotRows(List<TimeslotEntity> monthSlots) {

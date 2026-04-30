@@ -4,7 +4,7 @@ import ProjectCalendarView from '../views/ProjectCalendarView.vue';
 import ProjectsDashboardView from '../views/ProjectsDashboardView.vue';
 import StudentManagementView from '../views/StudentManagementView.vue';
 import TimeslotEditorView from '../views/TimeslotEditorView.vue';
-
+import SettingsView from '../views/SettingsView.vue';
 /**
  * Main route map for the TutorTimeTracker SPA.
  */
@@ -23,7 +23,8 @@ const routes: RouteRecordRaw[] = [
   },
   { path: '/timeslots/edit', name: 'timeslot-editor', component: TimeslotEditorView },
   { path: '/reports', name: 'export-reports', component: ExportReportsView },
-];
+    { path: '/settings', name: 'settings', component: SettingsView },
+  ];
 
 const router = createRouter({
   history: createWebHistory(),

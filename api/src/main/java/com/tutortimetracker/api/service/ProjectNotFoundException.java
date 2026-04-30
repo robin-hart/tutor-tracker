@@ -4,6 +4,8 @@ package com.tutortimetracker.api.service;
 public class ProjectNotFoundException extends RuntimeException {
 
   /**
+   * Creates an exception for a missing project reference.
+   *
    * @param message error details
    */
   public ProjectNotFoundException(String message) {

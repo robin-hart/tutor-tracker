@@ -30,6 +30,13 @@ public class PdflatexCompiler implements LatexCompiler {
     this.timeoutSeconds = timeoutSeconds;
   }
 
+  /**
+   * Compiles LaTeX by running the configured local pdflatex command in a temporary working
+   * directory and returning the generated PDF bytes.
+   *
+   * @param latexSource full LaTeX document source
+   * @return generated PDF bytes
+   */
   @Override
   public byte[] compileToPdf(String latexSource) {
     Path workDir = null;

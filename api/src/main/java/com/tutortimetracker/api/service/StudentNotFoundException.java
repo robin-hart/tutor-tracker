@@ -4,6 +4,8 @@ package com.tutortimetracker.api.service;
 public class StudentNotFoundException extends RuntimeException {
 
   /**
+   * Creates an exception for a missing student reference.
+   *
    * @param message error details
    */
   public StudentNotFoundException(String message) {

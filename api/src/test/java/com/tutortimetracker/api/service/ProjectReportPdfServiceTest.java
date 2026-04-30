@@ -1,6 +1,7 @@
 package com.tutortimetracker.api.service;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -69,7 +70,7 @@ class ProjectReportPdfServiceTest {
     when(timeslotRepository.findByProject(project)).thenReturn(List.of(slot));
     when(latexCompiler.compileToPdf(any(String.class))).thenReturn(expectedPdf);
 
-    byte[] actual = service.exportProjectMonthPdf("proj-1", "2026-03");
+    byte[] actual = service.exportProjectMonthPdf("proj-1", "2026-03", "Jane Doe");
 
     assertArrayEquals(expectedPdf, actual);
 
@@ -78,8 +79,7 @@ class ProjectReportPdfServiceTest {
 
     String latex = latexCaptor.getValue();
     assertTrue(latex.contains("Arbeitszeitblatt"));
-    assertTrue(latex.contains("Math"));
-    assertTrue(latex.contains("Science"));
+    assertTrue(latex.contains("Jane Doe"));
     assertTrue(latex.contains("University Lab"));
     assertTrue(latex.contains("Session"));
     assertTrue(latex.contains("12.03.2026"));
@@ -87,6 +87,38 @@ class ProjectReportPdfServiceTest {
     assertTrue(latex.contains("16:00"));
     assertTrue(latex.contains("1h 30min"));
     assertTrue(latex.contains("Unterschrift"));
+  }
+
+  @Test
+  void exportProjectMonthPdf_shouldLeaveNameEmptyWhenNoUserNameWasConfigured() {
+    ProjectEntity project = new ProjectEntity();
+    project.setSlug("proj-1");
+    project.setName("Math & Science");
+    project.setInstitution("University Lab");
+    project.setTargetMonthHours(12.5);
+    project.setCreatedAt(LocalDate.of(2026, 1, 1));
+
+    YearMonth month = YearMonth.parse("2026-03");
+    LocalDate from = month.atDay(1);
+    LocalDate to = month.plusMonths(1).atDay(1);
+
+    when(projectRepository.findBySlug("proj-1")).thenReturn(Optional.of(project));
+    when(timeslotRepository.findByProjectAndDateGreaterThanEqualAndDateLessThan(project, from, to))
+        .thenReturn(List.of());
+    when(timeslotRepository.findByProject(project)).thenReturn(List.of());
+    when(latexCompiler.compileToPdf(any(String.class))).thenReturn("pdf-content".getBytes());
+
+    byte[] actual = service.exportProjectMonthPdf("proj-1", "2026-03");
+
+    assertArrayEquals("pdf-content".getBytes(), actual);
+
+    ArgumentCaptor<String> latexCaptor = ArgumentCaptor.forClass(String.class);
+    verify(latexCompiler).compileToPdf(latexCaptor.capture());
+
+    String latex = latexCaptor.getValue();
+    assertTrue(latex.contains("\\textbf{Name:}"));
+    assertTrue(latex.contains("University Lab"));
+    assertFalse(latex.contains("Math & Science"));
   }
 
   @Test

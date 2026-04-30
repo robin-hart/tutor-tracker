@@ -127,8 +127,11 @@ public class ReportController {
       @Parameter(description = "Project slug", example = "math-grade-10") @PathVariable
           String projectId,
       @Parameter(description = "Month key in yyyy-MM format", example = "2026-03") @RequestParam
-          String month) {
-    byte[] pdf = projectReportPdfService.exportProjectMonthPdf(projectId, month);
+          String month,
+      @Parameter(description = "User name for the report", example = "John Doe")
+          @RequestParam(required = false)
+          String userName) {
+    byte[] pdf = projectReportPdfService.exportProjectMonthPdf(projectId, month, userName);
 
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_PDF);

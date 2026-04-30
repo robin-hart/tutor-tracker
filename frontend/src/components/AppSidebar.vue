@@ -36,7 +36,19 @@
         <span class="material-symbols-outlined">analytics</span>
         <span class="font-manrope font-semibold tracking-tight">Reports</span>
       </RouterLink>
-    </nav>
+        <RouterLink
+          :to="{ name: 'settings' }"
+          class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all hover:translate-x-1"
+          :class="
+            isActive('settings')
+              ? 'bg-white text-primary font-bold'
+              : 'text-on-surface-variant hover:bg-surface-container-highest'
+          "
+        >
+          <span class="material-symbols-outlined">settings</span>
+          <span class="font-manrope font-semibold tracking-tight">Settings</span>
+        </RouterLink>
+      </nav>
     <RouterLink
       :to="{ name: 'projects-dashboard' }"
       class="premium-gradient text-on-primary py-3 px-4 rounded-lg font-headline font-bold shadow-lg text-center"
