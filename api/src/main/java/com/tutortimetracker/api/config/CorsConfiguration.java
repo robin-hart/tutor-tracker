@@ -14,11 +14,14 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class CorsConfiguration implements WebMvcConfigurer {
 
+  private static final String DEFAULT_ALLOWED_ORIGIN_PATTERNS =
+      "http://localhost:*,http://127.0.0.1:*,http://192.168.*:*,http://10.*:*"
+          + ",http://172.16.*:*,http://172.17.*:*,http://172.18.*:*,http://172.19.*:*";
+
   private final String[] allowedOriginPatterns;
 
   public CorsConfiguration(
-      @Value(
-              "${app.cors.allowed-origin-patterns:http://localhost:*,http://127.0.0.1:*,http://192.168.*:*,http://10.*:*,http://172.16.*:*,http://172.17.*:*,http://172.18.*:*,http://172.19.*:*}")
+      @Value("${app.cors.allowed-origin-patterns:" + DEFAULT_ALLOWED_ORIGIN_PATTERNS + "}")
           String[] allowedOriginPatterns) {
     this.allowedOriginPatterns = allowedOriginPatterns;
   }
