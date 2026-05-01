@@ -89,7 +89,8 @@ public class ProjectReportPdfService {
      \\textbf{Datum:} \\today \\hfill
        \\textbf{Unterschrift:} {{TUTOR_SIGNATURE}}\\\\[1.8cm]
     \\textbf{Vorgesetzte(r)}\\\\[0.3cm]
-    \\textbf{Datum:} \\rule{4cm}{0.4pt} \\hfill \\textbf{Unterschrift:} \\rule{6cm}{0.4pt}\\
+      \\textbf{Datum:} \\rule{4cm}{0.4pt} \\hfill \\textbf{Unterschrift:}
+      \\makebox[6cm][l]{\\rule{6cm}{0.4pt}}\\
     \\end{tabularx}
 
       \\end{document}
@@ -238,9 +239,11 @@ public class ProjectReportPdfService {
 
   private String buildSignatureLatex(boolean hasSignature) {
     if (!hasSignature) {
-      return "\\rule{6cm}{0.4pt}";
+      return "\\makebox[6cm][l]{\\rule{6cm}{0.4pt}}";
     }
-    return "\\includegraphics[height=1.2cm]{" + SIGNATURE_FILE_NAME + "}";
+    return "\\makebox[6cm][l]{\\raisebox{-0.15cm}{\\includegraphics[height=1.6cm]{"
+        + SIGNATURE_FILE_NAME
+        + "}}}";
   }
 
   private String readTemplate() {
