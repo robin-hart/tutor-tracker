@@ -193,8 +193,10 @@ test.describe('Reports', () => {
     // Get all rows in the table
     const rows = await page.locator('table tbody tr').all();
 
-    // Should have rows for January through April 2026 (based on current date 2026-04-01)
-    expect(rows.length).toBeGreaterThanOrEqual(4);
+    const now = new Date();
+    const expectedMonthCount =
+      (now.getFullYear() - 2026) * 12 + (now.getMonth() - 0) + 1;
+    expect(rows.length).toBeGreaterThanOrEqual(expectedMonthCount);
 
     // Check that all months have the project name displayed
     for (const row of rows) {
@@ -272,13 +274,16 @@ test.describe('Reports', () => {
     );
     await expect(page.getByTestId('report-project-target')).toContainText('10h 00min');
 
-    const firstTotalHours = page.getByTestId('month-total-hours').first();
-    await expect(firstTotalHours).toContainText('h');
-    await expect(firstTotalHours).toContainText('min');
-    await expect(firstTotalHours).not.toContainText('hrs');
+    const aprilRow = page.locator('table tbody tr').filter({ hasText: 'April 2026' }).first();
+    await expect(aprilRow).toBeVisible();
 
-    const firstTransfer = page.getByTestId('month-transfer-next').first();
-    await expect(firstTransfer).toContainText('3h 00min');
+    const aprilTotalHours = aprilRow.getByTestId('month-total-hours');
+    await expect(aprilTotalHours).toContainText('h');
+    await expect(aprilTotalHours).toContainText('min');
+    await expect(aprilTotalHours).not.toContainText('hrs');
+
+    const aprilTransfer = aprilRow.getByTestId('month-transfer-next');
+    await expect(aprilTransfer).toContainText('3h 00min');
 
     const januaryRow = page.locator('table tbody tr').filter({ hasText: 'Januar 2026' }).first();
     await expect(januaryRow).toBeVisible();
