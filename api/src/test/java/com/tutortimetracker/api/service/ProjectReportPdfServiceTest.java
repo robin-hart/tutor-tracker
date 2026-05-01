@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -67,17 +68,19 @@ class ProjectReportPdfServiceTest {
     when(timeslotRepository.findByProjectAndDateGreaterThanEqualAndDateLessThan(project, from, to))
         .thenReturn(List.of(slot));
     when(timeslotRepository.findByProject(project)).thenReturn(List.of(slot));
-    when(latexCompiler.compileToPdf(any(String.class))).thenReturn(expectedPdf);
+    when(latexCompiler.compileToPdf(any(String.class), anyList())).thenReturn(expectedPdf);
 
-    byte[] actual = service.exportProjectMonthPdf("proj-1", "2026-03");
+    byte[] actual = service.exportProjectMonthPdf("proj-1", "2026-03", "Robin Hart", null);
 
     assertArrayEquals(expectedPdf, actual);
 
     ArgumentCaptor<String> latexCaptor = ArgumentCaptor.forClass(String.class);
-    verify(latexCompiler).compileToPdf(latexCaptor.capture());
+    ArgumentCaptor<List<LatexAsset>> assetsCaptor = ArgumentCaptor.forClass(List.class);
+    verify(latexCompiler).compileToPdf(latexCaptor.capture(), assetsCaptor.capture());
 
     String latex = latexCaptor.getValue();
     assertTrue(latex.contains("Arbeitszeitblatt"));
+    assertTrue(latex.contains("Robin Hart"));
     assertTrue(latex.contains("Math"));
     assertTrue(latex.contains("Science"));
     assertTrue(latex.contains("University Lab"));
@@ -87,6 +90,7 @@ class ProjectReportPdfServiceTest {
     assertTrue(latex.contains("16:00"));
     assertTrue(latex.contains("1h 30min"));
     assertTrue(latex.contains("Unterschrift"));
+    assertTrue(assetsCaptor.getValue().isEmpty());
   }
 
   @Test
@@ -124,14 +128,15 @@ class ProjectReportPdfServiceTest {
         .thenReturn(currentSlots);
     when(timeslotRepository.findByProject(project))
         .thenReturn(Stream.concat(previousSlots.stream(), currentSlots.stream()).toList());
-    when(latexCompiler.compileToPdf(any(String.class))).thenReturn("pdf-content".getBytes());
+    when(latexCompiler.compileToPdf(any(String.class), anyList()))
+        .thenReturn("pdf-content".getBytes());
 
-    byte[] actual = service.exportProjectMonthPdf("proj-1", "2026-04");
+    byte[] actual = service.exportProjectMonthPdf("proj-1", "2026-04", null, null);
 
     assertArrayEquals("pdf-content".getBytes(), actual);
 
     ArgumentCaptor<String> latexCaptor = ArgumentCaptor.forClass(String.class);
-    verify(latexCompiler).compileToPdf(latexCaptor.capture());
+    verify(latexCompiler).compileToPdf(latexCaptor.capture(), anyList());
 
     String latex = latexCaptor.getValue();
     assertTrue(latex.contains("IST-Arbeitszeit des Abrechnungsmonats:"));
@@ -191,14 +196,15 @@ class ProjectReportPdfServiceTest {
     when(timeslotRepository.findByProjectAndDateGreaterThanEqualAndDateLessThan(project, from, to))
         .thenReturn(slots);
     when(timeslotRepository.findByProject(project)).thenReturn(slots);
-    when(latexCompiler.compileToPdf(any(String.class))).thenReturn("pdf-content".getBytes());
+    when(latexCompiler.compileToPdf(any(String.class), anyList()))
+        .thenReturn("pdf-content".getBytes());
 
-    byte[] actual = service.exportProjectMonthPdf("proj-1", "2026-03");
+    byte[] actual = service.exportProjectMonthPdf("proj-1", "2026-03", null, null);
 
     assertArrayEquals("pdf-content".getBytes(), actual);
 
     ArgumentCaptor<String> latexCaptor = ArgumentCaptor.forClass(String.class);
-    verify(latexCompiler).compileToPdf(latexCaptor.capture());
+    verify(latexCompiler).compileToPdf(latexCaptor.capture(), anyList());
 
     String latex = latexCaptor.getValue();
     assertTrue(latex.contains("Arbeitszeitblatt"));
@@ -257,14 +263,15 @@ class ProjectReportPdfServiceTest {
         .thenReturn(currentMonthSlots);
     when(timeslotRepository.findByProject(project))
         .thenReturn(Stream.concat(previousSlots.stream(), currentMonthSlots.stream()).toList());
-    when(latexCompiler.compileToPdf(any(String.class))).thenReturn("pdf-content".getBytes());
+    when(latexCompiler.compileToPdf(any(String.class), anyList()))
+        .thenReturn("pdf-content".getBytes());
 
-    byte[] actual = service.exportProjectMonthPdf("proj-carryover-demo", "2026-04");
+    byte[] actual = service.exportProjectMonthPdf("proj-carryover-demo", "2026-04", null, null);
 
     assertArrayEquals("pdf-content".getBytes(), actual);
 
     ArgumentCaptor<String> latexCaptor = ArgumentCaptor.forClass(String.class);
-    verify(latexCompiler).compileToPdf(latexCaptor.capture());
+    verify(latexCompiler).compileToPdf(latexCaptor.capture(), anyList());
 
     String latex = latexCaptor.getValue();
     assertTrue(latex.contains("Zeitübertrag aus dem Vormonat:"));

@@ -143,10 +143,19 @@ export function generateProjectReport(projectId: string, month: string): Promise
   );
 }
 
-export async function exportProjectReportPdf(projectId: string, month: string): Promise<Blob> {
-  const response = await fetch(
-    `${API_BASE_URL}/projects/${projectId}/reports/export/pdf?month=${encodeURIComponent(month)}`
-  );
+export async function exportProjectReportPdf(
+  projectId: string,
+  payload: {
+    month: string;
+    tutorName?: string | null;
+    signatureDataUrl?: string | null;
+  }
+): Promise<Blob> {
+  const response = await fetch(`${API_BASE_URL}/projects/${projectId}/reports/export/pdf`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
 
   if (!response.ok) {
     let apiMessage = '';

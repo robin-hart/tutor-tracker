@@ -31,12 +31,14 @@ public class PdflatexCompiler implements LatexCompiler {
   }
 
   @Override
-  public byte[] compileToPdf(String latexSource) {
+  public byte[] compileToPdf(String latexSource, List<LatexAsset> assets) {
     Path workDir = null;
     try {
       workDir = Files.createTempDirectory("monthly-report-");
       Path texFile = workDir.resolve("report.tex");
       Files.writeString(texFile, latexSource, StandardCharsets.UTF_8);
+
+      writeAssets(workDir, assets);
 
       runLatex(workDir, texFile);
 
@@ -54,6 +56,33 @@ public class PdflatexCompiler implements LatexCompiler {
           ex);
     } finally {
       deleteDirectoryQuietly(workDir);
+    }
+  }
+
+  private void writeAssets(Path workDir, List<LatexAsset> assets) throws IOException {
+    if (assets == null || assets.isEmpty()) {
+      return;
+    }
+
+    for (LatexAsset asset : assets) {
+      if (asset == null || asset.fileName() == null || asset.fileName().isBlank()) {
+        throw new IllegalArgumentException("LaTeX asset file name must be provided.");
+      }
+      if (asset.content() == null || asset.content().length == 0) {
+        throw new IllegalArgumentException("LaTeX asset content must be provided.");
+      }
+      if (asset.fileName().contains("/") || asset.fileName().contains("\\")) {
+        throw new IllegalArgumentException(
+            "LaTeX asset file name must not contain path separators.");
+      }
+
+      Path target = workDir.resolve(asset.fileName()).normalize();
+      if (!target.startsWith(workDir)) {
+        throw new IllegalArgumentException(
+            "LaTeX asset file name is not allowed: " + asset.fileName());
+      }
+
+      Files.write(target, asset.content());
     }
   }
 
