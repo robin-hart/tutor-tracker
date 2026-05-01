@@ -50,7 +50,8 @@ public class ProjectReportPdfService {
 
     \\noindent\\textbf{Für Monat:} {{REPORT_MONTH}} \\\\[0.2cm]
       \\textbf{Name:} {{TUTOR_NAME}} \\\\[0.2cm]
-  \\textbf{Einrichtung:} {{PROJECT_INSTITUTION}}
+      \\textbf{Projekt:} {{PROJECT_NAME}} \\\\[0.2cm]
+      \\textbf{Einrichtung:} {{PROJECT_INSTITUTION}}
 
     \\renewcommand{\\arraystretch}{1.3}
 
@@ -162,6 +163,7 @@ public class ProjectReportPdfService {
         template
             .replace("{{TUTOR_NAME}}", escapeLatex(normalizedTutorName))
             .replace("{{PROJECT_INSTITUTION}}", escapeLatex(project.getInstitution()))
+            .replace("{{PROJECT_NAME}}", escapeLatex(project.getName()))
             .replace(
                 "{{REPORT_MONTH}}",
                 escapeLatex(capitalizeMonth(month.format(MONTH_LABEL_FORMATTER))))
