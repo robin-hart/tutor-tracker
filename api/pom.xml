@@ -90,7 +90,7 @@
                 <executions>
                     <execution>
                         <id>spotless-check</id>
-                        <phase>verify</phase>
+                        <phase>process-classes</phase>
                         <goals>
                             <goal>check</goal>
                         </goals>
@@ -124,7 +124,7 @@
                 <executions>
                     <execution>
                         <id>checkstyle-verify</id>
-                        <phase>verify</phase>
+                        <phase>process-classes</phase>
                         <goals>
                             <goal>check</goal>
                         </goals>
