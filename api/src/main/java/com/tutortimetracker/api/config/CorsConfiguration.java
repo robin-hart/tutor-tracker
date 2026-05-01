@@ -18,7 +18,15 @@ public class CorsConfiguration implements WebMvcConfigurer {
 
   public CorsConfiguration(
       @Value(
-              "${app.cors.allowed-origin-patterns:http://localhost:*,http://127.0.0.1:*,http://192.168.*:*,http://10.*:*,http://172.16.*:*,http://172.17.*:*,http://172.18.*:*,http://172.19.*:*}")
+              "${app.cors.allowed-origin-patterns:"
+                  + "http://localhost:*,"
+                  + "http://127.0.0.1:*,"
+                  + "http://192.168.*:*,"
+                  + "http://10.*:*,"
+                  + "http://172.16.*:*,"
+                  + "http://172.17.*:*,"
+                  + "http://172.18.*:*,"
+                  + "http://172.19.*:*}")
           String[] allowedOriginPatterns) {
     this.allowedOriginPatterns = allowedOriginPatterns;
   }
