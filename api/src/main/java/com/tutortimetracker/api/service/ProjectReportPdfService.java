@@ -50,7 +50,6 @@ public class ProjectReportPdfService {
 
     \\noindent\\textbf{Für Monat:} {{REPORT_MONTH}} \\\\[0.2cm]
       \\textbf{Name:} {{TUTOR_NAME}} \\\\[0.2cm]
-      \\textbf{Projekt:} {{PROJECT_NAME}} \\\\[0.2cm]
   \\textbf{Einrichtung:} {{PROJECT_INSTITUTION}}
 
     \\renewcommand{\\arraystretch}{1.3}
@@ -161,7 +160,6 @@ public class ProjectReportPdfService {
     String template = readTemplate();
     String latex =
         template
-            .replace("{{PROJECT_NAME}}", escapeLatex(project.getName()))
             .replace("{{TUTOR_NAME}}", escapeLatex(normalizedTutorName))
             .replace("{{PROJECT_INSTITUTION}}", escapeLatex(project.getInstitution()))
             .replace(
