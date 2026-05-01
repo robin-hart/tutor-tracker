@@ -105,7 +105,7 @@
                 <td class="px-8 py-6">
                   <button
                     class="px-3 py-1 bg-primary text-on-primary rounded-lg text-xs font-bold hover:bg-primary/90"
-                    @click="downloadReportForMonth(monthOption.key)"
+                    @click="openReportDialog(monthOption.key)"
                   >
                     Download PDF
                   </button>
@@ -115,13 +115,102 @@
           </table>
         </div>
       </div>
+      <div
+        v-if="showReportDialog"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-on-background/40 backdrop-blur-md"
+        @click.self="closeReportDialog"
+      >
+        <div
+          class="w-[min(720px,90vw)] glass-panel rounded-2xl shadow-2xl overflow-hidden border border-white/20"
+        >
+          <div class="px-8 pt-8 pb-4 flex justify-between items-center">
+            <div>
+              <h2 class="text-2xl font-bold font-headline">Download report</h2>
+              <p class="text-on-surface-variant text-sm font-medium">
+                Add optional details for the report header.
+              </p>
+            </div>
+            <button
+              type="button"
+              class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-highest"
+              @click="closeReportDialog"
+            >
+              <span class="material-symbols-outlined text-on-surface-variant">close</span>
+            </button>
+          </div>
+
+          <div class="px-8 py-6">
+            <label class="block mb-6">
+              <span class="text-xs text-on-surface-variant uppercase tracking-widest"
+                >Tutor name (optional)</span
+              >
+              <input
+                v-model.trim="tutorName"
+                :maxlength="tutorNameMaxLength"
+                class="mt-2 w-full bg-surface-container-low border border-outline-variant rounded-xl px-5 py-4 focus:ring-2 focus:ring-primary/20"
+                placeholder="Enter your name"
+              />
+              <p class="mt-2 text-xs text-on-surface-variant">
+                {{ tutorName.length }}/{{ tutorNameMaxLength }} characters
+              </p>
+            </label>
+
+            <div class="mb-6">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs text-on-surface-variant uppercase tracking-widest"
+                  >Signature (optional)</span
+                >
+                <button
+                  class="text-xs font-bold text-primary"
+                  type="button"
+                  @click="clearSignature"
+                >
+                  Clear
+                </button>
+              </div>
+              <div class="border border-outline-variant rounded-xl bg-surface-container-low">
+                <canvas
+                  ref="signatureCanvasRef"
+                  class="w-full h-40 rounded-xl touch-none bg-white"
+                  @pointerdown="startSignature"
+                  @pointermove="drawSignature"
+                  @pointerup="endSignature"
+                  @pointerleave="endSignature"
+                ></canvas>
+              </div>
+              <p class="mt-2 text-xs text-on-surface-variant">
+                Draw with your mouse or pen. The signature is not saved.
+              </p>
+            </div>
+          </div>
+
+          <div
+            class="px-8 pb-8 pt-4 border-t border-outline-variant flex items-center justify-end gap-3"
+          >
+            <button
+              class="px-6 py-3 text-sm font-bold text-on-surface-variant"
+              type="button"
+              @click="closeReportDialog"
+            >
+              Cancel
+            </button>
+            <button
+              class="px-10 py-3 premium-gradient text-white rounded-lg font-bold text-sm shadow-xl"
+              type="button"
+              @click="confirmReportDownload"
+            >
+              Download PDF
+            </button>
+          </div>
+        </div>
+      </div>
       <p v-if="errorMessage" class="text-error mt-4">{{ errorMessage }}</p>
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import AppSidebar from '../components/AppSidebar.vue';
 import MainTopBar from '../components/MainTopBar.vue';
 import { exportProjectReportPdf, getProjectCalendar, getProjects } from '../services/apiClient';
@@ -137,6 +226,14 @@ const allTimeslots = ref<Timeslot[]>([]);
 const selectedProjectName = ref('');
 const calendarRequestVersion = ref(0);
 const errorMessage = ref('');
+const showReportDialog = ref(false);
+const pendingMonthKey = ref('');
+const tutorName = ref('');
+const signatureCanvasRef = ref<HTMLCanvasElement | null>(null);
+const signatureContext = ref<CanvasRenderingContext2D | null>(null);
+const isDrawingSignature = ref(false);
+const signatureHasInk = ref(false);
+const tutorNameMaxLength = 120;
 
 const selectedProject = computed(
   () => projects.value.find((project) => project.id === selectedProjectId.value) || null
@@ -349,10 +446,16 @@ function getMonthTransferToNextLabel(monthKey: string): string {
 /**
  * Downloads a generated monthly report as PDF.
  */
-async function downloadReportForMonth(monthKey: string): Promise<void> {
+async function downloadReportForMonth(monthKey: string): Promise<boolean> {
   errorMessage.value = '';
   try {
-    const blob = await exportProjectReportPdf(selectedProjectId.value, monthKey);
+    const signatureDataUrl = buildSignatureDataUrl();
+    const normalizedName = normalizeTutorName(tutorName.value);
+    const blob = await exportProjectReportPdf(selectedProjectId.value, {
+      month: monthKey,
+      tutorName: normalizedName,
+      signatureDataUrl,
+    });
     const filename = `${selectedProjectId.value}-${monthKey}-report.pdf`;
     const objectUrl = URL.createObjectURL(blob);
 
@@ -364,8 +467,10 @@ async function downloadReportForMonth(monthKey: string): Promise<void> {
     link.remove();
 
     URL.revokeObjectURL(objectUrl);
+    return true;
   } catch (error) {
     errorMessage.value = getErrorMessage(error);
+    return false;
   }
 }
 
@@ -373,7 +478,140 @@ async function generateNewestMonthlyReport(): Promise<void> {
   if (!newestMonthKey.value) {
     return;
   }
-  await downloadReportForMonth(newestMonthKey.value);
+  openReportDialog(newestMonthKey.value);
+}
+
+function openReportDialog(monthKey: string): void {
+  if (!selectedProjectId.value || !monthKey) {
+    return;
+  }
+  pendingMonthKey.value = monthKey;
+  showReportDialog.value = true;
+  errorMessage.value = '';
+}
+
+function closeReportDialog(): void {
+  showReportDialog.value = false;
+}
+
+function normalizeTutorName(value: string): string | null {
+  const normalized = value.trim().replace(/\s+/g, ' ');
+  return normalized.length > 0 ? normalized : null;
+}
+
+function setupSignatureCanvas(): void {
+  const canvas = signatureCanvasRef.value;
+  if (!canvas) {
+    return;
+  }
+
+  const rect = canvas.getBoundingClientRect();
+  const ratio = window.devicePixelRatio || 1;
+  canvas.width = rect.width * ratio;
+  canvas.height = rect.height * ratio;
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    return;
+  }
+
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.scale(ratio, ratio);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#1f2933';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, rect.width, rect.height);
+
+  signatureContext.value = ctx;
+  signatureHasInk.value = false;
+}
+
+function clearSignature(): void {
+  const canvas = signatureCanvasRef.value;
+  const ctx = signatureContext.value;
+  if (!canvas || !ctx) {
+    return;
+  }
+  const rect = canvas.getBoundingClientRect();
+  ctx.clearRect(0, 0, rect.width, rect.height);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, rect.width, rect.height);
+  signatureHasInk.value = false;
+}
+
+function getSignaturePoint(event: PointerEvent): { x: number; y: number } {
+  const canvas = signatureCanvasRef.value;
+  if (!canvas) {
+    return { x: 0, y: 0 };
+  }
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: event.clientX - rect.left,
+    y: event.clientY - rect.top,
+  };
+}
+
+function startSignature(event: PointerEvent): void {
+  const ctx = signatureContext.value;
+  if (!ctx) {
+    return;
+  }
+  const canvas = signatureCanvasRef.value;
+  if (canvas) {
+    canvas.setPointerCapture(event.pointerId);
+  }
+  const point = getSignaturePoint(event);
+  ctx.beginPath();
+  ctx.moveTo(point.x, point.y);
+  isDrawingSignature.value = true;
+  signatureHasInk.value = true;
+}
+
+function drawSignature(event: PointerEvent): void {
+  if (!isDrawingSignature.value) {
+    return;
+  }
+  const ctx = signatureContext.value;
+  if (!ctx) {
+    return;
+  }
+  const point = getSignaturePoint(event);
+  ctx.lineTo(point.x, point.y);
+  ctx.stroke();
+}
+
+function endSignature(event: PointerEvent): void {
+  if (!isDrawingSignature.value) {
+    return;
+  }
+  isDrawingSignature.value = false;
+  const canvas = signatureCanvasRef.value;
+  if (canvas) {
+    canvas.releasePointerCapture(event.pointerId);
+  }
+}
+
+function buildSignatureDataUrl(): string | null {
+  if (!signatureHasInk.value) {
+    return null;
+  }
+  const canvas = signatureCanvasRef.value;
+  if (!canvas) {
+    return null;
+  }
+  return canvas.toDataURL('image/png');
+}
+
+async function confirmReportDownload(): Promise<void> {
+  if (!pendingMonthKey.value) {
+    return;
+  }
+  const success = await downloadReportForMonth(pendingMonthKey.value);
+  if (success) {
+    showReportDialog.value = false;
+  }
 }
 
 onMounted(async () => {
@@ -400,5 +638,17 @@ onMounted(async () => {
 watch(selectedProjectId, async () => {
   projectStartMonthKey.value = await resolveProjectStartMonth(selectedProjectId.value);
   await loadProjectCalendarData(selectedProjectId.value);
+});
+
+watch(showReportDialog, async (isOpen) => {
+  if (isOpen) {
+    await nextTick();
+    setupSignatureCanvas();
+  } else {
+    tutorName.value = '';
+    pendingMonthKey.value = '';
+    signatureContext.value = null;
+    signatureHasInk.value = false;
+  }
 });
 </script>

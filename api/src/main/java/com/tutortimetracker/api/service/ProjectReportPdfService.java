@@ -23,6 +23,12 @@ public class ProjectReportPdfService {
       DateTimeFormatter.ofPattern("MMMM uuuu", Locale.GERMAN);
   private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.uuuu");
   private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
+  private static final int MAX_TUTOR_NAME_LENGTH = 120;
+  private static final int MAX_SIGNATURE_BYTES = 250_000;
+  private static final String SIGNATURE_DATA_URL_PREFIX = "data:image/png;base64,";
+  private static final String SIGNATURE_FILE_NAME = "tutor-signature.png";
+  private static final byte[] PNG_SIGNATURE =
+      new byte[] {(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
   private static final String LATEX_TEMPLATE =
       """
     \\documentclass[a4paper,12pt]{article}
@@ -30,6 +36,7 @@ public class ProjectReportPdfService {
       \\usepackage[T1]{fontenc}
     \\usepackage[german]{babel}
     \\usepackage{geometry}
+    \\usepackage{graphicx}
     \\geometry{left=2.5cm,right=2cm,top=2cm,bottom=2cm}
     \\usepackage{array}
     \\usepackage{tabularx}
@@ -42,7 +49,8 @@ public class ProjectReportPdfService {
       \\end{center}
 
     \\noindent\\textbf{Für Monat:} {{REPORT_MONTH}} \\\\[0.2cm]
-    \\textbf{Name:} {{PROJECT_NAME}} \\\\[0.2cm]
+      \\textbf{Name:} {{TUTOR_NAME}} \\\\[0.2cm]
+      \\textbf{Projekt:} {{PROJECT_NAME}} \\\\[0.2cm]
   \\textbf{Einrichtung:} {{PROJECT_INSTITUTION}}
 
     \\renewcommand{\\arraystretch}{1.3}
@@ -79,7 +87,7 @@ public class ProjectReportPdfService {
     \\begin{tabularx}{\\textwidth}{@{}X@{}}
     \\textbf{Mitarbeiter(in)} \\\\[0.3cm]
      \\textbf{Datum:} \\today \\hfill
-       \\textbf{Unterschrift:} \\rule{6cm}{0.4pt}\\\\[1.8cm]
+       \\textbf{Unterschrift:} {{TUTOR_SIGNATURE}}\\\\[1.8cm]
     \\textbf{Vorgesetzte(r)}\\\\[0.3cm]
     \\textbf{Datum:} \\rule{4cm}{0.4pt} \\hfill \\textbf{Unterschrift:} \\rule{6cm}{0.4pt}\\
     \\end{tabularx}
@@ -106,6 +114,18 @@ public class ProjectReportPdfService {
    * @return generated PDF bytes
    */
   public byte[] exportProjectMonthPdf(String projectId, String monthKey) {
+    return exportProjectMonthPdf(projectId, monthKey, null, null);
+  }
+
+  /**
+   * @param projectId project slug
+   * @param monthKey month key in yyyy-MM format
+   * @param tutorName optional tutor name to render
+   * @param signatureDataUrl optional PNG data URL for the tutor signature
+   * @return generated PDF bytes
+   */
+  public byte[] exportProjectMonthPdf(
+      String projectId, String monthKey, String tutorName, String signatureDataUrl) {
     ProjectEntity project =
         projectRepository
             .findBySlug(projectId)
@@ -133,10 +153,15 @@ public class ProjectReportPdfService {
     int sollArbeitszeitMinutes = targetMinutes;
     int transferToNextMonthMinutes = sumIstAndTransferMinutes - sollArbeitszeitMinutes;
 
+    String normalizedTutorName = normalizeTutorName(tutorName);
+    LatexAsset signatureAsset = decodeSignatureAsset(signatureDataUrl);
+    String signatureLatex = buildSignatureLatex(signatureAsset != null);
+
     String template = readTemplate();
     String latex =
         template
             .replace("{{PROJECT_NAME}}", escapeLatex(project.getName()))
+            .replace("{{TUTOR_NAME}}", escapeLatex(normalizedTutorName))
             .replace("{{PROJECT_INSTITUTION}}", escapeLatex(project.getInstitution()))
             .replace(
                 "{{REPORT_MONTH}}",
@@ -150,9 +175,72 @@ public class ProjectReportPdfService {
             .replace(
                 "{{ZEITUEBERTRAG_NAECHSTER_MONAT}}",
                 formatSignedHoursAndMinutes(transferToNextMonthMinutes))
-            .replace("{{TIMESLOT_ROWS}}", buildTimeslotRows(monthSlots));
+            .replace("{{TIMESLOT_ROWS}}", buildTimeslotRows(monthSlots))
+            .replace("{{TUTOR_SIGNATURE}}", signatureLatex);
 
-    return latexCompiler.compileToPdf(latex);
+    List<LatexAsset> assets = signatureAsset == null ? List.of() : List.of(signatureAsset);
+    return latexCompiler.compileToPdf(latex, assets);
+  }
+
+  private String normalizeTutorName(String tutorName) {
+    if (tutorName == null) {
+      return "";
+    }
+    String normalized = tutorName.trim().replaceAll("\\s+", " ");
+    if (normalized.isBlank()) {
+      return "";
+    }
+    if (normalized.length() > MAX_TUTOR_NAME_LENGTH) {
+      throw new IllegalArgumentException(
+          "Tutor name must be " + MAX_TUTOR_NAME_LENGTH + " characters or fewer.");
+    }
+    return normalized;
+  }
+
+  private LatexAsset decodeSignatureAsset(String signatureDataUrl) {
+    if (signatureDataUrl == null || signatureDataUrl.isBlank()) {
+      return null;
+    }
+    if (!signatureDataUrl.startsWith(SIGNATURE_DATA_URL_PREFIX)) {
+      throw new IllegalArgumentException("Signature must be a PNG data URL.");
+    }
+
+    String base64 = signatureDataUrl.substring(SIGNATURE_DATA_URL_PREFIX.length());
+    byte[] decoded;
+    try {
+      decoded = java.util.Base64.getDecoder().decode(base64);
+    } catch (IllegalArgumentException ex) {
+      throw new IllegalArgumentException("Signature must be valid base64 PNG data.");
+    }
+
+    if (decoded.length > MAX_SIGNATURE_BYTES) {
+      throw new IllegalArgumentException("Signature image is too large.");
+    }
+
+    if (!isPngSignature(decoded)) {
+      throw new IllegalArgumentException("Signature must be a valid PNG image.");
+    }
+
+    return new LatexAsset(SIGNATURE_FILE_NAME, decoded);
+  }
+
+  private boolean isPngSignature(byte[] decoded) {
+    if (decoded == null || decoded.length < PNG_SIGNATURE.length) {
+      return false;
+    }
+    for (int index = 0; index < PNG_SIGNATURE.length; index++) {
+      if (decoded[index] != PNG_SIGNATURE[index]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private String buildSignatureLatex(boolean hasSignature) {
+    if (!hasSignature) {
+      return "\\rule{6cm}{0.4pt}";
+    }
+    return "\\includegraphics[height=1.2cm]{" + SIGNATURE_FILE_NAME + "}";
   }
 
   private String readTemplate() {

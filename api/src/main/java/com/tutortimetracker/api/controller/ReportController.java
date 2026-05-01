@@ -1,6 +1,7 @@
 package com.tutortimetracker.api.controller;
 
 import com.tutortimetracker.api.model.ApiErrorResponse;
+import com.tutortimetracker.api.model.ReportPdfExportRequest;
 import com.tutortimetracker.api.model.ReportRow;
 import com.tutortimetracker.api.service.ProjectReportPdfService;
 import com.tutortimetracker.api.service.TutorDataService;
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -20,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -128,12 +131,52 @@ public class ReportController {
           String projectId,
       @Parameter(description = "Month key in yyyy-MM format", example = "2026-03") @RequestParam
           String month) {
-    byte[] pdf = projectReportPdfService.exportProjectMonthPdf(projectId, month);
+    byte[] pdf = projectReportPdfService.exportProjectMonthPdf(projectId, month, null, null);
 
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_PDF);
     headers.setContentDisposition(
         ContentDisposition.attachment().filename(projectId + "-" + month + "-report.pdf").build());
+
+    return ResponseEntity.ok().headers(headers).body(pdf);
+  }
+
+  @Operation(
+      summary = "Export monthly project report PDF (with tutor details)",
+      description =
+          "Builds a LaTeX report from project timeslots and optional tutor name/signature."
+              + " Returns a PDF download.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "PDF generated"),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid month or input",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Project not found",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+        @ApiResponse(
+            responseCode = "503",
+            description = "LaTeX compiler unavailable or generation failed",
+            content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+      })
+  @PostMapping(value = "/projects/{projectId}/reports/export/pdf", produces = "application/pdf")
+  public ResponseEntity<byte[]> exportProjectReportPdf(
+      @Parameter(description = "Project slug", example = "math-grade-10") @PathVariable
+          String projectId,
+      @Valid @RequestBody ReportPdfExportRequest request) {
+    byte[] pdf =
+        projectReportPdfService.exportProjectMonthPdf(
+            projectId, request.month(), request.tutorName(), request.signatureDataUrl());
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_PDF);
+    headers.setContentDisposition(
+        ContentDisposition.attachment()
+            .filename(projectId + "-" + request.month() + "-report.pdf")
+            .build());
 
     return ResponseEntity.ok().headers(headers).body(pdf);
   }
