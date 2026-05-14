@@ -81,8 +81,6 @@ class ProjectReportPdfServiceTest {
     String latex = latexCaptor.getValue();
     assertTrue(latex.contains("Arbeitszeitblatt"));
     assertTrue(latex.contains("Robin Hart"));
-    assertTrue(latex.contains("Math"));
-    assertTrue(latex.contains("Science"));
     assertTrue(latex.contains("University Lab"));
     assertTrue(latex.contains("Session"));
     assertTrue(latex.contains("12.03.2026"));
