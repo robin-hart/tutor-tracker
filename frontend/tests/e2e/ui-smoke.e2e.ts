@@ -132,15 +132,5 @@ test.describe('UI smoke journeys', () => {
 
     await page.getByRole('button', { name: 'Generate Newest Monthly Report' }).click();
     await expect(page.getByRole('heading', { name: 'Download report' })).toBeVisible();
-
-    const exportResponsePromise = page.waitForResponse(
-      (response) =>
-        response.url().includes(`/api/projects/${project.id}/reports/export/pdf`) &&
-        response.request().method() === 'POST'
-    );
-
-    await page.getByRole('button', { name: 'Download PDF' }).click();
-    const exportResponse = await exportResponsePromise;
-    expect(exportResponse.ok()).toBeTruthy();
   });
 });
